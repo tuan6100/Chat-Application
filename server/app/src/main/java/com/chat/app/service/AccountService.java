@@ -12,10 +12,9 @@ import java.util.List;
 @Service
 public interface AccountService {
 
-    public Account findAccountById(Long accountId);
     public Account findAccountProfile(String jwt);
     public Account createAccount(Account account) throws AccountException;
-    public Account updateAccount(Long accountId, AccountDto accountDto);
+    public Account updateAccount(Long accountId, AccountDto accountDto) throws AccountException;
     public void deleteAccount(Long accountId);
     public List<Account> searchAccount(String query);
 

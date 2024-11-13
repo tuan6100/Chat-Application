@@ -2,6 +2,8 @@ package com.chat.app.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.engine.internal.CacheHelper;
+
 import java.util.Date;
 import java.util.List;
 
@@ -11,7 +13,7 @@ import java.util.List;
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int accountId;
+    private Long accountId;
 
     @Column(name = "username", nullable = false)
     private String username;
@@ -27,6 +29,9 @@ public class Account {
 
     @Column(name = "birthDate")
     private Date birthDate;
+
+    @Column(name = "gender")
+    private Character gender;
 
     @Column(name = "bio")
     private String bio;

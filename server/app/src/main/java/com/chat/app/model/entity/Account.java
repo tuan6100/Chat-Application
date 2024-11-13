@@ -1,10 +1,14 @@
 package com.chat.app.model.entity;
 
+import com.chat.app.enumeration.UserStatus;
+import com.chat.app.model.entity.extend.chatroom.GroupChat;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.engine.internal.CacheHelper;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 @Data
@@ -39,9 +43,20 @@ public class Account {
     @Column(name = "avatar")
     private String avatarImagePath;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Relationship> users;
+    @Column(name = "status")
+    private UserStatus status;
 
-    @OneToMany(mappedBy = "friend", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Relationship> friends;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private HashSet<Relationship> users;
+
+    @OneToMany(mappedBy = "friend", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private HashSet<Relationship> friends;
+
+    @ManyToMany(mappedBy = "admins", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    private HashSet<GroupChat> adminOfGroup;
+
+    @ManyToMany(mappedBy = "members", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    private HashSet<GroupChat> memberOfGroup;
 }

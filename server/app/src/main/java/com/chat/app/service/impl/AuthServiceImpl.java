@@ -66,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
         if (accountRepository.findByUsername(username) != null) {
             throw new AccountException("This username is used with another account");
         }
-        Account newAccount = new Account();
+        Account newAccount = new Account(accountId);
         newAccount.setUsername(username);
         newAccount.setEmail(email);
         newAccount.setPassword(passwordEncoder.encode(password));

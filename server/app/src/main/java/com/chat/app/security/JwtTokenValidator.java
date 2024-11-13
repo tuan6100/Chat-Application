@@ -20,7 +20,7 @@ import java.util.List;
 
 public class JwtTokenValidator extends OncePerRequestFilter {
     public final static String JWT_HEADER = "Authorization";
-    public final static String JWT_SECRET = "secret";
+    public final static String JWT_SECRET = "Jvlwt4neEhQ5l5yiXT1MESRom+0QOsIk";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException, java.io.IOException {

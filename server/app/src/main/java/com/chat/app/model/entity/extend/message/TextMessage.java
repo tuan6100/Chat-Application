@@ -1,9 +1,11 @@
-package com.chat.app.model.entity;
+package com.chat.app.model.entity.extend.message;
 
 
+import com.chat.app.model.entity.Message;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 import lombok.Data;
 
 @Data
@@ -11,6 +13,7 @@ import lombok.Data;
 @DiscriminatorValue("TEXT")
 public class TextMessage extends Message {
 
-    @Column(name = "text_content", nullable = false)
+    @Lob
+    @Column(name = "text_content")
     private String textContent;
 }

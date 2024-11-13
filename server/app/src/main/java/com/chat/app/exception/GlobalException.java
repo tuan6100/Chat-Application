@@ -9,7 +9,7 @@ import org.springframework.web.context.request.WebRequest;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
-public class GlobalException {
+public class GlobalException extends Exception {
 
     @ExceptionHandler(AccountException.class)
     public ResponseEntity<ErrorDetail> accountExceptionHander(AccountException e, WebRequest request) {

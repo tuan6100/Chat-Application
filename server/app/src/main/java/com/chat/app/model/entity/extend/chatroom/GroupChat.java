@@ -1,17 +1,21 @@
 package com.chat.app.model.entity.extend.chatroom;
 
+import com.chat.app.enumeration.Theme;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.ChatRoom;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "group_chat")
 public class GroupChat extends ChatRoom {
@@ -36,7 +40,24 @@ public class GroupChat extends ChatRoom {
     )
     private HashSet<Account> members;
 
-    @Column
+    @Column(name = "created_at")
     private Date createdAt;
+
+    @Column(name = "permission", columnDefinition = "boolean default false")
+    private boolean permission;
+
+    public GroupChat() {
+    }
+
+    public GroupChat(String roomName, String avatar, Account creator, Date createdAt, boolean permission) {
+        super(roomName, avatar, Theme.SYSTEM);
+        this.creator = creator;
+        this.createdAt = createdAt;
+        this.permission = permission;
+    }
+
+    public boolean getPermission() {
+        return permission;
+    }
 }
 

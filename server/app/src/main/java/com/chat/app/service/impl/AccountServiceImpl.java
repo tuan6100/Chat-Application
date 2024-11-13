@@ -1,8 +1,9 @@
 package com.chat.app.service.impl;
 
 import com.chat.app.exception.AccountException;
-import com.chat.app.model.dto.AccountDto;
+import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
+import com.chat.app.model.entity.extend.chatroom.GroupChat;
 import com.chat.app.repository.AccountRepository;
 import com.chat.app.security.TokenProvider;
 import com.chat.app.service.AccountService;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Service
 public class AccountServiceImpl implements AccountService {
+
     @Autowired
     private AccountRepository accountRepository;
 
@@ -38,7 +40,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account updateAccount(Long accountId, AccountDto accountDto) throws AccountException {
+    public Account updateAccount(Long accountId, AccountDTO accountDto) throws AccountException {
         Account account = accountRepository.findByAccountId(accountId);
         if (account == null) {
             throw new AccountException("Account not found");
@@ -47,7 +49,7 @@ public class AccountServiceImpl implements AccountService {
             account.setUsername(accountDto.getUsername());
         }
         if (accountDto.getAvatarImagePath() != null) {
-            account.setAvatarImagePath(accountDto.getAvatarImagePath());
+            account.setAvatar(accountDto.getAvatarImagePath());
         }
         if (accountDto.getBirthDate() != null) {
             account.setBirthDate(accountDto.getBirthDate());
@@ -63,11 +65,12 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void deleteAccount(Long accountId) {
-
+        accountRepository.deleteById(accountId);
     }
 
     @Override
     public List<Account> searchAccount(String query) {
         return List.of();
     }
+
 }

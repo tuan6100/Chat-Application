@@ -1,5 +1,6 @@
-package com.chat.app.model.entity;
+package com.chat.app.model.entity.extend.message;
 
+import com.chat.app.model.entity.Message;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -10,6 +11,6 @@ import lombok.Data;
 @DiscriminatorValue("IMAGE")
 public class ImageMessage extends Message {
 
-    @Column(name = "image_url", nullable = false)
+    @Column(name = "image_url")
     private String imageUrl;
 }

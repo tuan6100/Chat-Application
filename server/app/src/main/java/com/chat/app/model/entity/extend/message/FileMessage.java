@@ -1,8 +1,8 @@
-package com.chat.app.model.entity;
+package com.chat.app.model.entity.extend.message;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
+
+import com.chat.app.model.entity.Message;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
@@ -12,9 +12,11 @@ public class FileMessage extends Message {
 
     public static final int MAX_ALLOWED_SIZE = 512;
 
-    @Column(name = "file_url", nullable = false)
+    @Column(name = "file_url")
     private String fileUrl;
 
     @Column(name = "file_name")
     private String fileName;
+
+
 }

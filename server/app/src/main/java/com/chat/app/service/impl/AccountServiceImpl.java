@@ -21,11 +21,11 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account findAccountProfile(String jwt) {
-        String email = tokenProvider.getEmailFromToken(jwt);
-        if (email == null) {
+        String username = tokenProvider.getUsernameFromToken(jwt);
+        if (username == null) {
             throw new BadCredentialsException("Invalid token");
         }
-        Account account = accountRepository.findByEmail(email);
+        Account account = accountRepository.findByEmail(username);
         if (account == null) {
             throw new BadCredentialsException("Account not found");
         }

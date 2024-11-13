@@ -5,11 +5,9 @@ import com.chat.app.model.entity.extend.chatroom.GroupChat;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
-import org.hibernate.engine.internal.CacheHelper;
 
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 
 @Data
 @Entity
@@ -41,7 +39,7 @@ public class Account {
     private String bio;
 
     @Column(name = "avatar")
-    private String avatarImagePath;
+    private String avatar;
 
     @Column(name = "status")
     private UserStatus status;

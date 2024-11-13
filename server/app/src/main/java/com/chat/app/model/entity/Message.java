@@ -14,14 +14,14 @@ public abstract class Message {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long messageId;
+    protected Long messageId;
 
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
-    private Account sender;
+    protected Account sender;
 
     @Column(nullable = false)
-    private Date timestamp = new Date();
+    protected Date timestamp = new Date();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -29,9 +29,9 @@ public abstract class Message {
             joinColumns = @JoinColumn(name = "original_message_id", referencedColumnName = "messageId"),
             inverseJoinColumns = @JoinColumn(name = "reply_message_id", referencedColumnName = "messageId")
     )
-    private List<Message> repliedMessage;
+    protected List<Message> repliedMessage;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "roomId")
-    private ChatRoom chatRoom;
+    protected ChatRoom chatRoom;
 }

@@ -1,26 +1,31 @@
 package com.chat.app.service;
 
-import com.chat.app.exception.AccountException;
+import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.GroupChatDTO;
 import com.chat.app.model.entity.Account;
+import com.chat.app.model.entity.extend.chat.GroupChat;
 import org.springframework.stereotype.Service;
 
 @Service
-public interface GroupChatService {
+public interface GroupChatService extends ChatService {
 
-    public void createGroupChat(Account creator, GroupChatDTO groupChatDTO) ;
+    public GroupChat createGroupChat(Account creator, GroupChatDTO groupChatDTO) ;
 
-    public void setPermission(Long groupChatId, Long accountId, boolean permission);
+    public GroupChat setPermission(Long groupChatId, Long accountId, boolean permission) throws ChatException;
 
-    public void addMember(Long groupChatId, Long userId, String newMemberUsername) throws AccountException;
+    public GroupChat joinGroup(Long groupChatId, Long accountId) throws ChatException;
 
-    public void removeMember(Long groupChatId, Long userId, String memberUsername)throws AccountException;
+    public GroupChat leaveGroup(Long groupChatId, Long accountId) throws ChatException;
 
-    public void addAdmin(Long groupChatId, Long userId, String newAdminUsername) throws AccountException;
+    public GroupChat addMember(Long groupChatId, Long userId, String newMemberUsername) throws ChatException;
 
-    public void removeAdmin(Long groupChatId, Long userId, String adminUsername) throws AccountException;
+    public GroupChat removeMember(Long groupChatId, Long userId, String memberUsername)throws ChatException;
 
-    public void deleteGroupChat(Long groupChatId, Long accountId) throws Exception;
+    public GroupChat addAdmin(Long groupChatId, Long userId, String newAdminUsername) throws ChatException;
+
+    public GroupChat removeAdmin(Long groupChatId, Long userId, String adminUsername) throws ChatException;
+
+    public void deleteGroupChat(Long groupChatId, Long creatorId) throws Exception;
 
 
 }

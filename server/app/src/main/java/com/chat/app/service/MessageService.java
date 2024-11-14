@@ -1,27 +1,26 @@
-//package com.chat.app.service;
-//
-//import com.chat.app.model.entity.Message;
-//import com.chat.app.repository.MessageRepository;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.stereotype.Service;
-//
-//import java.util.List;
-//
-//@Service
-//public class MessageService {
-//    private final MessageRepository messageRepository;
-//
-//    @Autowired
-//    public MessageService(MessageRepository messageRepository) {
-//        this.messageRepository = messageRepository;
-//    }
-//
-//    public List<Message> getMessagesByChatRoomId(Long chatRoomId) {
-//        return messageRepository.findByChatRoomId(chatRoomId);
-//    }
-//
-//    public Message saveMessage(Message message) {
-//        return messageRepository.save(message);
-//    }
-//
-//}
+package com.chat.app.service;
+
+import com.chat.app.exception.ChatException;
+import com.chat.app.model.entity.Message;
+import com.chat.app.payload.request.MessageRequest;
+import org.springframework.stereotype.Service;
+
+@Service
+public interface MessageService {
+
+    public Message findMessage(Long messageId) throws ChatException;
+
+    public Message filterMessage(String keyword) throws ChatException;
+
+    public Message sendTextMessage(Long chatId, MessageRequest request) throws ChatException;
+
+    public Message viewMessage(Long chatId, Long messageId, long viewedId) throws ChatException;
+
+    //public Message reactMessage(Long chatId, Long messageId, long accountId, String emojiUnicode) throws AccountException;
+
+    public Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest request ) throws ChatException;
+
+    public Message editMessage(Long chatId, Long messageId, MessageRequest request) throws ChatException;
+
+    public void removeMessage(Long messageId) throws ChatException;
+}

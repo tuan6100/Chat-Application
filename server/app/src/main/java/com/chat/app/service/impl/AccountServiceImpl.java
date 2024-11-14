@@ -1,9 +1,8 @@
 package com.chat.app.service.impl;
 
-import com.chat.app.exception.AccountException;
+import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
-import com.chat.app.model.entity.extend.chatroom.GroupChat;
 import com.chat.app.repository.AccountRepository;
 import com.chat.app.security.TokenProvider;
 import com.chat.app.service.AccountService;
@@ -22,6 +21,12 @@ public class AccountServiceImpl implements AccountService {
     private TokenProvider tokenProvider;
 
     @Override
+    public Account findAccount(Long accountId) throws ChatException {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new ChatException("Account not found"));
+    }
+
+    @Override
     public Account findAccountProfile(String jwt) {
         String username = tokenProvider.getUsernameFromToken(jwt);
         if (username == null) {
@@ -35,15 +40,15 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account createAccount(Account account) throws AccountException {
+    public Account createAccount(Account account) throws ChatException {
         return accountRepository.save(account);
     }
 
     @Override
-    public Account updateAccount(Long accountId, AccountDTO accountDto) throws AccountException {
-        Account account = accountRepository.findByAccountId(accountId);
+    public Account updateAccount(Long accountId, AccountDTO accountDto) throws ChatException {
+        Account account = findAccount(accountId);
         if (account == null) {
-            throw new AccountException("Account not found");
+            throw new ChatException("Account not found");
         }
         if (accountDto.getUsername() != null) {
             account.setUsername(accountDto.getUsername());

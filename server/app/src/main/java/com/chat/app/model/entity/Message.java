@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 @Data
@@ -23,15 +24,37 @@ public abstract class Message {
     @Column(nullable = false)
     protected Date timestamp = new Date();
 
+//    @Column(name = "reactions")
+//    protected HashMap<String, String> reactions;
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "chatId")
+    protected Chat chat;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "replies",
             joinColumns = @JoinColumn(name = "original_message_id", referencedColumnName = "messageId"),
             inverseJoinColumns = @JoinColumn(name = "reply_message_id", referencedColumnName = "messageId")
     )
-    protected List<Message> repliedMessage;
+    protected List<Message> repliedMessages;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "roomId")
-    protected ChatRoom chatRoom;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "views",
+            joinColumns = @JoinColumn(name = "messageId"),
+            inverseJoinColumns = @JoinColumn( name = "accountId")
+    )
+    protected List<Account> viewers;
+
+
+    public Message() {
+    }
+
+    public Message(Account sender, Date date, Chat chat, List<Message> replies) {
+        this.sender = sender;
+        this.timestamp = date;
+        this.chat = chat;
+        this.repliedMessages = replies;
+    }
 }

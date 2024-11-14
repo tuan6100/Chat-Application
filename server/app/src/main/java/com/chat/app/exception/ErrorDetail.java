@@ -1,7 +1,10 @@
 package com.chat.app.exception;
 
+import lombok.Data;
+
 import java.time.LocalDateTime;
 
+@Data
 public class ErrorDetail {
     private String error;
     private String message;

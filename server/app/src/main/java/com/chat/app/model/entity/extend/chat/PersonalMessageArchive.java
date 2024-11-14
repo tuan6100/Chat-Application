@@ -1,7 +1,7 @@
-package com.chat.app.model.entity.extend.chatroom;
+package com.chat.app.model.entity.extend.chat;
 
 import com.chat.app.model.entity.Account;
-import com.chat.app.model.entity.ChatRoom;
+import com.chat.app.model.entity.Chat;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Entity
 @Table(name = "personal_message_archive")
-public class PersonalMessageArchive extends ChatRoom {
+public class PersonalMessageArchive extends Chat {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "accountId")

@@ -25,7 +25,8 @@ public class Relationship {
     @JoinColumn(name = "friend_id", referencedColumnName = "accountId")
     private Account friend;
 
-    @Column(name = "status", nullable = false)
+
+    @Enumerated(EnumType.STRING)
     private RelationshipStatus status;
 
     @Column(name = "timeline", nullable = false)

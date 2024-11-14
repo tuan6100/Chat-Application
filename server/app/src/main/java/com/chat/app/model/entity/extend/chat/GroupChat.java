@@ -1,24 +1,22 @@
-package com.chat.app.model.entity.extend.chatroom;
+package com.chat.app.model.entity.extend.chat;
 
 import com.chat.app.enumeration.Theme;
 import com.chat.app.model.entity.Account;
-import com.chat.app.model.entity.ChatRoom;
+import com.chat.app.model.entity.Chat;
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Setter
 @Entity
 @Table(name = "group_chat")
-public class GroupChat extends ChatRoom {
+public class GroupChat extends Chat {
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "creator_id")
@@ -27,7 +25,7 @@ public class GroupChat extends ChatRoom {
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(
             name = "admins_in_group",
-            joinColumns = @JoinColumn(name = "roomId"),
+            joinColumns = @JoinColumn(name = "chatId"),
             inverseJoinColumns = @JoinColumn(name = "accountId")
     )
     private HashSet<Account> admins;
@@ -35,7 +33,7 @@ public class GroupChat extends ChatRoom {
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(
             name = "members_in_group",
-            joinColumns = @JoinColumn(name = "roomId"),
+            joinColumns = @JoinColumn(name = "chatId"),
             inverseJoinColumns = @JoinColumn(name = "accountId")
     )
     private HashSet<Account> members;

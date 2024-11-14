@@ -1,0 +1,69 @@
+package com.chat.app.service.impl;
+
+import com.chat.app.enumeration.Theme;
+import com.chat.app.exception.ChatException;
+import com.chat.app.model.entity.Chat;
+import com.chat.app.model.entity.Message;
+import com.chat.app.repository.ChatRepository;
+import com.chat.app.repository.MessageRepository;
+import com.chat.app.service.ChatService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
+
+@Service
+@Primary
+public class ChatServiceImpl implements ChatService {
+
+    @Autowired
+    private ChatRepository chatRepository;
+
+    @Autowired
+    private MessageRepository messageRepository;
+
+    @Override
+    public Chat addMessage(Long chatId, Long MessageID) throws ChatException {
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new ChatException("Chat not found"));
+        Message message = messageRepository.findById(MessageID)
+                .orElseThrow(() -> new ChatException("Message not found"));
+        chat.getMessages().add(message);
+        return chatRepository.save(chat);
+    }
+
+    @Override
+    public Chat removeMessage(Long chatId, Long MessageID) throws ChatException {
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new ChatException("Chat not found"));
+        Message message = messageRepository.findById(MessageID)
+                .orElseThrow(() -> new ChatException("Message not found"));
+        chat.getMessages().remove(message);
+        return chatRepository.save(chat);
+    }
+
+    @Override
+    public Chat changeTheme(Long chatId, Theme theme) throws ChatException {
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new ChatException("Chat not found"));
+        chat.setTheme(theme);
+        return chatRepository.save(chat);
+    }
+
+    @Override
+    public Chat findChat(Long chatId) throws ChatException {
+        return chatRepository.findById(chatId)
+                .orElseThrow(() -> new ChatException("Chat not found"));
+    }
+
+    @Override
+    public Message findMessage(long chatId, Long messageId) throws ChatException {
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new ChatException("Chat room not found"));
+        return chat.getMessages().stream()
+                .filter(message -> message.getMessageId() == messageId)
+                .findFirst()
+                .orElseThrow(() -> new ChatException("Message not found in chat room"));
+    }
+
+
+}

@@ -1,13 +1,14 @@
 package com.chat.app.model.entity;
 
 import com.chat.app.enumeration.UserStatus;
-import com.chat.app.model.entity.extend.chatroom.GroupChat;
+import com.chat.app.model.entity.extend.chat.GroupChat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
 
 import java.util.Date;
-import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Entity
@@ -44,17 +45,21 @@ public class Account {
     @Column(name = "status")
     private UserStatus status;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private HashSet<Relationship> users;
+    @OneToMany(mappedBy = "user",  fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Relationship> users;
 
-    @OneToMany(mappedBy = "friend", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private HashSet<Relationship> friends;
+    @OneToMany(mappedBy = "friend",  fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private Set<Relationship> friends;
 
-    @ManyToMany(mappedBy = "admins", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "admins",  fetch = FetchType.LAZY)
     @ToString.Exclude
-    private HashSet<GroupChat> adminOfGroup;
+    private Set<GroupChat> adminOfGroup;
 
-    @ManyToMany(mappedBy = "members", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "members",  fetch = FetchType.LAZY)
     @ToString.Exclude
-    private HashSet<GroupChat> memberOfGroup;
+    private Set<GroupChat> memberOfGroup;
+
+    @ManyToMany(mappedBy = "viewers",  fetch = FetchType.EAGER)
+    @ToString.Exclude
+    private Set<Message> messages;
 }

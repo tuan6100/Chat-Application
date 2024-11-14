@@ -1,6 +1,6 @@
 package com.chat.app.service.impl;
 
-import com.chat.app.exception.AccountException;
+import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.request.AuthRequestWithEmail;
 import com.chat.app.payload.request.AuthRequestWithUsername;
@@ -22,17 +22,17 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private TokenProvider tokenProvider;
 
-
     @Override
-    public ResponseEntity<AuthResponse> login(AuthRequestWithUsername authRequest) throws AccountException {
+    public ResponseEntity<AuthResponse> login(AuthRequestWithUsername authRequest) throws ChatException {
         Account account = accountRepository.findByUsername(authRequest.getUsername());
         if (account == null || !passwordEncoder.matches(authRequest.getPassword(), account.getPassword())) {
-            throw new AccountException("Invalid username or password");
+            throw new ChatException("Invalid username or password");
         }
         Authentication auth = new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword());
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -42,10 +42,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseEntity<AuthResponse> login(AuthRequestWithEmail authRequest) throws AccountException {
+    public ResponseEntity<AuthResponse> login(AuthRequestWithEmail authRequest) throws ChatException {
         Account account = accountRepository.findByEmail(authRequest.getEmail());
         if (account == null || !passwordEncoder.matches(authRequest.getPassword(), account.getPassword())) {
-            throw new AccountException("Invalid email or password");
+            throw new ChatException("Invalid email or password");
         }
         Authentication auth = new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword());
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -54,28 +54,24 @@ public class AuthServiceImpl implements AuthService {
         return ResponseEntity.ok(response);
     }
 
-
     @Override
-    public ResponseEntity<AuthResponse> register(Account account) throws AccountException {
+    public ResponseEntity<AuthResponse> register(Account account) throws ChatException {
         String username = account.getUsername();
         String email = account.getEmail();
         String password = account.getPassword();
         if (accountRepository.findByEmail(email) != null) {
-            throw new AccountException("This email is used with another account");
+            throw new ChatException("This email is used with another account");
         }
         if (accountRepository.findByUsername(username) != null) {
-            throw new AccountException("This username is used with another account");
+            throw new ChatException("This username is used with another account");
         }
-        Account newAccount = new Account(accountId);
-        newAccount.setUsername(username);
-        newAccount.setEmail(email);
-        newAccount.setPassword(passwordEncoder.encode(password));
-        accountRepository.save(newAccount);
+        account.setPassword(passwordEncoder.encode(password));
+        accountRepository.save(account);
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(username, password);
         SecurityContextHolder.getContext().setAuthentication(auth);
         String jwt = tokenProvider.generateToken(auth);
         AuthResponse response = new AuthResponse(jwt, true);
         return ResponseEntity.ok(response);
     }
-
 }
+

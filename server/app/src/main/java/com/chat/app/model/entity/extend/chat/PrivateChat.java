@@ -1,7 +1,7 @@
-package com.chat.app.model.entity.extend.chatroom;
+package com.chat.app.model.entity.extend.chat;
 
 import com.chat.app.enumeration.Theme;
-import com.chat.app.model.entity.ChatRoom;
+import com.chat.app.model.entity.Chat;
 import com.chat.app.model.entity.Relationship;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,7 +11,7 @@ import lombok.*;
 @Setter
 @Entity
 @Table(name = "friendship_chat")
-public class PrivateChat extends ChatRoom {
+public class PrivateChat extends Chat {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "relationshipId")

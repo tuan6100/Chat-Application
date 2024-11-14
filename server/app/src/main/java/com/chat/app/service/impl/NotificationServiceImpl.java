@@ -3,13 +3,11 @@ package com.chat.app.service.impl;
 import com.chat.app.model.dto.NotificationDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Message;
-import com.chat.app.model.entity.extend.chatroom.GroupChat;
-import com.chat.app.model.entity.extend.message.FileMessage;
+import com.chat.app.model.entity.extend.chat.GroupChat;
 import com.chat.app.model.entity.extend.message.ImageMessage;
 import com.chat.app.model.entity.extend.message.TextMessage;
 import com.chat.app.payload.response.NotificationResponse;
 import com.chat.app.service.NotificationService;
-import org.springframework.http.ResponseEntity;
 
 public class NotificationServiceImpl implements NotificationService {
 

@@ -38,10 +38,10 @@ public class JwtTokenValidator extends OncePerRequestFilter {
                         .build()
                         .parseClaimsJws(jwt)
                         .getBody();
-                String username = claims.getSubject();
+                String email = claims.getSubject();
                 String authorities = claims.get("authorities", String.class);
                 List<GrantedAuthority> auths = AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
-                Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, auths);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(email, null, auths);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

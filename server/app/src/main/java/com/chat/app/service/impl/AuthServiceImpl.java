@@ -8,6 +8,7 @@ import com.chat.app.payload.response.AuthResponse;
 import com.chat.app.repository.AccountRepository;
 import com.chat.app.security.RefreshTokenService;
 import com.chat.app.security.TokenProvider;
+import com.chat.app.service.AccountService;
 import com.chat.app.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +19,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class AuthServiceImpl implements AuthService {
 
     @Autowired
-    private AccountRepository accountRepository;
+    private AccountService accountService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -36,52 +40,66 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseEntity<AuthResponse> login(AuthRequestWithUsername authRequest) throws ChatException {
-        Account account = accountRepository.findByUsername(authRequest.getUsername());
+        Account account = accountService.findAccount(authRequest.getUsername(), authRequest.getPassword());
         if (account == null || !passwordEncoder.matches(authRequest.getPassword(), account.getPassword())) {
             throw new ChatException("Invalid username or password");
         }
-        Authentication auth = new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword());
+        Authentication auth = new UsernamePasswordAuthenticationToken(account.getEmail(), authRequest.getPassword());
         SecurityContextHolder.getContext().setAuthentication(auth);
         String accessToken = tokenProvider.generateAccessToken(auth);
-        String refreshToken = tokenProvider.generateRefreshToken(auth);
-        refreshTokenService.saveRefreshToken(refreshToken, account);
+        Optional<String> optionalRefreshToken = refreshTokenService.getLatestRefreshTokenByAccount(account.getAccountId());
+        String refreshToken;
+        if (optionalRefreshToken.isPresent()) {
+            refreshToken = optionalRefreshToken.get();
+        } else {
+            refreshToken = tokenProvider.generateRefreshToken(auth);
+            refreshTokenService.saveRefreshToken(refreshToken, account);
+        }
         AuthResponse response = new AuthResponse(accessToken, refreshToken, true);
         return ResponseEntity.ok(response);
     }
 
     @Override
     public ResponseEntity<AuthResponse> login(AuthRequestWithEmail authRequest) throws ChatException {
-        Account account = accountRepository.findByEmail(authRequest.getEmail());
+        Account account = accountService.findAccount(authRequest.getEmail());
         if (account == null || !passwordEncoder.matches(authRequest.getPassword(), account.getPassword())) {
             throw new ChatException("Invalid email or password");
         }
-        Authentication auth = new UsernamePasswordAuthenticationToken(account.getUsername(), authRequest.getPassword());
+        Authentication auth = new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword());
         SecurityContextHolder.getContext().setAuthentication(auth);
         String accessToken = tokenProvider.generateAccessToken(auth);
-        String refreshToken = tokenProvider.generateRefreshToken(auth);
-        refreshTokenService.saveRefreshToken(refreshToken, account);
+        Optional<String> optionalRefreshToken = refreshTokenService.getLatestRefreshTokenByAccount(account.getAccountId());
+        String refreshToken;
+        if (optionalRefreshToken.isPresent()) {
+            refreshToken = optionalRefreshToken.get();
+        } else {
+            refreshToken = tokenProvider.generateRefreshToken(auth);
+            refreshTokenService.saveRefreshToken(refreshToken, account);
+        }
         AuthResponse response = new AuthResponse(accessToken, refreshToken, true);
         return ResponseEntity.ok(response);
     }
 
     @Override
     public AuthResponse register(Account account) throws ChatException {
-        String username = account.getUsername();
         String email = account.getEmail();
         String password = account.getPassword();
-        if (accountRepository.findByEmail(email) != null) {
+        if (accountService.findAccount(email) != null) {
             throw new ChatException("This email is used with another account");
         }
-        if (accountRepository.findByUsername(username) != null) {
-            throw new ChatException("This username is used with another account");
-        }
         account.setPassword(passwordEncoder.encode(password));
-        accountRepository.save(account);
-        Authentication auth = new UsernamePasswordAuthenticationToken(account.getUsername(), account.getPassword());
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        Account savedAccount = accountService.createAccount(account);
+        Authentication auth = new UsernamePasswordAuthenticationToken(email, password);
         String accessToken = tokenProvider.generateAccessToken(auth);
-        String refreshToken = tokenProvider.generateRefreshToken(auth);
-        refreshTokenService.saveRefreshToken(refreshToken, account);
+        Optional<String> optionalRefreshToken = refreshTokenService.getLatestRefreshTokenByAccount(savedAccount.getAccountId());
+        String refreshToken;
+        if (optionalRefreshToken.isPresent()) {
+            refreshToken = optionalRefreshToken.get();
+        } else {
+            refreshToken = tokenProvider.generateRefreshToken(auth);
+            refreshTokenService.saveRefreshToken(refreshToken, savedAccount);
+        }
+        refreshTokenService.limitRefreshTokensPerAccount(account);
         return new AuthResponse(accessToken, refreshToken, true);
     }
 

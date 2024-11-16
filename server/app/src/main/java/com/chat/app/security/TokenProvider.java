@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 @Service
 public class TokenProvider {
     private final SecretKey key = Keys.hmacShaKeyFor(JwtTokenValidator.JWT_SECRET.getBytes());
-    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 3600000;
-    private static final long REFRESH_TOKEN_EXPIRATION_TIME = 604800000;
+    public static final long ACCESS_TOKEN_EXPIRATION_TIME = 3600000;
+    public static final long REFRESH_TOKEN_EXPIRATION_TIME = 604800000;
 
     public String generateAccessToken(Authentication authentication) {
         List<String> authorities = authentication.getAuthorities().stream()
@@ -27,7 +27,7 @@ public class TokenProvider {
         return Jwts.builder()
                 .issuer("ChatApp")
                 .subject(authentication.getPrincipal().toString())
-                .claim("username", authentication.getPrincipal().toString())
+                .claim("email", authentication.getPrincipal().toString())
                 .claim("authorities", String.join(",", authorities))
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME))
@@ -46,7 +46,7 @@ public class TokenProvider {
                 .compact();
     }
 
-    public String getUsernameFromToken(String jwt) {
+    public String getemailFromToken(String jwt) {
         if (jwt.startsWith("Bearer ")) {
             jwt = jwt.substring(7);
         }
@@ -55,6 +55,6 @@ public class TokenProvider {
                 .build()
                 .parseClaimsJws(jwt)
                 .getBody();
-        return claims.get("username", String.class);
+        return claims.get("email", String.class);
     }
 }

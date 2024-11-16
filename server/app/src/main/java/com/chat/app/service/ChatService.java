@@ -9,13 +9,13 @@ import org.springframework.stereotype.Service;
 @Service
 public interface ChatService {
 
-    public Chat addMessage(Long chatId, Long MessageID) throws ChatException;
+    public Chat findChat(Long chatId) throws ChatException;
 
-    public Chat removeMessage(Long chatId, Long MessageID) throws ChatException;
+    public Chat addMessage(Long chatId, Long MessageId) throws ChatException;
+
+    public Chat removeMessage(Long chatId, Long MessageId) throws ChatException;
 
     public Chat changeTheme(Long chatId, Theme theme) throws ChatException;
-
-    public Chat findChat(Long chatId) throws ChatException;
 
     public Message findMessage(long chatId, Long messageId) throws ChatException;
 

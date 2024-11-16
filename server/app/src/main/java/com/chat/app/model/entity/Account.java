@@ -4,6 +4,7 @@ import com.chat.app.enumeration.UserStatus;
 import com.chat.app.model.entity.extend.chat.GroupChat;
 import com.chat.app.security.RefreshTokenEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -27,7 +28,7 @@ public class Account {
     @Column(name = "username", nullable = false)
     private String username;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -68,5 +69,6 @@ public class Account {
     private Set<Message> messages;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<RefreshTokenEntity> refreshTokens = new ArrayList<>();
 }

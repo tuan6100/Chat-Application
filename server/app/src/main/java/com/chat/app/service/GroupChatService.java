@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 @Service
 public interface GroupChatService extends ChatService {
 
+    public GroupChat findGroupChatById(long chatId) throws ChatException;
+
     public GroupChat createGroupChat(Account creator, GroupChatDTO groupChatDTO) ;
 
     public GroupChat setPermission(Long groupChatId, Long accountId, boolean permission) throws ChatException;

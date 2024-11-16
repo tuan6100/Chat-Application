@@ -1,6 +1,7 @@
 package com.chat.app.security;
 
 import com.chat.app.model.entity.Account;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -18,8 +19,9 @@ public class RefreshTokenEntity {
     @Column(nullable = false, unique = true)
     private String token;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "account_id", nullable = false)
+    @JsonBackReference
     private Account account;
 
     @Column

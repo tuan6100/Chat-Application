@@ -6,6 +6,7 @@ import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.extend.chat.GroupChat;
 import com.chat.app.repository.AccountRepository;
 import com.chat.app.repository.GroupChatRepository;
+import com.chat.app.service.AccountService;
 import com.chat.app.service.GroupChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,14 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
     private GroupChatRepository groupChatRepository;
 
     @Autowired
-    private AccountRepository accountRepository;
+    private AccountService accountService;
+
+
+    @Override
+    public GroupChat findGroupChatById(long chatId) throws ChatException {
+        return (GroupChat) groupChatRepository.findById(chatId)
+                .orElseThrow(() -> new ChatException("Group chat not found"));
+    }
 
     @Override
     public GroupChat createGroupChat(Account creator, GroupChatDTO groupChatDTO) {
@@ -39,8 +47,7 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
 
     @Override
     public GroupChat setPermission(Long groupChatId, Long accountId, boolean permission) throws ChatException {
-        GroupChat groupChat = (GroupChat) groupChatRepository.findById(groupChatId)
-                .orElseThrow(() -> new ChatException("Group chat not found"));
+        GroupChat groupChat = findGroupChatById(groupChatId);
         if (accountId != groupChat.getCreator().getAccountId()) {
             throw new ChatException("You do not have permission to add a member to this group chat");
         }
@@ -50,10 +57,8 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
 
     @Override
     public GroupChat joinGroup(Long groupChatId, Long accountId) throws ChatException {
-        GroupChat groupChat = (GroupChat) groupChatRepository.findById(groupChatId)
-                .orElseThrow(() -> new ChatException("Group chat not found"));
-        Account newMember = accountRepository.findById(accountId).
-                orElseThrow(() -> new ChatException("Account not found"));
+        GroupChat groupChat = findGroupChatById(groupChatId);
+        Account newMember = accountService.findAccount(accountId);
         if (!groupChat.getPermission()) {
             groupChat.getMembers().add(newMember);
         }
@@ -62,21 +67,17 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
 
     @Override
     public GroupChat leaveGroup(Long groupChatId, Long accountId) throws ChatException {
-        GroupChat groupChat = (GroupChat) groupChatRepository.findById(groupChatId)
-                .orElseThrow(() -> new ChatException("Group chat not found"));
-        Account newMember = accountRepository.findById(accountId).
-                orElseThrow(() -> new ChatException("Account not found"));
+        GroupChat groupChat = findGroupChatById(groupChatId);
+        Account newMember = accountService.findAccount(accountId);
         groupChat.getMembers().remove(newMember);
         return groupChatRepository.save(groupChat);
     }
 
     @Override
     public GroupChat addMember(Long groupChatId, Long adminId, String newMemberUsername) throws ChatException {
-        GroupChat groupChat = (GroupChat) groupChatRepository.findById(groupChatId)
-                .orElseThrow(() -> new ChatException("Group chat not found"));
-        Account admin = accountRepository.findById(adminId).
-                orElseThrow(() -> new ChatException("Account not found"));
-        Account newMember = accountRepository.findByUsername(newMemberUsername);
+        GroupChat groupChat = findGroupChatById(groupChatId);
+        Account admin = accountService.findAccount(adminId);
+        Account newMember = accountService.findAccount(newMemberUsername);
         if (groupChat.getMembers().contains(newMember)) {
             throw new ChatException("This user is already a member of this group chat");
         }
@@ -89,11 +90,9 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
 
     @Override
     public GroupChat removeMember(Long groupChatId, Long adminId, String memberUsername) throws ChatException {
-        GroupChat groupChat = (GroupChat) groupChatRepository.findById(groupChatId)
-                .orElseThrow(() -> new ChatException("Group chat not found"));
-        Account admin = accountRepository.findById(adminId).
-                orElseThrow(() -> new ChatException("Account not found"));
-        Account member = accountRepository.findByUsername(memberUsername);
+        GroupChat groupChat = findGroupChatById(groupChatId);
+        Account admin = accountService.findAccount(adminId);
+        Account member = accountService.findAccount(memberUsername);
         if (!groupChat.getMembers().contains(member)) {
             throw new ChatException("This user is not a member of this group chat");
         }
@@ -106,9 +105,8 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
 
     @Override
     public GroupChat addAdmin(Long groupChatId, Long userId, String newAdminUsername) throws ChatException {
-        GroupChat groupChat = (GroupChat) groupChatRepository.findById(groupChatId)
-                .orElseThrow(() -> new ChatException("Group chat not found"));
-        Account newAdmin = accountRepository.findByUsername(newAdminUsername);
+        GroupChat groupChat = findGroupChatById(groupChatId);
+        Account newAdmin = accountService.findAccount(newAdminUsername);
         if (groupChat.getAdmins().contains(newAdmin)) {
             throw new ChatException("This user is already an admin of this group chat");
         }
@@ -121,9 +119,8 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
 
     @Override
     public GroupChat removeAdmin(Long groupChatId, Long userId, String adminUsername) throws ChatException {
-        GroupChat groupChat = (GroupChat) groupChatRepository.findById(groupChatId)
-                .orElseThrow(() -> new ChatException("Group chat not found"));
-        Account admin = accountRepository.findByUsername(adminUsername);
+        GroupChat groupChat = findGroupChatById(groupChatId);
+        Account admin = accountService.findAccount(adminUsername);
         if (!groupChat.getAdmins().contains(admin)) {
             throw new ChatException("This user is not an admin of this group chat");
         }

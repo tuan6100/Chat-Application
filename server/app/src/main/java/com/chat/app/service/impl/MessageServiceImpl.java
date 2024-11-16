@@ -13,6 +13,7 @@ import com.chat.app.service.AccountService;
 import com.chat.app.service.ChatService;
 import com.chat.app.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -20,14 +21,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @Service
-public class MessageImpl implements MessageService {
+public class MessageServiceImpl implements MessageService {
 
     @Autowired
     private MessageRepository messageRepository;
 
     @Autowired
+    @Lazy
     private ChatService chatService;
 
     @Autowired
@@ -51,15 +54,15 @@ public class MessageImpl implements MessageService {
         Account sender = accountService.findAccount(messageRequest.getSenderId());
         String content = messageRequest.getContent();
         Date date = new Date();
-        if (messageRequest.getType() == "Text") {
+        if (Objects.equals(messageRequest.getType(), "Text")) {
             Message message = new TextMessage(sender, date, chat, null, content);
             return messageRepository.save(message);
         }
-        if (messageRequest.getType() == "Image") {
+        if (Objects.equals(messageRequest.getType(), "Image")) {
             Message message = new ImageMessage(sender, date, chat, null, content);
             return messageRepository.save(message);
         }
-        if (messageRequest.getType() == "File") {
+        if (Objects.equals(messageRequest.getType(), "File")) {
             Path path = Paths.get(content);
             Message message = new FileMessage(sender, date, chat, null, content,  path.getFileName().toString());
             return messageRepository.save(message);
@@ -85,15 +88,15 @@ public class MessageImpl implements MessageService {
         Account sender = accountService.findAccount(messageRequest.getSenderId());
         String content = messageRequest.getContent();
         Date date = new Date();
-        if (messageRequest.getType() == "Text") {
+        if (Objects.equals(messageRequest.getType(), "Text")) {
             Message message = new TextMessage(sender, date, chat, repliedMessages, content);
             return messageRepository.save(message);
         }
-        if (messageRequest.getType() == "Image") {
+        if (Objects.equals(messageRequest.getType(), "Image")) {
             Message message = new ImageMessage(sender, date, chat, repliedMessages, content);
             return messageRepository.save(message);
         }
-        if (messageRequest.getType() == "File") {
+        if (Objects.equals(messageRequest.getType(), "File")) {
             Path path = Paths.get(content);
             Message message = new FileMessage(sender, date, chat, repliedMessages, content,  path.getFileName().toString());
             return messageRepository.save(message);
@@ -105,7 +108,7 @@ public class MessageImpl implements MessageService {
     public Message editMessage(Long chatId, Long messageId, MessageRequest messageRequest) throws ChatException {
         Message message = chatService.findMessage(chatId, messageId);
         Account sender = accountService.findAccount(messageRequest.getSenderId());
-        if (message instanceof TextMessage && messageRequest.getType() == "Text") {
+        if (message instanceof TextMessage && Objects.equals(messageRequest.getType(), "Text")) {
             if (sender != message.getSender()) {
                 throw new ChatException("You can not edit messages");
             }

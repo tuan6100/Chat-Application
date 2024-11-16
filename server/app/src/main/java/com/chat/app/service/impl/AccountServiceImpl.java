@@ -8,6 +8,7 @@ import com.chat.app.security.TokenProvider;
 import com.chat.app.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,7 +19,14 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
-    private TokenProvider tokenProvider;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+
+    @Override
+    public Account createAccount(Account account) throws ChatException {
+        return accountRepository.save(account);
+    }
 
     @Override
     public Account findAccount(Long accountId) throws ChatException {
@@ -27,21 +35,19 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public List<Account> findAccounts(String username) {
-        return accountRepository.findByUsernameContaining(username);
+    public Account findAccount(String email) {
+        return accountRepository.findByEmail(email);
     }
 
     @Override
-    public Account findAccountProfile(String jwt) {
-        String username = tokenProvider.getUsernameFromToken(jwt);
-        if (username == null) {
-            throw new BadCredentialsException("Invalid token");
+    public Account findAccount(String username, String password) throws ChatException {
+        List<Account> accounts = accountRepository.findByUsername(username);
+        for (Account account : accounts) {
+            if (passwordEncoder.matches(password, account.getPassword())) {
+                return account;
+            }
         }
-        Account account = accountRepository.findByEmail(username);
-        if (account == null) {
-            throw new BadCredentialsException("Account not found");
-        }
-        return account;
+        throw new ChatException("Invalid username or password");
     }
 
     @Override

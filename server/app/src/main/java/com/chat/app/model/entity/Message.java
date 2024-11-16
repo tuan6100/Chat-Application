@@ -15,6 +15,7 @@ public abstract class Message {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "message_id")
     protected Long messageId;
 
     @ManyToOne
@@ -28,22 +29,22 @@ public abstract class Message {
 //    protected HashMap<String, String> reactions;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "chatId")
+    @JoinColumn(name = "chat_id")
     protected Chat chat;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "replies",
-            joinColumns = @JoinColumn(name = "original_message_id", referencedColumnName = "messageId"),
-            inverseJoinColumns = @JoinColumn(name = "reply_message_id", referencedColumnName = "messageId")
+            joinColumns = @JoinColumn(name = "original_message_id", referencedColumnName = "message_id"),
+            inverseJoinColumns = @JoinColumn(name = "reply_message_id", referencedColumnName = "message_id")
     )
     protected List<Message> repliedMessages;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "views",
-            joinColumns = @JoinColumn(name = "messageId"),
-            inverseJoinColumns = @JoinColumn( name = "accountId")
+            joinColumns = @JoinColumn(name = "message_id"),
+            inverseJoinColumns = @JoinColumn( name = "account_id")
     )
     protected List<Account> viewers;
 

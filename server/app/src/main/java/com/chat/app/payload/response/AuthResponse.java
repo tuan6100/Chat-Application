@@ -5,11 +5,13 @@ import lombok.Data;
 
 @Data
 public class AuthResponse {
-    private String jwt;
+    private String accessToken;
+    private String refreshToken;
     private Boolean isAuthenticated;
 
-    public AuthResponse(String jwt, Boolean isAuthenticated) {
-        this.jwt = jwt;
+    public AuthResponse(String accessToken, String refreshToken, Boolean isAuthenticated) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
         this.isAuthenticated = isAuthenticated;
     }
 }

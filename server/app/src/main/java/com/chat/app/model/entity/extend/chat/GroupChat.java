@@ -25,16 +25,16 @@ public class GroupChat extends Chat {
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(
             name = "admins_in_group",
-            joinColumns = @JoinColumn(name = "chatId"),
-            inverseJoinColumns = @JoinColumn(name = "accountId")
+            joinColumns = @JoinColumn(name = "chat_id"),
+            inverseJoinColumns = @JoinColumn(name = "account_id")
     )
     private HashSet<Account> admins;
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(
             name = "members_in_group",
-            joinColumns = @JoinColumn(name = "chatId"),
-            inverseJoinColumns = @JoinColumn(name = "accountId")
+            joinColumns = @JoinColumn(name = "chat_id"),
+            inverseJoinColumns = @JoinColumn(name = "account_id")
     )
     private HashSet<Account> members;
 

@@ -18,11 +18,11 @@ public class Relationship {
     private Long RelationshipId;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", referencedColumnName = "accountId")
+    @JoinColumn(name = "user_id", referencedColumnName = "account_id")
     private Account user;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "friend_id", referencedColumnName = "accountId")
+    @JoinColumn(name = "friend_id", referencedColumnName = "account_id")
     private Account friend;
 
 

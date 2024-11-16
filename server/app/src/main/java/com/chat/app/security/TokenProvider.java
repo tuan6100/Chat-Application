@@ -11,25 +11,38 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class TokenProvider {
     private final SecretKey key = Keys.hmacShaKeyFor(JwtTokenValidator.JWT_SECRET.getBytes());
-    private static final long EXPIRATION_TIME = 3600000;
+    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 3600000;
+    private static final long REFRESH_TOKEN_EXPIRATION_TIME = 604800000;
 
-    public String generateToken(Authentication authentication) {
+    public String generateAccessToken(Authentication authentication) {
         List<String> authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
         return Jwts.builder()
-                .setIssuer("ChatApp")
-                .setSubject(authentication.getName())
-                .claim("username", authentication.getName())
+                .issuer("ChatApp")
+                .subject(authentication.getPrincipal().toString())
+                .claim("username", authentication.getPrincipal().toString())
                 .claim("authorities", String.join(",", authorities))
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME))
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(Authentication authentication) {
+        return Jwts.builder()
+                .issuer("ChatApp")
+                .subject(authentication.getPrincipal().toString())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME))
+                .claim("refresh_token_id", UUID.randomUUID().toString())
+                .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
 

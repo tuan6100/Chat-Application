@@ -17,8 +17,8 @@ public abstract class Chat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected long chatId;
 
-    @Column(name = "room_name")
-    protected String roomName;
+    @Column(name = "chat_name")
+    protected String chatName;
 
     @Column(name = "avatar")
     protected String avatar;
@@ -26,14 +26,14 @@ public abstract class Chat {
     @OneToMany(mappedBy = "chat", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     protected List<Message> messages;
 
-    @Column(name = "theme", columnDefinition = "varchar(255) default 'SYSTEM'")
+    @Column(name = "theme", columnDefinition = "smallint default 2")
     protected Theme theme;
 
     public Chat() {
     }
 
-    public Chat(String roomName, String avatar, Theme theme) {
-        this.roomName = roomName;
+    public Chat(String chatName, String avatar, Theme theme) {
+        this.chatName = chatName;
         this.avatar = avatar;
         this.theme = theme;
     }

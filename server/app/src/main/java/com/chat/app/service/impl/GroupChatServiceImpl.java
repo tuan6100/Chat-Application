@@ -27,7 +27,7 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
     public GroupChat createGroupChat(Account creator, GroupChatDTO groupChatDTO) {
         GroupChat groupChat = new GroupChat();
         groupChat.setCreator(creator);
-        groupChat.setRoomName(groupChatDTO.getRoomName());
+        groupChat.setChatName(groupChatDTO.getRoomName());
         groupChat.setAvatar(groupChatDTO.getAvatar());
         groupChat.setTheme(groupChatDTO.getTheme());
         groupChat.setMembers(groupChatDTO.getMembers());

@@ -9,6 +9,6 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
 
     Chat findBychatId(Long chatId);
 
-    Chat findByRoomName(String roomName) ;
+    Chat findByChatName(String roomName) ;
 
 }

@@ -6,8 +6,10 @@ import com.chat.app.payload.request.AuthRequestWithEmail;
 import com.chat.app.payload.request.AuthRequestWithUsername;
 import com.chat.app.payload.response.AuthResponse;
 import com.chat.app.repository.AccountRepository;
+import com.chat.app.security.RefreshTokenService;
 import com.chat.app.security.TokenProvider;
 import com.chat.app.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +30,10 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private TokenProvider tokenProvider;
 
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
+
     @Override
     public ResponseEntity<AuthResponse> login(AuthRequestWithUsername authRequest) throws ChatException {
         Account account = accountRepository.findByUsername(authRequest.getUsername());
@@ -36,8 +42,10 @@ public class AuthServiceImpl implements AuthService {
         }
         Authentication auth = new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword());
         SecurityContextHolder.getContext().setAuthentication(auth);
-        String jwt = tokenProvider.generateToken(auth);
-        AuthResponse response = new AuthResponse(jwt, true);
+        String accessToken = tokenProvider.generateAccessToken(auth);
+        String refreshToken = tokenProvider.generateRefreshToken(auth);
+        refreshTokenService.saveRefreshToken(refreshToken, account);
+        AuthResponse response = new AuthResponse(accessToken, refreshToken, true);
         return ResponseEntity.ok(response);
     }
 
@@ -47,15 +55,17 @@ public class AuthServiceImpl implements AuthService {
         if (account == null || !passwordEncoder.matches(authRequest.getPassword(), account.getPassword())) {
             throw new ChatException("Invalid email or password");
         }
-        Authentication auth = new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword());
+        Authentication auth = new UsernamePasswordAuthenticationToken(account.getUsername(), authRequest.getPassword());
         SecurityContextHolder.getContext().setAuthentication(auth);
-        String jwt = tokenProvider.generateToken(auth);
-        AuthResponse response = new AuthResponse(jwt, true);
+        String accessToken = tokenProvider.generateAccessToken(auth);
+        String refreshToken = tokenProvider.generateRefreshToken(auth);
+        refreshTokenService.saveRefreshToken(refreshToken, account);
+        AuthResponse response = new AuthResponse(accessToken, refreshToken, true);
         return ResponseEntity.ok(response);
     }
 
     @Override
-    public ResponseEntity<AuthResponse> register(Account account) throws ChatException {
+    public AuthResponse register(Account account) throws ChatException {
         String username = account.getUsername();
         String email = account.getEmail();
         String password = account.getPassword();
@@ -67,11 +77,32 @@ public class AuthServiceImpl implements AuthService {
         }
         account.setPassword(passwordEncoder.encode(password));
         accountRepository.save(account);
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(username, password);
+        Authentication auth = new UsernamePasswordAuthenticationToken(account.getUsername(), account.getPassword());
         SecurityContextHolder.getContext().setAuthentication(auth);
-        String jwt = tokenProvider.generateToken(auth);
-        AuthResponse response = new AuthResponse(jwt, true);
-        return ResponseEntity.ok(response);
+        String accessToken = tokenProvider.generateAccessToken(auth);
+        String refreshToken = tokenProvider.generateRefreshToken(auth);
+        refreshTokenService.saveRefreshToken(refreshToken, account);
+        return new AuthResponse(accessToken, refreshToken, true);
     }
+
+    @Override
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        String refreshToken = extractRefreshToken(request);
+        if (refreshToken != null && refreshTokenService.isRefreshTokenValid(refreshToken)) {
+            refreshTokenService.deleteRefreshToken(refreshToken);
+            return ResponseEntity.ok("Successfully logged out");
+        } else {
+            return ResponseEntity.badRequest().body("Invalid refresh token");
+        }
+    }
+
+    private String extractRefreshToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+
 }
 

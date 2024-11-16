@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 public class PersonalMessageArchive extends Chat {
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "accountId")
+    @JoinColumn(name = "account_id")
     private Account account;
 
     public static final int MAX_STORAGE_SIZE = 1024;

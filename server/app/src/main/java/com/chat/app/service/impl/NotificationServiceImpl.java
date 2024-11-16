@@ -46,7 +46,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public NotificationResponse notifyGroupInvitation(NotificationDTO notificationDTO, GroupChat groupChat) {
         String title = "New request";
-        String message = "You are invited to the group" + groupChat.getRoomName() + "by" + notificationDTO.getSenderAccount().getUsername();
+        String message = "You are invited to the group" + groupChat.getChatName() + "by" + notificationDTO.getSenderAccount().getUsername();
         String aboutTime = notificationDTO.getAboutTime();
         return new NotificationResponse(title, message, aboutTime);
     }

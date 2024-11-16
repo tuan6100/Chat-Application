@@ -14,7 +14,7 @@ import lombok.*;
 public class PrivateChat extends Chat {
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "relationshipId")
+    @JoinColumn(name = "relationship_id")
     private Relationship relationship;
 
     public PrivateChat() {

@@ -27,6 +27,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public List<Account> findAccounts(String username) {
+        return accountRepository.findByUsernameContaining(username);
+    }
+
+    @Override
     public Account findAccountProfile(String jwt) {
         String username = tokenProvider.getUsernameFromToken(jwt);
         if (username == null) {
@@ -37,11 +42,6 @@ public class AccountServiceImpl implements AccountService {
             throw new BadCredentialsException("Account not found");
         }
         return account;
-    }
-
-    @Override
-    public Account createAccount(Account account) throws ChatException {
-        return accountRepository.save(account);
     }
 
     @Override

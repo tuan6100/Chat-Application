@@ -11,10 +11,11 @@ import java.util.List;
 public interface AccountService {
 
     public Account findAccount(Long id) throws ChatException;
+    
+    public List<Account> findAccounts(String username);
 
     public Account findAccountProfile(String jwt);
 
-    public Account createAccount(Account account) throws ChatException;
 
     public Account updateAccount(Long accountId, AccountDTO accountDto) throws ChatException;
 

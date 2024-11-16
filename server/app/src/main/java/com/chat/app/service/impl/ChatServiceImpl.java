@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 @Primary
 public class ChatServiceImpl implements ChatService {
@@ -60,7 +62,7 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new ChatException("Chat room not found"));
         return chat.getMessages().stream()
-                .filter(message -> message.getMessageId() == messageId)
+                .filter(message -> Objects.equals(message.getMessageId(), messageId))
                 .findFirst()
                 .orElseThrow(() -> new ChatException("Message not found in chat room"));
     }

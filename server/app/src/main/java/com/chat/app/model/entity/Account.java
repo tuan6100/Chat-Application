@@ -2,20 +2,25 @@ package com.chat.app.model.entity;
 
 import com.chat.app.enumeration.UserStatus;
 import com.chat.app.model.entity.extend.chat.GroupChat;
+import com.chat.app.security.RefreshTokenEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Data
 @Entity
 @Table(name="account")
 public class Account {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "account_id")
     private Long accountId;
 
     @Column(name = "username", nullable = false)
@@ -24,13 +29,10 @@ public class Account {
     @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "phoneNumber")
-    private String phoneNumber;
-
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "birthDate")
+    @Column(name = "birth_date")
     private Date birthDate;
 
     @Column(name = "gender")
@@ -62,4 +64,7 @@ public class Account {
     @ManyToMany(mappedBy = "viewers",  fetch = FetchType.EAGER)
     @ToString.Exclude
     private Set<Message> messages;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RefreshTokenEntity> refreshTokens = new ArrayList<>();
 }

@@ -4,6 +4,7 @@ import com.chat.app.enumeration.UserStatus;
 import com.chat.app.model.entity.extend.chat.GroupChat;
 import com.chat.app.security.RefreshTokenEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
@@ -29,6 +30,7 @@ public class Account {
     @Column(name = "email", nullable = false)
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "password", nullable = false)
     private String password;
 

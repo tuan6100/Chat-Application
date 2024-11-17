@@ -56,6 +56,7 @@ public class AuthServiceImpl implements AuthService {
             refreshTokenService.saveRefreshToken(refreshToken, account);
         }
         AuthResponse response = new AuthResponse(accessToken, refreshToken, true);
+        refreshTokenService.limitRefreshTokensPerAccount(account);
         return ResponseEntity.ok(response);
     }
 
@@ -76,6 +77,7 @@ public class AuthServiceImpl implements AuthService {
             refreshToken = tokenProvider.generateRefreshToken(auth);
             refreshTokenService.saveRefreshToken(refreshToken, account);
         }
+        refreshTokenService.limitRefreshTokensPerAccount(account);
         AuthResponse response = new AuthResponse(accessToken, refreshToken, true);
         return ResponseEntity.ok(response);
     }
@@ -104,7 +106,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseEntity<String> logout(HttpServletRequest request) {
+    public ResponseEntity<String> logout(HttpServletRequest request) throws ChatException {
         String refreshToken = extractRefreshToken(request);
         if (refreshToken != null && refreshTokenService.isRefreshTokenValid(refreshToken)) {
             refreshTokenService.deleteRefreshToken(refreshToken);

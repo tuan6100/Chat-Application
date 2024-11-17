@@ -38,7 +38,16 @@ public class RelationshipServiceImpl implements RelationshipService {
         Map<Account, String> otherAccounts = new HashMap<>();
         for (Account account : accounts) {
             if (relationshipRepository.findByUserAndFriend(myAccount, account) == null) {
-                otherAccounts.put(account, username);
+                otherAccounts.put(account, "Not friend");
+            } else {
+                Relationship relationship = relationshipRepository.findByUserAndFriend(myAccount, account);
+                if (relationship.getStatus() == RelationshipStatus.ACCEPTED) {
+                    otherAccounts.put(account, "Friend");
+                } else if (relationship.getStatus() == RelationshipStatus.BLOCKED) {
+                    otherAccounts.put(account, "Blocked");
+                } else {
+                    otherAccounts.put(account, "Waiting to accept");
+                }
             }
         }
         return otherAccounts;
@@ -59,10 +68,19 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
+    public List<Long> getInvitationsList(Long userId) throws ChatException {
+        accountService.findAccount(userId);
+        return relationshipRepository.getFriends(userId);
+    }
+
+    @Override
     public Relationship acceptFriend(Long userId, Long friendId) throws ChatException {
         Account user = accountService.findAccount(userId);
         Account friend = accountService.findAccount(friendId);
-        Relationship relationship = relationshipRepository.findByUserAndFriend(user, friend);
+        Relationship relationship = relationshipRepository.findByUserAndFriend(friend, user);
+        if (relationship == null) {
+            throw new ChatException("You have no invitation from this user.");
+        }
         relationship.setStatus(RelationshipStatus.ACCEPTED);
         return relationshipRepository.save(relationship);
     }

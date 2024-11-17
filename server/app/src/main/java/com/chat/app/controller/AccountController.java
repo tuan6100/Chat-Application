@@ -1,9 +1,12 @@
 package com.chat.app.controller;
 
+import com.chat.app.enumeration.RelationshipStatus;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
+import com.chat.app.model.entity.Relationship;
 import com.chat.app.service.AccountService;
+import com.chat.app.service.RelationshipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.attribute.UserPrincipal;
+import java.util.Date;
 import java.util.Map;
 
 @RestController
@@ -22,8 +26,10 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
+    @Autowired
+    private RelationshipService relationshipService;
 
-    private Account getAuthenticatedAccount() throws ChatException {
+    Account getAuthenticatedAccount() throws ChatException {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             throw new ChatException("User is not authenticated");
@@ -70,6 +76,63 @@ public class AccountController {
         accountService.resetPassword(account.getAccountId(), oldPassword, newPassword);
         return ResponseEntity.ok(account);
     }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/invite")
+    public ResponseEntity<Relationship> inviteFriend(@RequestParam Long friendId) throws ChatException {
+        Account user = getAuthenticatedAccount();
+        Account friend = accountService.findAccount(friendId);
+        relationshipService.inviteFriend(user.getAccountId(), friendId);
+        return ResponseEntity.ok(new Relationship(user, friend, RelationshipStatus.WAITING_TO_ACCEPT, new Date()));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/accept")
+    public ResponseEntity<Relationship> acceptFriend(@RequestParam Long friendId) throws ChatException {
+        Account user = getAuthenticatedAccount();
+        Account friend = accountService.findAccount(friendId);
+        relationshipService.acceptFriend(user.getAccountId(), friendId);
+        return ResponseEntity.ok(new Relationship(friend, user, RelationshipStatus.ACCEPTED, new Date()));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/invitations")
+    public ResponseEntity<Map<Account, String>> getInvitationsList() throws ChatException {
+        Account user = getAuthenticatedAccount();
+        return ResponseEntity.ok(relationshipService.findFriends(user.getAccountId(), ""));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/search")
+    public ResponseEntity<Map<Account, String>> searchAccount(@RequestParam String username) throws ChatException {
+        Account user = getAuthenticatedAccount();
+        return ResponseEntity.ok(relationshipService.findFriends(user.getAccountId(), username));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/unfriend")
+    public ResponseEntity<Void> unfriend(@RequestParam Long friendId) throws ChatException {
+        Account user = getAuthenticatedAccount();
+        Account friend = accountService.findAccount(friendId);
+        relationshipService.unfriend(user.getAccountId(), friendId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/block")
+    public ResponseEntity<Void> block(@RequestParam Long friendId) throws ChatException {
+        Account user = getAuthenticatedAccount();
+        Account friend = accountService.findAccount(friendId);
+        relationshipService.blockFriend(user.getAccountId(), friendId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/unblock")
+    public ResponseEntity<Void> unblock(@RequestParam Long friendId) throws ChatException {
+        Account user = getAuthenticatedAccount();
+        Account friend = accountService.findAccount(friendId);
+        relationshipService.unblockFriend(user.getAccountId(), friendId);
+        return ResponseEntity.ok().build();
+    }
 }
-
-

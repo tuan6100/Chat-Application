@@ -8,11 +8,13 @@ import com.chat.app.model.entity.extend.message.ImageMessage;
 import com.chat.app.model.entity.extend.message.TextMessage;
 import com.chat.app.payload.response.NotificationResponse;
 import com.chat.app.service.NotificationService;
+import org.springframework.stereotype.Service;
 
+@Service
 public class NotificationServiceImpl implements NotificationService {
 
     @Override
-    public NotificationResponse notifyFriendRequestReceived(NotificationDTO notificationDTO) {
+    public NotificationResponse notifyFriendRequestInvited(NotificationDTO notificationDTO) {
         String message = String.format("You received a friend request from " + notificationDTO.getSenderAccount().getUsername());
         String aboutTime = notificationDTO.getAboutTime();
         return new NotificationResponse("New request", message, aboutTime);

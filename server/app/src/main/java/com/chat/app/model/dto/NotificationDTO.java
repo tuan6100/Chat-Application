@@ -16,6 +16,23 @@ public class NotificationDTO {
     private Date sentDate;
     private Date viewedDate;
 
+    public NotificationDTO() {
+    }
+
+    public NotificationDTO(Account senderAccount, Account recipientAccount, Date sentDate, Date viewedDate) {
+        this.senderAccount = senderAccount;
+        this.recipientAccount = recipientAccount;
+        this.sentDate = sentDate;
+        this.viewedDate = viewedDate;
+    }
+
+    public NotificationDTO(Account senderAccount, Account recipientAccount, Date sentDate) {
+        this.senderAccount = senderAccount;
+        this.recipientAccount = recipientAccount;
+        this.sentDate = sentDate;
+        this.viewedDate = new Date();
+    }
+
     public String getAboutTime() {
         long timeDiff = viewedDate.getTime() - sentDate.getTime();
         long seconds = TimeUnit.MILLISECONDS.toSeconds(timeDiff);

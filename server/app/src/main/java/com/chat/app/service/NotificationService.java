@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface NotificationService {
 
-    public NotificationResponse notifyFriendRequestReceived(NotificationDTO notificationDTO);
+    public NotificationResponse notifyFriendRequestInvited(NotificationDTO notificationDTO);
 
     public NotificationResponse notifyFriendRequestAccepted(NotificationDTO notificationDTO);
 

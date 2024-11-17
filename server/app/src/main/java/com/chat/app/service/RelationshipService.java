@@ -19,6 +19,8 @@ public interface RelationshipService {
     
     public Relationship acceptFriend(Long userId, Long friendId) throws ChatException;
 
+    public List<Long> getInvitationsList(Long userId) throws ChatException;
+
     public void unfriend(Long userId, Long friendId) throws ChatException;
     
     public Relationship blockFriend(Long userId, Long friendId) throws ChatException;

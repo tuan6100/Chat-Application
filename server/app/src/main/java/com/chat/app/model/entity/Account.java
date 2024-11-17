@@ -50,9 +50,11 @@ public class Account {
     @Column(name = "status")
     private UserStatus status;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "user",  fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Relationship> users;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "friend",  fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<Relationship> friends;
 

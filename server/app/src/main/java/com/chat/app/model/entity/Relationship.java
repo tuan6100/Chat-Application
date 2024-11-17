@@ -1,6 +1,7 @@
 package com.chat.app.model.entity;
 
 import com.chat.app.enumeration.RelationshipStatus;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,10 +20,12 @@ public class Relationship {
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", referencedColumnName = "account_id")
+    @JsonBackReference
     private Account user;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "friend_id", referencedColumnName = "account_id")
+    @JsonBackReference
     private Account friend;
 
 

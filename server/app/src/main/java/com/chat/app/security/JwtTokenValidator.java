@@ -24,20 +24,23 @@ import java.util.List;
 public class JwtTokenValidator extends OncePerRequestFilter {
 
     public final static String JWT_HEADER = "Authorization";
-    public final static String JWT_SECRET = "Jvlwt4neEhQ5l5yiXT1MESRom+0QOsIk";
+    public final static String JWT_SECRET = "flat4neEhQ5l5yiXT1MESRom+0QOsIkt";
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException, java.io.IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
+                                    throws ServletException, IOException, java.io.IOException {
         String jwt = request.getHeader(JWT_HEADER);
         if (jwt != null && jwt.startsWith("Bearer ")) {
             try {
                 jwt = jwt.substring(7);
                 SecretKey secretKey = Keys.hmacShaKeyFor(JWT_SECRET.getBytes());
                 Claims claims = Jwts.parser()
-                        .setSigningKey(secretKey)
+                        .verifyWith(secretKey)
                         .build()
-                        .parseClaimsJws(jwt)
-                        .getBody();
+                        .parseSignedClaims(jwt)
+                        .getPayload();
                 String email = claims.getSubject();
                 String authorities = claims.get("authorities", String.class);
                 List<GrantedAuthority> auths = AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);

@@ -18,7 +18,11 @@ public interface AccountService {
 
     public Account findAccount(String username, String password) throws ChatException;
 
+    public List<Account> searchAccounts(String username) throws ChatException;
+
     public Account updateAccount(Long accountId, AccountDTO accountDto) throws ChatException;
+
+    public Account resetPassword(Long accountId, String oldPassword, String newPassword) throws ChatException;
 
     public void deleteAccount(Long accountId);
 

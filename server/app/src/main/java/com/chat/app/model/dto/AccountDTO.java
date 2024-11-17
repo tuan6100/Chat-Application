@@ -7,8 +7,6 @@ import java.util.Date;
 @Data
 public class AccountDTO {
     private String username;
-//    private String password;
-//    private String email;
     private String avatarImagePath;
     private Date birthDate;
     private Character gender;

@@ -6,8 +6,10 @@ spring:
     name: real-time-chat-app
 
   datasource:
+    url: jdbc:postgresql://localhost:5432/chatstorage
     username: postgres
-    driver-class-name: org.postgresql.Driver  
+    password:
+    driver-class-name: org.postgresql.Driver
   jpa:
     database: postgresql
     show-sql: true
@@ -23,7 +25,7 @@ spring:
       exclude: logs/**
 
 logging:
-    file:
-      name: server/app/src/main/resources/logs/application.log
-    level:
-      org.springframework.security: DEBUG
+  file:
+    name: server/app/src/main/resources/logs/application.log
+  level:
+    org.springframework.security: DEBUG

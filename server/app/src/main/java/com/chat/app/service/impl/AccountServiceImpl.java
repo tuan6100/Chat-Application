@@ -41,13 +41,18 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account findAccount(String username, String password) throws ChatException {
-        List<Account> accounts = accountRepository.findByUsername(username);
+        List<Account> accounts = searchAccounts(username);
         for (Account account : accounts) {
             if (passwordEncoder.matches(password, account.getPassword())) {
                 return account;
             }
         }
         throw new ChatException("Invalid username or password");
+    }
+
+    @Override
+    public List<Account> searchAccounts(String username) throws ChatException {
+        return accountRepository.findByUsername(username);
     }
 
     @Override
@@ -71,6 +76,16 @@ public class AccountServiceImpl implements AccountService {
         if (accountDto.getBio() != null) {
             account.setBio(accountDto.getBio());
         }
+        return accountRepository.save(account);
+    }
+
+    @Override
+    public Account resetPassword(Long accountId, String oldPassword, String newPassword) throws ChatException {
+        Account account = findAccount(accountId);
+        if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
+            throw new ChatException("Password does not match");
+        }
+        account.setPassword(passwordEncoder.encode(newPassword));
         return accountRepository.save(account);
     }
 

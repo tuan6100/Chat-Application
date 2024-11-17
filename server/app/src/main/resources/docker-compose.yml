@@ -1,0 +1,21 @@
+
+services:
+  postgres-db:
+    image: postgres:16
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chatstorage
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - springboot-network
+
+networks:
+  springboot-network:
+
+volumes:
+  postgres_data:

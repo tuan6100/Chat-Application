@@ -1,5 +1,6 @@
 package com.chat.app.security;
 
+import com.chat.app.model.entity.Account;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -9,6 +10,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -57,4 +60,5 @@ public class TokenProvider {
                 .getBody();
         return claims.get("email", String.class);
     }
+
 }

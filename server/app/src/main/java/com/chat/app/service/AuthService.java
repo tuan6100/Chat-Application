@@ -18,5 +18,5 @@ public interface AuthService {
 
     public AuthResponse register(Account account) throws ChatException;
 
-    public ResponseEntity<String> logout(HttpServletRequest request);
+    public ResponseEntity<String> logout(HttpServletRequest request) throws ChatException;
 }

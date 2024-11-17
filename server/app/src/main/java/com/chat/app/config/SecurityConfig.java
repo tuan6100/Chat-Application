@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**","/error").permitAll()
                 .anyRequest().authenticated()
         );
-
+        http.logout((logout) -> logout.logoutSuccessUrl("/api/auth/logout"));
         http.cors(AbstractHttpConfigurer::disable);
         http.csrf(AbstractHttpConfigurer::disable);
         http.headers(headers -> headers.frameOptions(FrameOptionsConfig::disable));

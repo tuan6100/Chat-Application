@@ -3,7 +3,10 @@ package com.chat.app.security;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.service.AccountService;
+import com.chat.app.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -23,7 +26,7 @@ public class RefreshTokenService {
     @Autowired
     private AccountService accountService;
 
-//    private static final long REFRESH_TOKEN_EXPIRATION_TIME = 30L * 24 * 60 * 60 * 1000;
+
     private static final int MAX_TOKENS_PER_ACCOUNT = 10;
 
     public void saveRefreshToken(String refreshToken, Account account) {
@@ -32,19 +35,35 @@ public class RefreshTokenService {
         refreshTokenRepository.save(tokenEntity);
     }
 
-    public boolean isRefreshTokenValid(String refreshToken) {
+    public boolean isRefreshTokenValid(String refreshToken) throws ChatException {
         Optional<RefreshTokenEntity> token = refreshTokenRepository.findByToken(refreshToken);
-        return token.map(refreshTokenEntity -> refreshTokenEntity.getExpiryDate().isAfter(Instant.now())).orElse(false);
+        if (token.isPresent()) {
+            if (token.get().getExpiryDate().isBefore(Instant.now())) {
+                refreshTokenRepository.deleteByToken(refreshToken);
+                return false;
+            }
+            return true;
+        }
+        throw new ChatException("Invalid refresh token");
     }
-
-    public void deleteRefreshToken(String refreshToken) {
-        refreshTokenRepository.deleteByToken(refreshToken);
-    }
-
 
     public List<RefreshTokenEntity> getRefreshTokenByAccount(Long accountId) throws ChatException {
         Account account = accountService.findAccount(accountId);
         return refreshTokenRepository.findByAccount(account);
+    }
+
+    public Account getAccountByRefreshToken(String refreshToken) throws ChatException {
+        Optional<RefreshTokenEntity> token = refreshTokenRepository.findByToken(refreshToken);
+        if (token.isPresent()) {
+            return token.get().getAccount();
+        }
+        throw new ChatException("Invalid refresh token");
+    }
+
+    public String getAccessTokenByRefreshToken(String refreshToken) throws ChatException {
+        Account account = getAccountByRefreshToken(refreshToken);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(account.getUsername(), account.getPassword());
+        return tokenProvider.generateAccessToken(authentication);
     }
 
     public Optional<String> getLatestRefreshTokenByAccount(Long accountId) throws ChatException {
@@ -64,5 +83,8 @@ public class RefreshTokenService {
         }
     }
 
+    public void deleteRefreshToken(String refreshToken) {
+        refreshTokenRepository.deleteByToken(refreshToken);
+    }
 
 }

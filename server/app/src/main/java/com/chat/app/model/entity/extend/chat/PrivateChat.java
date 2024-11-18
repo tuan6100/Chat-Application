@@ -10,10 +10,10 @@ import lombok.*;
 @Getter
 @Setter
 @Entity
-@Table(name = "friendship_chat")
+@Table(name = "private_chat")
 public class PrivateChat extends Chat {
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne (cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "relationship_id")
     private Relationship relationship;
 
@@ -21,8 +21,8 @@ public class PrivateChat extends Chat {
         super();
     }
 
-    public PrivateChat(String roomName, String avatar, Theme theme, Relationship relationship) {
-        super(roomName, avatar, theme);
+    public PrivateChat(String chatName, String avatar, Theme theme, Relationship relationship) {
+        super(chatName, avatar, theme);
         this.relationship = relationship;
     }
 }

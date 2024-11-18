@@ -1,6 +1,7 @@
 package com.chat.app.model.entity;
 
 import com.chat.app.enumeration.RelationshipStatus;
+import com.chat.app.model.entity.extend.chat.PrivateChat;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,39 +9,39 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @Entity
 @Table(name = "relationship")
 public class Relationship {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long RelationshipId;
+    private Long relationshipId;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", referencedColumnName = "account_id")
-    @JsonBackReference
-    private Account user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "first_account_id", referencedColumnName = "account_id")
+    @JsonBackReference("first-account-relationships")
+    private Account firstAccount;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "friend_id", referencedColumnName = "account_id")
-    @JsonBackReference
-    private Account friend;
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "second_account_id", referencedColumnName = "account_id")
+    @JsonBackReference("second-account-relationships")
+    private Account secondAccount;
 
     @Enumerated(EnumType.STRING)
     private RelationshipStatus status;
 
     @Column(name = "timeline", nullable = false)
-    private Date timeline = new Date();
+    private Date timeline;
 
-    public Relationship(Account user, Account friend, RelationshipStatus relationshipStatus, Date timeline) {
-        this.user = user;
-        this.friend = friend;
-        this.status = relationshipStatus;
+    public Relationship(Account firstAccount, Account secondAccount, RelationshipStatus status, Date timeline) {
+        this.firstAccount = firstAccount;
+        this.secondAccount = secondAccount;
+        this.status = status;
         this.timeline = timeline;
     }
-
-
 }
+

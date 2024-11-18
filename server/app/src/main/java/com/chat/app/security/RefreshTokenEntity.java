@@ -21,7 +21,6 @@ public class RefreshTokenEntity {
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "account_id", nullable = false)
-    @JsonBackReference
     private Account account;
 
     @Column

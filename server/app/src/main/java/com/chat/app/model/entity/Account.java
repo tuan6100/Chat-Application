@@ -47,30 +47,30 @@ public class Account {
     @Column(name = "avatar")
     private String avatar;
 
-    @Column(name = "status")
     private UserStatus status;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "user",  fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<Relationship> users;
+    @OneToMany(mappedBy = "firstAccount", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<Relationship> firstRelationships;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "friend",  fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<Relationship> friends;
+    @OneToMany(mappedBy = "secondAccount", fetch = FetchType.LAZY)
+    @JsonManagedReference("second-account-relationships")
+    private Set<Relationship> secondRelationships;
 
-    @ManyToMany(mappedBy = "admins",  fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "admins", fetch = FetchType.LAZY)
     @ToString.Exclude
     private Set<GroupChat> adminOfGroup;
 
-    @ManyToMany(mappedBy = "members",  fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
     @ToString.Exclude
     private Set<GroupChat> memberOfGroup;
 
-    @ManyToMany(mappedBy = "viewers",  fetch = FetchType.EAGER)
+    @ManyToMany(mappedBy = "viewers", fetch = FetchType.LAZY)
     @ToString.Exclude
     private Set<Message> messages;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonIgnore
     private List<RefreshTokenEntity> refreshTokens = new ArrayList<>();
 }
+

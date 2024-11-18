@@ -1,7 +1,6 @@
 package com.chat.app.repository;
 
 import com.chat.app.enumeration.RelationshipStatus;
-import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Relationship;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,13 +11,18 @@ import java.util.List;
 @Repository
 public interface RelationshipRepository extends JpaRepository<Relationship, Long> {
 
-    public Relationship findByUserAndFriend(Account user, Account friend);
+    @Query("SELECT r FROM Relationship r " +
+            "WHERE (r.firstAccount.accountId = ?1 AND r.secondAccount.accountId = ?2) " +
+            "   OR (r.firstAccount.accountId = ?2 AND r.secondAccount.accountId = ?1)")
+    Relationship findByFirstAccountAndSecondAccount(Long firstAccountId, Long secondAccountId);
 
-    @Query("SELECT r FROM Relationship r WHERE r.user.accountId = ?1 AND r.status = 'ACCEPTED'")
-    public List<Relationship> findFriend(Long accountId);
+    @Query("SELECT r FROM Relationship r " +
+            "WHERE (r.firstAccount.accountId = ?1 OR r.secondAccount.accountId = ?1) " +
+            "   AND r.status = ?2")
+    List<Relationship> findByAccountAndStatus(Long accountId, RelationshipStatus status);
 
-    @Query("SELECT r.friend.accountId FROM Relationship r WHERE r.user.accountId = ?1 AND r.status = 'WAITING_TO_ACCEPT'")
-    List<Long> getFriends(Long userId);
-
-
+    @Query("SELECT r FROM Relationship r " +
+            "WHERE r.firstAccount.accountId = ?1 OR r.secondAccount.accountId = ?1")
+    List<Relationship> findAllByAccount(Long accountId);
 }
+

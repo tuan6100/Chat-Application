@@ -107,8 +107,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseEntity<String> logout(HttpServletRequest request) throws ChatException {
-        String refreshToken = extractRefreshToken(request);
-        if (refreshToken != null && refreshTokenService.isRefreshTokenValid(refreshToken)) {
+        removeAccessTokenFromHeader(request);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            throw new ChatException("User is not authenticated");
+        }
+        String email = auth.getName();
+        Account account =  accountService.findAccount(email);
+        String refreshToken = refreshTokenService.getLatestRefreshTokenByAccount(account.getAccountId()).get();
+        if (refreshTokenService.isRefreshTokenValid(refreshToken)) {
             refreshTokenService.deleteRefreshToken(refreshToken);
             return ResponseEntity.ok("Successfully logged out");
         } else {
@@ -116,13 +123,11 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    private String extractRefreshToken(HttpServletRequest request) {
+    private void removeAccessTokenFromHeader(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+            bearerToken.replace(bearerToken, "");
         }
-        return null;
     }
-
 }
 

@@ -3,6 +3,7 @@ package com.chat.app.service;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
+import com.chat.app.payload.response.AccountResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,6 +12,8 @@ import java.util.List;
 public interface AccountService {
 
     public Account createAccount(Account account) throws ChatException;
+
+    public AccountResponse getAccountInfo(Long accountId) throws ChatException;
 
     public Account findAccount(Long id) throws ChatException;
 

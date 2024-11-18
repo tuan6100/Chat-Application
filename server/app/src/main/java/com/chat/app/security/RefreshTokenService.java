@@ -4,6 +4,7 @@ import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.AuthService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -83,6 +84,7 @@ public class RefreshTokenService {
         }
     }
 
+    @Transactional
     public void deleteRefreshToken(String refreshToken) {
         refreshTokenRepository.deleteByToken(refreshToken);
     }

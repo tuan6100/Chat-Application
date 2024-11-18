@@ -3,8 +3,10 @@ package com.chat.app.controller;
 import com.chat.app.enumeration.RelationshipStatus;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
+import com.chat.app.model.dto.FriendStatusDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Relationship;
+import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.RelationshipService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.attribute.UserPrincipal;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -44,9 +47,16 @@ public class AccountController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Account> getCurrentAccountInfo() throws ChatException {
+    public ResponseEntity<AccountResponse> getCurrentAccountInfo() throws ChatException {
         Account account = getAuthenticatedAccount();
-        return ResponseEntity.ok(account);
+        List<AccountResponse.FriendResponse> friends = relationshipService.getFriendsList(account.getAccountId());
+        AccountResponse response = new AccountResponse(
+                account.getAccountId(),
+                account.getUsername(),
+                account.getAvatar(),
+                friends
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -96,17 +106,19 @@ public class AccountController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/me/invitations")
-    public ResponseEntity<Map<Account, String>> getInvitationsList() throws ChatException {
+    @PostMapping("/me/refuse")
+    public ResponseEntity<String> refuseFriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        return ResponseEntity.ok(relationshipService.findFriends(user.getAccountId(), ""));
+        Account friend = accountService.findAccount(friendId);
+        relationshipService.refuseFriend(user.getAccountId(), friendId);
+        return ResponseEntity.ok("Refused a friend request from " + friend.getUsername());
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/search")
-    public ResponseEntity<Map<Account, String>> searchAccount(@RequestParam String username) throws ChatException {
+    @GetMapping("/me/invitations")
+    public ResponseEntity<List<FriendStatusDTO>> getInvitationsList() throws ChatException {
         Account user = getAuthenticatedAccount();
-        return ResponseEntity.ok(relationshipService.findFriends(user.getAccountId(), username));
+        return ResponseEntity.ok(relationshipService.getInvitationsList(user.getAccountId()));
     }
 
     @PreAuthorize("isAuthenticated()")

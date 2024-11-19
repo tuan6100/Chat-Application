@@ -44,7 +44,7 @@ public abstract class Message {
     @JoinTable(
             name = "views",
             joinColumns = @JoinColumn(name = "message_id"),
-            inverseJoinColumns = @JoinColumn( name = "account_id")
+            inverseJoinColumns = @JoinColumn(name = "viewer_id", referencedColumnName = "account_id")
     )
     protected List<Account> viewers;
 

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface GroupChatService extends ChatService {
 
-    public GroupChat findGroupChatById(long chatId) throws ChatException;
+    public GroupChat getGroupChat(long chatId) throws ChatException;
 
     public GroupChat createGroupChat(Account creator, GroupChatDTO groupChatDTO) ;
 
@@ -19,13 +19,13 @@ public interface GroupChatService extends ChatService {
 
     public GroupChat leaveGroup(Long groupChatId, Long accountId) throws ChatException;
 
-    public GroupChat addMember(Long groupChatId, Long userId, String newMemberUsername) throws ChatException;
+    public GroupChat addMember(Long groupChatId, Long userId, Long newMemberId) throws ChatException;
 
-    public GroupChat removeMember(Long groupChatId, Long userId, String memberUsername)throws ChatException;
+    public GroupChat removeMember(Long groupChatId, Long userId, Long newMemberId)throws ChatException;
 
-    public GroupChat addAdmin(Long groupChatId, Long userId, String newAdminUsername) throws ChatException;
+    public GroupChat addAdmin(Long groupChatId, Long userId, Long newAdminId) throws ChatException;
 
-    public GroupChat removeAdmin(Long groupChatId, Long userId, String adminUsername) throws ChatException;
+    public GroupChat removeAdmin(Long groupChatId, Long userId, Long adminId) throws ChatException;
 
     public void deleteGroupChat(Long groupChatId, Long creatorId) throws Exception;
 

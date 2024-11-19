@@ -19,6 +19,8 @@ spring:
       hibernate:
         format_sql: true
         use_sql_comments: true
+        jdbc:
+          time_zone: UTC+7
 
   devtools:
     restart:

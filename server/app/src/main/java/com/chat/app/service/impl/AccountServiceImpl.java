@@ -5,12 +5,10 @@ import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.repository.AccountRepository;
-import com.chat.app.security.TokenProvider;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.RelationshipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +35,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public AccountResponse getAccountInfo(Long accountId) throws ChatException {
-        Account account = findAccount(accountId);
+        Account account = getAccount(accountId);
         AccountResponse response = new AccountResponse();
         response.setAccountId(account.getAccountId());
         response.setUsername(account.getUsername());
@@ -56,24 +54,29 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account findAccount(Long accountId) throws ChatException {
+    public Account getAccount(Long accountId) throws ChatException {
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> new ChatException("Account not found"));
     }
 
     @Override
-    public Account findAccount(String email) {
+    public Account getAccount(String email) {
         return accountRepository.findByEmail(email);
     }
 
     @Override
-    public Account findAccount(String username, String password) throws ChatException {
+    public Account getAccount(String username, String password) throws ChatException {
         List<Account> accounts = searchAccounts(username);
         for (Account account : accounts) {
             if (passwordEncoder.matches(password, account.getPassword())) {
                 return account;
             }
         }
+        accounts.forEach(account -> {
+            if (passwordEncoder.matches(password, account.getPassword())) {
+                return ;
+            }
+        });
         throw new ChatException("Invalid username or password");
     }
 
@@ -84,7 +87,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account updateAccount(Long accountId, AccountDTO accountDto) throws ChatException {
-        Account account = findAccount(accountId);
+        Account account = getAccount(accountId);
         if (account == null) {
             throw new ChatException("Account not found");
         }
@@ -108,7 +111,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account resetPassword(Long accountId, String oldPassword, String newPassword) throws ChatException {
-        Account account = findAccount(accountId);
+        Account account = getAccount(accountId);
         if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
             throw new ChatException("Password does not match");
         }

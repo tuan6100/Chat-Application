@@ -12,13 +12,11 @@ public interface MessageService {
 
     public Message filterMessage(String keyword) throws ChatException;
 
-    public Message sendTextMessage(Long chatId, MessageRequest request) throws ChatException;
+    public Message sendMessage(Long chatId, MessageRequest request) throws ChatException;
 
     public Message viewMessage(Long chatId, Long messageId, long viewedId) throws ChatException;
 
-    //public Message reactMessage(Long chatId, Long messageId, long accountId, String emojiUnicode) throws AccountException;
-
-    public Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest request ) throws ChatException;
+    public Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest request) throws ChatException;
 
     public Message editMessage(Long chatId, Long messageId, MessageRequest request) throws ChatException;
 

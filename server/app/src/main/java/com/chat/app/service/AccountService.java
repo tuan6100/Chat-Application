@@ -15,11 +15,11 @@ public interface AccountService {
 
     public AccountResponse getAccountInfo(Long accountId) throws ChatException;
 
-    public Account findAccount(Long id) throws ChatException;
+    public Account getAccount(Long id) throws ChatException;
 
-    public Account findAccount(String email);
+    public Account getAccount(String email);
 
-    public Account findAccount(String username, String password) throws ChatException;
+    public Account getAccount(String username, String password) throws ChatException;
 
     public List<Account> searchAccounts(String username) throws ChatException;
 

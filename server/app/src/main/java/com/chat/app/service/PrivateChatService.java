@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface PrivateChatService extends ChatService {
 
-    public PrivateChat findPrivateChat(Long chatId) throws ChatException;
+    public PrivateChat getPrivateChat(Long chatId) throws ChatException;
 
     public void createPrivateChat(Relationship relationship);
 

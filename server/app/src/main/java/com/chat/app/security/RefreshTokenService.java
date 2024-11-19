@@ -3,7 +3,6 @@ package com.chat.app.security;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.service.AccountService;
-import com.chat.app.service.AuthService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -49,7 +48,7 @@ public class RefreshTokenService {
     }
 
     public List<RefreshTokenEntity> getRefreshTokenByAccount(Long accountId) throws ChatException {
-        Account account = accountService.findAccount(accountId);
+        Account account = accountService.getAccount(accountId);
         return refreshTokenRepository.findByAccount(account);
     }
 

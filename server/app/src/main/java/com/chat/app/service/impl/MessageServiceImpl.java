@@ -49,9 +49,9 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Message sendTextMessage(Long chatId, MessageRequest messageRequest) throws ChatException {
+    public Message sendMessage(Long chatId, MessageRequest messageRequest) throws ChatException {
         Chat chat = chatService.findChat(chatId);
-        Account sender = accountService.findAccount(messageRequest.getSenderId());
+        Account sender = accountService.getAccount(messageRequest.getSenderId());
         String content = messageRequest.getContent();
         Date date = new Date();
         if (Objects.equals(messageRequest.getType(), "Text")) {
@@ -73,7 +73,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public Message viewMessage(Long chatId, Long messageId, long viewerId) throws ChatException {
         Message message = chatService.findMessage(chatId, messageId);
-        Account viewer = accountService. findAccount(viewerId);
+        Account viewer = accountService.getAccount(viewerId);
         message.getViewers().add(viewer);
         return messageRepository.save(message);
     }
@@ -85,7 +85,7 @@ public class MessageServiceImpl implements MessageService {
         Message repliedMessage = chatService.findMessage(chatId, repliedMessageId);
         List<Message> repliedMessages = new ArrayList<>();
         repliedMessages.add(repliedMessage);
-        Account sender = accountService.findAccount(messageRequest.getSenderId());
+        Account sender = accountService.getAccount(messageRequest.getSenderId());
         String content = messageRequest.getContent();
         Date date = new Date();
         if (Objects.equals(messageRequest.getType(), "Text")) {
@@ -107,7 +107,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public Message editMessage(Long chatId, Long messageId, MessageRequest messageRequest) throws ChatException {
         Message message = chatService.findMessage(chatId, messageId);
-        Account sender = accountService.findAccount(messageRequest.getSenderId());
+        Account sender = accountService.getAccount(messageRequest.getSenderId());
         if (message instanceof TextMessage && Objects.equals(messageRequest.getType(), "Text")) {
             if (sender != message.getSender()) {
                 throw new ChatException("You can not edit messages");

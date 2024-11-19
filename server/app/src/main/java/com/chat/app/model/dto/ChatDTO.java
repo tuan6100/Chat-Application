@@ -6,13 +6,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ChatRoomDTO {
+public class ChatDTO {
 
     protected String roomName;
     protected String avatar;
     protected Theme theme;
 
-    public ChatRoomDTO(String roomName, String avatar, Theme theme) {
+    public ChatDTO(String roomName, String avatar, Theme theme) {
         this.roomName = roomName;
         this.avatar = avatar;
         this.theme = theme;

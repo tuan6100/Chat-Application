@@ -5,7 +5,6 @@ import com.chat.app.model.entity.Account;
 import com.chat.app.payload.request.AuthRequestWithEmail;
 import com.chat.app.payload.request.AuthRequestWithUsername;
 import com.chat.app.payload.response.AuthResponse;
-import com.chat.app.repository.AccountRepository;
 import com.chat.app.security.RefreshTokenService;
 import com.chat.app.security.TokenProvider;
 import com.chat.app.service.AccountService;
@@ -19,7 +18,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -40,7 +38,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseEntity<AuthResponse> login(AuthRequestWithUsername authRequest) throws ChatException {
-        Account account = accountService.findAccount(authRequest.getUsername(), authRequest.getPassword());
+        Account account = accountService.getAccount(authRequest.getUsername(), authRequest.getPassword());
         if (account == null || !passwordEncoder.matches(authRequest.getPassword(), account.getPassword())) {
             throw new ChatException("Invalid username or password");
         }
@@ -62,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseEntity<AuthResponse> login(AuthRequestWithEmail authRequest) throws ChatException {
-        Account account = accountService.findAccount(authRequest.getEmail());
+        Account account = accountService.getAccount(authRequest.getEmail());
         if (account == null || !passwordEncoder.matches(authRequest.getPassword(), account.getPassword())) {
             throw new ChatException("Invalid email or password");
         }
@@ -86,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse register(Account account) throws ChatException {
         String email = account.getEmail();
         String password = account.getPassword();
-        if (accountService.findAccount(email) != null) {
+        if (accountService.getAccount(email) != null) {
             throw new ChatException("This email is used with another account");
         }
         account.setPassword(passwordEncoder.encode(password));
@@ -113,7 +111,7 @@ public class AuthServiceImpl implements AuthService {
             throw new ChatException("User is not authenticated");
         }
         String email = auth.getName();
-        Account account =  accountService.findAccount(email);
+        Account account =  accountService.getAccount(email);
         String refreshToken = refreshTokenService.getLatestRefreshTokenByAccount(account.getAccountId()).get();
         if (refreshTokenService.isRefreshTokenValid(refreshToken)) {
             refreshTokenService.deleteRefreshToken(refreshToken);

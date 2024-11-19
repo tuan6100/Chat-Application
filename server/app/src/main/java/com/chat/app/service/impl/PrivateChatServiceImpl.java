@@ -19,7 +19,7 @@ public class PrivateChatServiceImpl extends ChatServiceImpl implements PrivateCh
     private PrivateChatRepository privateChatRepository;
 
     @Override
-    public PrivateChat findPrivateChat(Long chatId) throws ChatException {
+    public PrivateChat getPrivateChat(Long chatId) throws ChatException {
         return (PrivateChat) privateChatRepository.findById(chatId)
                 .orElseThrow(() -> new ChatException("Private chat not found"));
 

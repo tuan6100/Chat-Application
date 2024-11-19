@@ -13,11 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.attribute.UserPrincipal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +36,7 @@ public class AccountController {
             throw new ChatException("User is not authenticated");
         }
         String email = auth.getName();
-        return accountService.findAccount(email);
+        return accountService.getAccount(email);
     }
 
     @GetMapping("/info")
@@ -66,7 +64,7 @@ public class AccountController {
         if (!currentAccount.getAccountId().equals(accountId)) {
             throw new ChatException("You do not have permission to view this account");
         }
-        Account account = accountService.findAccount(accountId);
+        Account account = accountService.getAccount(accountId);
         return ResponseEntity.ok(account);
     }
 
@@ -91,7 +89,7 @@ public class AccountController {
     @PostMapping("/me/invite")
     public ResponseEntity<Relationship> inviteFriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        Account friend = accountService.findAccount(friendId);
+        Account friend = accountService.getAccount(friendId);
         relationshipService.inviteFriend(user.getAccountId(), friendId);
         return ResponseEntity.ok(new Relationship(user, friend, RelationshipStatus.WAITING_TO_ACCEPT, new Date()));
     }
@@ -100,7 +98,7 @@ public class AccountController {
     @PostMapping("/me/accept")
     public ResponseEntity<Relationship> acceptFriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        Account friend = accountService.findAccount(friendId);
+        Account friend = accountService.getAccount(friendId);
         relationshipService.acceptFriend(user.getAccountId(), friendId);
         return ResponseEntity.ok(new Relationship(friend, user, RelationshipStatus.ACCEPTED, new Date()));
     }
@@ -109,7 +107,7 @@ public class AccountController {
     @PostMapping("/me/refuse")
     public ResponseEntity<String> refuseFriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        Account friend = accountService.findAccount(friendId);
+        Account friend = accountService.getAccount(friendId);
         relationshipService.refuseFriend(user.getAccountId(), friendId);
         return ResponseEntity.ok("Refused a friend request from " + friend.getUsername());
     }
@@ -125,7 +123,7 @@ public class AccountController {
     @PostMapping("/me/unfriend")
     public ResponseEntity<Void> unfriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        Account friend = accountService.findAccount(friendId);
+        Account friend = accountService.getAccount(friendId);
         relationshipService.unfriend(user.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }
@@ -134,7 +132,7 @@ public class AccountController {
     @PostMapping("/me/block")
     public ResponseEntity<Void> block(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        Account friend = accountService.findAccount(friendId);
+        Account friend = accountService.getAccount(friendId);
         relationshipService.blockFriend(user.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }
@@ -143,7 +141,7 @@ public class AccountController {
     @PostMapping("/me/unblock")
     public ResponseEntity<Void> unblock(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        Account friend = accountService.findAccount(friendId);
+        Account friend = accountService.getAccount(friendId);
         relationshipService.unblockFriend(user.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }

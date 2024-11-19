@@ -5,13 +5,11 @@ import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.FriendStatusDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Relationship;
-import com.chat.app.model.entity.extend.chat.PrivateChat;
 import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.repository.RelationshipRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.PrivateChatService;
 import com.chat.app.service.RelationshipService;
-import jdk.jfr.Label;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -64,8 +62,8 @@ public class RelationshipServiceImpl implements RelationshipService {
             }
         }
 
-        Account user = accountService.findAccount(userId);
-        Account friend = accountService.findAccount(friendId);
+        Account user = accountService.getAccount(userId);
+        Account friend = accountService.getAccount(friendId);
         Relationship relationship = new Relationship(user, friend, RelationshipStatus.WAITING_TO_ACCEPT, new Date());
         return relationshipRepository.save(relationship);
     }
@@ -116,8 +114,8 @@ public class RelationshipServiceImpl implements RelationshipService {
     public Relationship blockFriend(Long userId, Long friendId) throws ChatException {
         Relationship relationship = getRelationship(userId, friendId);
         if (relationship == null) {
-            Account user = accountService.findAccount(userId);
-            Account friend = accountService.findAccount(friendId);
+            Account user = accountService.getAccount(userId);
+            Account friend = accountService.getAccount(friendId);
             relationship = new Relationship(user, friend, RelationshipStatus.BLOCKED, new Date());
         } else {
             relationship.setStatus(RelationshipStatus.BLOCKED);

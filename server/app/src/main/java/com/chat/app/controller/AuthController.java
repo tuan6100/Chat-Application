@@ -9,11 +9,14 @@ import com.chat.app.security.RefreshTokenService;
 import com.chat.app.security.TokenProvider;
 import com.chat.app.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Map;
 
@@ -29,22 +32,21 @@ public class AuthController {
 
 
     @PostMapping("/login/username")
-    public ResponseEntity<AuthResponse> loginWithUsername(@RequestBody AuthRequestWithUsername authRequest) throws ChatException {
-        return authService.login(authRequest);
+    public ResponseEntity<String> loginWithUsername(@RequestBody AuthRequestWithUsername authRequest) throws ChatException {
+        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse();
+        return authService.login(authRequest, response);
     }
 
     @PostMapping("/login/email")
-    public ResponseEntity<AuthResponse> loginWithEmail(@RequestBody AuthRequestWithEmail authRequest) throws ChatException {
-        return authService.login(authRequest);
+    public ResponseEntity<String> loginWithEmail(@RequestBody AuthRequestWithEmail authRequest) throws ChatException {
+        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse();
+        return authService.login(authRequest, response);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody Account account) throws ChatException {
-        AuthResponse authResponse = authService.register(account);
-        return ResponseEntity
-                .status(201)
-                .header("Location", "/api/account/" + account.getAccountId())
-                .body(authResponse);
+    public ResponseEntity<String> register(@RequestBody Account account) throws ChatException {
+        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse();
+        return authService.register(account, response);
     }
 
     @DeleteMapping("/logout")
@@ -52,7 +54,7 @@ public class AuthController {
         return authService.logout(request);
     }
 
-    @PostMapping("/api/auth/refresh")
+    @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) throws ChatException {
         String refreshToken = request.get("refreshToken");
         if (refreshTokenService.isRefreshTokenValid(refreshToken)) {

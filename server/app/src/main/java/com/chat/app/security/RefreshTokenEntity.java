@@ -19,22 +19,26 @@ public class RefreshTokenEntity {
     @Column(nullable = false, unique = true)
     private String token;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
     @Column
     private boolean isMobile;
 
+    @Column
+    private Instant createdDate;
+
     @Column(nullable = false)
     private Instant expiryDate;
 
     public RefreshTokenEntity() {}
 
-    public RefreshTokenEntity(String token, Account account, Instant expiryDate) {
+    public RefreshTokenEntity(String token, Account account, Instant expiryDate, Instant createdDate) {
         this.token = token;
         this.account = account;
         this.expiryDate = expiryDate;
+        this.createdDate = createdDate;
     }
 
 }

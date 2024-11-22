@@ -69,7 +69,7 @@ public class Account {
     @ToString.Exclude
     private Set<Message> messages;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST, orphanRemoval = true)
     @JsonIgnore
     private List<RefreshTokenEntity> refreshTokens = new ArrayList<>();
 }

@@ -29,6 +29,5 @@ public interface AccountService {
 
     public void deleteAccount(Long accountId);
 
-    public List<Account> searchAccount(String query);
 
 }

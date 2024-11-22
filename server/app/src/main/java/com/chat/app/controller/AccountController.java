@@ -131,7 +131,6 @@ public class AccountController {
     @PostMapping("/me/unfriend")
     public ResponseEntity<Void> unfriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        Account friend = accountService.getAccount(friendId);
         relationshipService.unfriend(user.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }
@@ -140,7 +139,6 @@ public class AccountController {
     @PostMapping("/me/block")
     public ResponseEntity<Void> block(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        Account friend = accountService.getAccount(friendId);
         relationshipService.blockFriend(user.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }
@@ -149,7 +147,6 @@ public class AccountController {
     @PostMapping("/me/unblock")
     public ResponseEntity<Void> unblock(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        Account friend = accountService.getAccount(friendId);
         relationshipService.unblockFriend(user.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }

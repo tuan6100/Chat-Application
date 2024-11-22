@@ -124,9 +124,5 @@ public class AccountServiceImpl implements AccountService {
         accountRepository.deleteById(accountId);
     }
 
-    @Override
-    public List<Account> searchAccount(String query) {
-        return List.of();
-    }
 
 }

@@ -27,11 +27,11 @@ public class RefreshTokenService {
     private AccountService accountService;
 
 
-    private static final int MAX_TOKENS_PER_ACCOUNT = 10;
+    private static final int MAX_TOKENS_PER_ACCOUNT = 5;
 
     public void saveRefreshToken(String refreshToken, Account account) {
         Instant expiryDate = Instant.now().plusMillis(TokenProvider.REFRESH_TOKEN_EXPIRATION_TIME);
-        RefreshTokenEntity tokenEntity = new RefreshTokenEntity(refreshToken, account, expiryDate);
+        RefreshTokenEntity tokenEntity = new RefreshTokenEntity(refreshToken, account, expiryDate, Instant.now());
         refreshTokenRepository.save(tokenEntity);
     }
 

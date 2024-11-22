@@ -1,5 +1,6 @@
 package com.chat.app.exception;
 
+import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,14 +13,23 @@ import java.time.LocalDateTime;
 public class GlobalException {
 
     @ExceptionHandler(ChatException.class)
-    public ResponseEntity<ErrorDetail> accountExceptionHandler(ChatException e, WebRequest request) {
-        ErrorDetail err = new ErrorDetail("Account Error", e.getMessage(), LocalDateTime.now());
+    public ResponseEntity<ErrorResponse> handleChatException(ChatException e) {
+        ErrorResponse err = new ErrorResponse(e.getMessage());
         return new ResponseEntity<>(err, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorDetail> otherExceptionHandler(Exception e, WebRequest request) {
+    public ResponseEntity<ErrorDetail> otherExceptionHandler(Exception e) {
         ErrorDetail err = new ErrorDetail("Internal Server Error", e.getMessage(), LocalDateTime.now());
         return new ResponseEntity<>(err, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Data
+    public static class ErrorResponse {
+        private String message;
+
+        public ErrorResponse(String message) {
+            this.message = message;
+        }
     }
 }

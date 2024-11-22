@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -83,7 +84,7 @@ public class ChatController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("{chatId}/message/viewed")
-    public ResponseEntity<Message> viewMessage(@PathVariable Long chatId, @RequestBody Map<Long, Long> viewerMap) throws ChatException {
+    public ResponseEntity<Message> viewMessage(@PathVariable Long chatId, @RequestBody  Map<Long, Long> viewerMap) throws ChatException {
         if (!(viewerMap.containsKey("messageId")) || (!viewerMap.containsKey("userId"))) {
             throw new ChatException("Invalid viewer map");
         }

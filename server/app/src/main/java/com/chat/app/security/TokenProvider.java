@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class TokenProvider {
-    private final SecretKey key = Keys.hmacShaKeyFor(JwtTokenValidator.JWT_SECRET.getBytes());
+    private final SecretKey key = Keys.hmacShaKeyFor(MySecretKey.JWT_SECRET.getBytes());
     public static final long ACCESS_TOKEN_EXPIRATION_TIME = 3600000;
     public static final long REFRESH_TOKEN_EXPIRATION_TIME = 604800000;
 

@@ -3,10 +3,11 @@ package com.chat.app.config;
 import com.chat.app.security.JwtTokenValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,8 +46,8 @@ public class SecurityConfig {
         );
         http.logout((logout) -> logout.logoutSuccessUrl("/api/auth/logout"));
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
-        http.csrf(AbstractHttpConfigurer::disable);
-        http.headers(headers -> headers.frameOptions(FrameOptionsConfig::disable));
+        http.csrf(CsrfConfigurer::disable);
+        http.headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin));
         return http.build();
     }
 
@@ -59,7 +60,6 @@ public class SecurityConfig {
         config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         source.registerCorsConfiguration("/api/**", config);
-        source.registerCorsConfiguration("/login", config);
         return source;
     }
 

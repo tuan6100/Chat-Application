@@ -69,6 +69,13 @@ public class AccountController {
     }
 
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/avatar")
+    public ResponseEntity<String> getCurrentAccountAvatar() throws ChatException {
+        Account account = getAuthenticatedAccount();
+        return ResponseEntity.ok(account.getAvatar());
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/me/update")
     public ResponseEntity<Account> updateAccount(@RequestBody AccountDTO accountDTO) throws ChatException {
         Account account = getAuthenticatedAccount();
@@ -76,6 +83,7 @@ public class AccountController {
         return ResponseEntity.ok(account);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/me/reset-password")
     public ResponseEntity<Account> resetPassword(@RequestBody Map<String, String> requestPassword) throws ChatException {
         Account account = getAuthenticatedAccount();

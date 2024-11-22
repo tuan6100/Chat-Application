@@ -8,7 +8,6 @@ import com.chat.app.model.entity.extend.chat.GroupChat;
 import com.chat.app.model.entity.extend.chat.PrivateChat;
 import com.chat.app.payload.request.MessageRequest;
 import com.chat.app.service.ChatService;
-import com.chat.app.service.GroupChatService;
 import com.chat.app.service.MessageService;
 import com.chat.app.service.PrivateChatService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +76,7 @@ public class ChatController {
 
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("{chatId}/message")
-    public ResponseEntity<?> removeMessage(@PathVariable Long chatId, @RequestParam Long messageId) throws ChatException {
+    public ResponseEntity<String> removeMessage(@PathVariable Long chatId, @RequestParam Long messageId) throws ChatException {
         chatService.removeMessage(chatId, messageId);
         return ResponseEntity.ok("Message removed");
     }
@@ -85,6 +84,9 @@ public class ChatController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("{chatId}/message/viewed")
     public ResponseEntity<Message> viewMessage(@PathVariable Long chatId, @RequestBody Map<Long, Long> viewerMap) throws ChatException {
+        if (!(viewerMap.containsKey("messageId")) || (!viewerMap.containsKey("userId"))) {
+            throw new ChatException("Invalid viewer map");
+        }
         Long messageId = viewerMap.get("messageId");
         Long viewerId = viewerMap.get("viewerId");
         Message message = messageService.viewMessage(chatId, messageId, viewerId);

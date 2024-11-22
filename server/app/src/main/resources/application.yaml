@@ -27,7 +27,7 @@ spring:
       exclude: logs/**
 
 logging:
-  file:
-    name: server/app/src/main/resources/logs/application.log
+#  file:
+#    name: server/app/src/main/resources/logs/application.log
   level:
     org.springframework.security: DEBUG

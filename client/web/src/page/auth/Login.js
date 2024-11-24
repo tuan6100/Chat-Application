@@ -20,7 +20,6 @@ const Login = () => {
             </Stack>
           </Stack>
 
-          {/* Login form */}
           <LoginForm />
         </Paper>
       </Container>

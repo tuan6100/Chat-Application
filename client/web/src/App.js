@@ -1,13 +1,13 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
-import Login from "./page/auth/Login";
+import { AuthProvider } from "./context/AuthContext"; // Import AuthProvider
+import Router from "./route"; // Import Router
 
 const App = () => {
-  return (
-      <Routes>
-        <Route path="/" element={<Login />} />
-      </Routes>
-  );
+    return (
+        <AuthProvider>
+            <Router /> {/* Dùng Router bên trong AuthProvider để đảm bảo context hoạt động */}
+        </AuthProvider>
+    );
 };
 
 export default App;

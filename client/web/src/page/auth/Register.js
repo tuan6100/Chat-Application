@@ -7,7 +7,7 @@ const Register = () => {
   return (
     <Stack spacing={2} sx={{mb:5, position:'relative'}}>
         <Typography variant='h4'>
-            Get Started With WeChat
+            Get Started With Chat
         </Typography>
         <Stack direction={'row'} spacing={0.5}>
             <Typography variant='body2'>Allready have an account?</Typography>
@@ -21,7 +21,6 @@ const Register = () => {
     <Link underline='always' color='text.primary'>Terms of service</Link>{' and '}
     <Link underline='always' color='text.primary'>Privacy policy</Link>
     </Typography>
-    <AuthSocial/>
     </Stack>
   )
 }

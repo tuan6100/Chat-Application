@@ -32,29 +32,35 @@ public class AuthController {
 
 
     @PostMapping("/login/username")
-    public ResponseEntity<String> loginWithUsername(@RequestBody AuthRequestWithUsername authRequest) throws ChatException {
-        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse();
-        return authService.login(authRequest, response);
+    public ResponseEntity<AuthResponse> loginWithUsername(@RequestBody AuthRequestWithUsername authRequest) throws ChatException {
+        AuthResponse authResponse = authService.login(authRequest);
+        return ResponseEntity.ok()
+                .headers(authResponse.getHeaders())
+                .body(authResponse);
     }
 
     @PostMapping("/login/email")
-    public ResponseEntity<String> loginWithEmail(@RequestBody AuthRequestWithEmail authRequest) throws ChatException {
-        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse();
-        return authService.login(authRequest, response);
+    public ResponseEntity<AuthResponse> loginWithEmail(@RequestBody AuthRequestWithEmail authRequest) throws ChatException {
+        AuthResponse authResponse = authService.login(authRequest);
+        return ResponseEntity.ok()
+                .headers(authResponse.getHeaders())
+                .body(authResponse);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody Account account) throws ChatException {
-        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse();
-        return authService.register(account, response);
+    public ResponseEntity<AuthResponse> register(@RequestBody Account account) throws ChatException {
+        AuthResponse authResponse = authService.register(account);
+        return ResponseEntity.ok()
+                .headers(authResponse.getHeaders())
+                .body(authResponse);
     }
 
     @DeleteMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request) throws ChatException {
-        return authService.logout(request);
+    public ResponseEntity<AuthResponse> logout(HttpServletRequest request) throws ChatException {
+        return ResponseEntity.ok(authService.logout(request));
     }
 
-    @PostMapping("/refresh")
+    @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) throws ChatException {
         String refreshToken = request.get("refreshToken");
         if (refreshTokenService.isRefreshTokenValid(refreshToken)) {

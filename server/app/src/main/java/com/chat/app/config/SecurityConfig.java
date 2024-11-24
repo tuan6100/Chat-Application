@@ -1,9 +1,9 @@
 package com.chat.app.config;
 
 import com.chat.app.security.JwtTokenValidator;
+import com.chat.app.security.TokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,8 +28,8 @@ public class SecurityConfig {
     private final JwtTokenValidator jwtTokenValidator;
 
 
-    public SecurityConfig(JwtTokenValidator jwtTokenValidator) {
-        this.jwtTokenValidator = jwtTokenValidator;
+    public SecurityConfig(TokenProvider tokenProvider, JwtTokenValidator jwtTokenValidator, JwtTokenValidator jwtTokenValidator1) {
+        this.jwtTokenValidator = jwtTokenValidator1;
     }
 
     @Bean

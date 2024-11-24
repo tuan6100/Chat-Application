@@ -48,31 +48,11 @@ public class ChatController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("{chatId}")
-    @MessageMapping("{chatId}/message")
-    @SendTo("/client/{chatId}")
-    public ResponseEntity<Message> sendMessage(@PathVariable Long chatId, @RequestBody MessageRequest request) throws ChatException {
-        Message message = messageService.sendMessage(chatId, request);
-        return ResponseEntity.ok(message);
-    }
-
-    @PreAuthorize("isAuthenticated()")
     @PutMapping("{chatId}")
     public ResponseEntity<Chat> changeTheme(@PathVariable Long chatId, @RequestParam String theme) throws ChatException {
         Theme themeEnum = Theme.valueOf(theme.toUpperCase());
         Chat chat = chatService.changeTheme(chatId, themeEnum);
         return ResponseEntity.ok(chat);
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("{chatId}/message/reply")
-    public ResponseEntity<Message> replyMessage(@PathVariable Long chatId,
-                                                @RequestParam Long repliedMessageId,
-                                                @RequestBody MessageRequest request
-                                                ) throws ChatException {
-        Message message = messageService.replyMessage(chatId, repliedMessageId, request);
-        chatService.addMessage(chatId, message.getMessageId());
-        return ResponseEntity.ok(message);
     }
 
     @PreAuthorize("isAuthenticated()")

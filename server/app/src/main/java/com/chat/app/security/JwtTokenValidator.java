@@ -1,5 +1,6 @@
 package com.chat.app.security;
 
+import com.chat.app.security.MySecretKey;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.IOException;

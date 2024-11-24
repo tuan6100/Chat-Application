@@ -53,6 +53,7 @@ public class AuthServiceImpl implements AuthService {
         optionalRefreshToken.ifPresent(s -> refreshTokenService.deleteRefreshToken(s));
         refreshToken = tokenProvider.generateRefreshToken(auth);
         refreshTokenService.saveRefreshToken(refreshToken, account);
+        responseHeader.add("X-Refresh-Token", "Bearer " + refreshToken);
         refreshTokenService.limitRefreshTokensPerAccount(account);
         return responseHeader;
     }

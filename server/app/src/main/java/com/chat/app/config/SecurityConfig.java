@@ -55,11 +55,20 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(true); // Đảm bảo gửi và nhận header `Authorization`
         config.setAllowedOrigins(List.of("http://localhost:3000"));
-        config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        source.registerCorsConfiguration("/api/**", config);
+        config.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "X-Refresh-Token",
+                "Content-Type",
+                "Cache-Control"
+        ));
+        config.setExposedHeaders(Arrays.asList(
+                "Authorization",
+                "X-Refresh-Token"
+        ));
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 

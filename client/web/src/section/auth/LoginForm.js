@@ -54,24 +54,23 @@ const LoginForm = () => {
                 });
                 return;
             }
-            console.log(response.headers.get("Authorization"));
-            console.log(response.headers.get("X-Refresh-Token"));
-            console.log(response.headers.get("Content-Type"));
-            // const authHeader = response.headers.get("Authorization");
-            // const accessToken = authHeader.substring(7, authHeader.length);
-            // const refreshTokenHeader = response.headers.get("X-Refresh-Token");
-            // const refreshToken = refreshTokenHeader.substring(7, refreshTokenHeader.length);
-            //
-            // if (accessToken && refreshToken) {
-            //     localStorage.setItem("accessToken", accessToken);
-            //     localStorage.setItem("refreshToken", refreshToken);
-            //     console.log("Tokens saved:", { accessToken, refreshToken });
-            //     setIsAuthenticated(true);
-            //     setErrorMessage("");
-            //     window.location.href = "/app";
-            // } else {
-            //     setErrorMessage("Failed to retrieve tokens.");
-            // }
+            // console.log(response.headers.get("Authorization"));
+            // console.log(response.headers.get("X-Refresh-Token"));
+            // console.log(response.headers.get("Content-Type"));
+            const authHeader = response.headers.get("Authorization");
+            const accessToken = authHeader.substring(7, authHeader.length);
+            const refreshTokenHeader = response.headers.get("X-Refresh-Token");
+            const refreshToken = refreshTokenHeader.substring(7, refreshTokenHeader.length);
+
+            if (accessToken && refreshToken) {
+                localStorage.setItem("accessToken", accessToken);
+                localStorage.setItem("refreshToken", refreshToken);
+                setIsAuthenticated(true);
+                setErrorMessage("");
+                window.location.href = "/app";
+            } else {
+                setErrorMessage("Failed to retrieve tokens.");
+            }
         } catch (error) {
             console.error("Error during login:", error);
             setErrorMessage(error.message || "Login failed");

@@ -32,13 +32,13 @@ export default function Router() {
       path: "/app",
       element: (
           <ProtectedRoute isAuthenticated={isAuthenticated}>
-            {/* DashboardLayout or other protected components */}
+
           </ProtectedRoute>
       ),
       children: [
-        // Đặt các route cho phần ứng dụng đã đăng nhập ở đây
+
       ],
     },
-    { path: "*", element: <Navigate to="/auth/login" replace /> },
+    { path: "*", element: <Navigate to="/app" replace /> },
   ]);
 }

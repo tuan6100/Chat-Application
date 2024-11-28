@@ -1,13 +1,13 @@
-import React, {useContext, useState} from "react";
+import React, { useContext, useState } from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
-import FormProvider from "../../component/hook-form/FormProvider";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Alert, Button, IconButton, InputAdornment, Link, Stack } from "@mui/material";
-import TextField from "../../component/hook-form/HookTextField";
+import { Alert, Button, IconButton, InputAdornment, Stack } from "@mui/material";
+import { Link } from "react-router-dom";
 import { RiEyeCloseLine, RiEye2Fill } from "react-icons/ri";
-// import { Link as RouterLink } from "react-router-dom";
-import AuthContext  from "../../context/AuthContext";
+import AuthContext from "../../context/AuthContext";
+import FormProvider from "../../component/hook-form/FormProvider";
+import TextField from "../../component/hook-form/HookTextField";
 
 const LoginForm = () => {
     const { setIsAuthenticated } = useContext(AuthContext);
@@ -16,14 +16,14 @@ const LoginForm = () => {
     const [errorMessage, setErrorMessage] = useState("");
 
     const loginSchema = Yup.object().shape({
-        username: Yup.string().required("Username is required"),
+        email: Yup.string().required("Email is required").email("Invalid email format"),
         password: Yup.string().required("Password is required"),
     });
 
     const methods = useForm({
         resolver: yupResolver(loginSchema),
         defaultValues: {
-            username: "",
+            email: "",
             password: "",
         },
     });
@@ -32,39 +32,35 @@ const LoginForm = () => {
 
     const onSubmit = async (data) => {
         try {
-            const response = await fetch("http://localhost:8000/api/auth/login/username", {
+            const response = await fetch("http://localhost:8000/api/auth/login/email", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
-                credentials: 'include'
+                credentials: "include",
             });
+
             if (!response.ok) {
                 const errorData = await response.json();
-                console.log("Error data:", errorData);
                 setErrorMessage(errorData.message || "Login failed");
-                setError("username", {
-                    type: "manual",
-                    message: errorData.message || "Username or password incorrect",
-                });
-                setError("password", {
-                    type: "manual",
-                    message: errorData.message || "Username or password incorrect",
-                });
+
+                if (errorData.message) {
+                    setError("email", { type: "manual", message: errorData.message });
+                    setError("password", { type: "manual", message: errorData.message });
+                }
+
                 return;
             }
-            // console.log(response.headers.get("Authorization"));
-            // console.log(response.headers.get("X-Refresh-Token"));
-            // console.log(response.headers.get("Content-Type"));
-            const authHeader = response.headers.get("Authorization");
-            const accessToken = authHeader.substring(7, authHeader.length);
-            const refreshTokenHeader = response.headers.get("X-Refresh-Token");
-            const refreshToken = refreshTokenHeader.substring(7, refreshTokenHeader.length);
 
-            if (accessToken && refreshToken) {
+            const authHeader = response.headers.get("Authorization");
+            const refreshTokenHeader = response.headers.get("X-Refresh-Token");
+
+            if (authHeader && refreshTokenHeader) {
+                const accessToken = authHeader.split(" ")[1];
+                const refreshToken = refreshTokenHeader.split(" ")[1];
+
                 localStorage.setItem("accessToken", accessToken);
                 localStorage.setItem("refreshToken", refreshToken);
+
                 setIsAuthenticated(true);
                 setErrorMessage("");
                 window.location.href = "/app";
@@ -74,25 +70,23 @@ const LoginForm = () => {
         } catch (error) {
             console.error("Error during login:", error);
             setErrorMessage(error.message || "Login failed");
-            setError("afterSubmit", {
-                type: "manual",
-                message: error.message,
-            });
         }
     };
 
     return (
         <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={3}>
-                {(errorMessage || errors.afterSubmit) && (
-                    <Alert severity="error">{errorMessage || errors.afterSubmit.message}</Alert>
+                {(errorMessage || errors.email || errors.password) && (
+                    <Alert severity="error">
+                        {errorMessage || errors.email?.message || errors.password?.message}
+                    </Alert>
                 )}
 
                 <TextField
-                    name="username"
-                    label="Username"
-                    error={!!errors.username}
-                    helperText={errors.username?.message}
+                    name="email"
+                    label="Email"
+                    error={!!errors.email}
+                    helperText={errors.email?.message}
                 />
 
                 <TextField
@@ -105,7 +99,7 @@ const LoginForm = () => {
                         endAdornment: (
                             <InputAdornment position="end">
                                 <IconButton
-                                    aria-label="Show password"
+                                    aria-label="Toggle password visibility"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >
                                     {showPassword ? <RiEye2Fill /> : <RiEyeCloseLine />}
@@ -116,13 +110,14 @@ const LoginForm = () => {
                 />
             </Stack>
 
-            <Stack alignItems={"flex-end"} sx={{ my: 2 }}>
-                <Link to="/auth/reset-password">Forgot Password?</Link>
+            <Stack alignItems="flex-end" sx={{ my: 2 }}>
+                <Link to="/auth/reset-password" style={{ textDecoration: "none" }}>
+                    Forgot Password?
+                </Link>
             </Stack>
 
             <Button
                 fullWidth
-                color="inherit"
                 size="large"
                 type="submit"
                 variant="contained"

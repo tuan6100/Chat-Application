@@ -2,8 +2,8 @@ import { Suspense, lazy, useContext } from "react";
 import { Navigate, useRoutes } from "react-router-dom";
 import LoadingScreen from "../component/ScreenLoading";
 import MainLayout from "../layout/main";
-import ProtectedRoute from "./ProtectRouter"; // Bảo vệ route
-import AuthContext from "../context/AuthContext"; // Import context
+import ProtectedRoute from "./ProtectRouter";
+import AuthContext from "../context/AuthContext";
 
 const Loadable = (Component) => (props) => {
   return (
@@ -17,7 +17,7 @@ const LoginPage = Loadable(lazy(() => import("../page/auth/Login")));
 const RegisterPage = Loadable(lazy(() => import("../page/auth/Register")));
 
 export default function Router() {
-  const { isAuthenticated } = useContext(AuthContext); // Lấy isAuthenticated từ context
+  const { isAuthenticated } = useContext(AuthContext);
 
   return useRoutes([
     {

@@ -1,5 +1,6 @@
 server:
   port: 8000
+  address: localhost
 
 spring:
   application:

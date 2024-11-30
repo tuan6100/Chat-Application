@@ -51,10 +51,10 @@ public class TokenProvider {
             jwt = jwt.substring(7);
         }
         Claims claims = Jwts.parser()
-                .setSigningKey(key)
+                .verifyWith(key)
                 .build()
-                .parseClaimsJws(jwt)
-                .getBody();
+                .parseSignedClaims(jwt)
+                .getPayload();
         return claims.get("email", String.class);
     }
 }

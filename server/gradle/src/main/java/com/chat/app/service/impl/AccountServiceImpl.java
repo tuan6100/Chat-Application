@@ -86,7 +86,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account updateAccount(Long accountId, AccountDTO accountDto) throws ChatException {
+    public void updateAccount(Long accountId, AccountDTO accountDto) throws ChatException {
         Account account = getAccount(accountId);
         if (account == null) {
             throw new ChatException("Account not found");
@@ -106,17 +106,7 @@ public class AccountServiceImpl implements AccountService {
         if (accountDto.getBio() != null) {
             account.setBio(accountDto.getBio());
         }
-        return accountRepository.save(account);
-    }
-
-    @Override
-    public Account resetPassword(Long accountId, String oldPassword, String newPassword) throws ChatException {
-        Account account = getAccount(accountId);
-        if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
-            throw new ChatException("Password does not match");
-        }
-        account.setPassword(passwordEncoder.encode(newPassword));
-        return accountRepository.save(account);
+        accountRepository.save(account);
     }
 
     @Override

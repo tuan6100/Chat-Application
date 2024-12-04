@@ -4,6 +4,7 @@ import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.request.AuthRequestWithEmail;
 import com.chat.app.payload.request.AuthRequestWithUsername;
+import com.chat.app.payload.request.ResetPasswordRequest;
 import com.chat.app.payload.response.AuthResponse;
 import com.chat.app.security.RefreshTokenService;
 import com.chat.app.security.TokenProvider;
@@ -13,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -58,6 +60,20 @@ public class AuthController {
     @DeleteMapping("/logout")
     public ResponseEntity<AuthResponse> logout(HttpServletRequest request) throws ChatException {
         return ResponseEntity.ok(authService.logout(request));
+    }
+
+    @PutMapping("/forgot-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) throws ChatException {
+        String email = request.get("email");
+        String newPassword = request.get("newPassword");
+        ResetPasswordRequest resetPasswordRequest = new ResetPasswordRequest(email, newPassword);
+        return ResponseEntity.ok(authService.getNewPassword(resetPasswordRequest));
+    }
+
+    @PutMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) throws ChatException {
+        Account account = authService.resetPassword(resetPasswordRequest);
+        return ResponseEntity.ok(Map.of("message", "Reset password successfully"));
     }
 
     @PostMapping("/refresh-token")

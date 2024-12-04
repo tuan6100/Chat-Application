@@ -84,16 +84,6 @@ public class AccountController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PutMapping("/me/reset-password")
-    public ResponseEntity<Account> resetPassword(@RequestBody Map<String, String> requestPassword) throws ChatException {
-        Account account = getAuthenticatedAccount();
-        String oldPassword = requestPassword.get("oldPassword");
-        String newPassword = requestPassword.get("newPassword");
-        accountService.resetPassword(account.getAccountId(), oldPassword, newPassword);
-        return ResponseEntity.ok(account);
-    }
-
-    @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/invite")
     public ResponseEntity<Relationship> inviteFriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();

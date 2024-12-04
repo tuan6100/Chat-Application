@@ -4,18 +4,17 @@ import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.request.AuthRequestWithEmail;
 import com.chat.app.payload.request.AuthRequestWithUsername;
+import com.chat.app.payload.request.ResetPasswordRequest;
 import com.chat.app.payload.response.AuthResponse;
+import com.chat.app.repository.AccountRepository;
 import com.chat.app.security.RefreshTokenService;
 import com.chat.app.security.TokenProvider;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +27,9 @@ import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    @Autowired
+    private AccountRepository accountRepository;
 
     @Autowired
     private AccountService accountService;
@@ -100,6 +102,37 @@ public class AuthServiceImpl implements AuthService {
         Authentication auth = new UsernamePasswordAuthenticationToken(email, password);
         HttpHeaders responseHeader = getResponseHeader(auth, savedAccount);
         return new AuthResponse("Account created successfully", HttpStatus.CREATED.value(), responseHeader);
+    }
+
+    @Override
+    public AuthResponse getNewPassword(ResetPasswordRequest resetPasswordRequest) throws ChatException {
+        String email = resetPasswordRequest.getEmail();
+        String newPassword = resetPasswordRequest.getNewPassword();
+        Account account = accountService.getAccount(email);
+        if (account == null) {
+            throw new ChatException("Invalid email");
+        }
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+        Authentication auth = new UsernamePasswordAuthenticationToken(email, newPassword);
+        HttpHeaders responseHeader = getResponseHeader(auth, account);
+        return new AuthResponse("OK", HttpStatus.OK.value(), responseHeader);
+    }
+
+    @Override
+    public Account resetPassword(ResetPasswordRequest resetPasswordRequest) throws ChatException {
+        String email = resetPasswordRequest.getEmail();
+        String oldPassword = resetPasswordRequest.getOldPassword();
+        String newPassword = resetPasswordRequest.getNewPassword();
+        Account account = accountService.getAccount(email);
+        if (account == null) {
+            throw new ChatException("Invalid email");
+        }
+        if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
+            throw new ChatException("Old password does not match");
+        }
+        account.setPassword(passwordEncoder.encode(newPassword));
+        return accountRepository.save(account);
     }
 
     @Override

@@ -19,7 +19,7 @@ public class RefreshTokenEntity {
     @Column(nullable = false, unique = true)
     private String token;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 

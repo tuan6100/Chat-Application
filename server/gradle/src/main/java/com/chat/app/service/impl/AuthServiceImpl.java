@@ -50,9 +50,7 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(auth);
         String accessToken = tokenProvider.generateAccessToken(auth);
         responseHeader.set("Authorization", "Bearer " + accessToken);
-        Optional<String> optionalRefreshToken = refreshTokenService.getLatestRefreshTokenByAccount(account.getAccountId());
         String refreshToken;
-        optionalRefreshToken.ifPresent(s -> refreshTokenService.deleteRefreshToken(s));
         refreshToken = tokenProvider.generateRefreshToken(auth);
         refreshTokenService.saveRefreshToken(refreshToken, account);
         responseHeader.add("X-Refresh-Token", "Bearer " + refreshToken);

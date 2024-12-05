@@ -10,6 +10,7 @@ import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.RelationshipService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -47,6 +48,9 @@ public class AccountController {
     @GetMapping("/me")
     public ResponseEntity<AccountResponse> getCurrentAccountInfo() throws ChatException {
         Account account = getAuthenticatedAccount();
+        if (account == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         List<AccountResponse.FriendResponse> friends = relationshipService.getFriendsList(account.getAccountId());
         AccountResponse response = new AccountResponse(
                 account.getAccountId(),
@@ -139,5 +143,13 @@ public class AccountController {
         Account user = getAuthenticatedAccount();
         relationshipService.unblockFriend(user.getAccountId(), friendId);
         return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> delete() throws ChatException {
+        Account user = getAuthenticatedAccount();
+        accountService.deleteAccount(user.getAccountId());
+        return ResponseEntity.ok("Account deleted successfully");
     }
 }

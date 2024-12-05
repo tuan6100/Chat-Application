@@ -1,7 +1,6 @@
 package com.chat.app.config;
 
 import com.chat.app.security.JwtTokenValidator;
-import com.chat.app.security.TokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -18,7 +17,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -28,8 +26,8 @@ public class SecurityConfig {
     private final JwtTokenValidator jwtTokenValidator;
 
 
-    public SecurityConfig(TokenProvider tokenProvider, JwtTokenValidator jwtTokenValidator, JwtTokenValidator jwtTokenValidator1) {
-        this.jwtTokenValidator = jwtTokenValidator1;
+    public SecurityConfig(JwtTokenValidator jwtTokenValidator) {
+        this.jwtTokenValidator = jwtTokenValidator;
     }
 
     @Bean
@@ -55,14 +53,18 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true); // Đảm bảo gửi và nhận header `Authorization`
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowCredentials(true);
+//        config.setAllowedOrigins(List.of("http://localhost:3000", "https://2b59-42-113-16-145.ngrok-free.app/"));
+        config.addAllowedOriginPattern("*");
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "X-Refresh-Token",
                 "Content-Type",
-                "Cache-Control"
+                "Cache-Control",
+                "accept",
+                "user-agent",
+                "x-requested-with"
         ));
         config.setExposedHeaders(Arrays.asList(
                 "Authorization",

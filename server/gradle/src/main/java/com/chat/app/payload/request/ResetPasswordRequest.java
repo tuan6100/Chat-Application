@@ -19,9 +19,5 @@ public class ResetPasswordRequest {
         this.newPassword = newPassword;
     }
 
-    public ResetPasswordRequest(String email, String newPassword) {
-        this.email = email;
-        this.newPassword = newPassword;
-    }
 
 }

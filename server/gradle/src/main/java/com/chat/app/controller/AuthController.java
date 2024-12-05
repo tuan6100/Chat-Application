@@ -8,6 +8,7 @@ import com.chat.app.payload.request.ResetPasswordRequest;
 import com.chat.app.payload.response.AuthResponse;
 import com.chat.app.security.RefreshTokenService;
 import com.chat.app.security.TokenProvider;
+import com.chat.app.service.AccountService;
 import com.chat.app.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +29,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private AccountService accountService;
 
     @Autowired
     private RefreshTokenService refreshTokenService;
@@ -62,12 +66,20 @@ public class AuthController {
         return ResponseEntity.ok(authService.logout(request));
     }
 
-    @PutMapping("/forgot-password")
-    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) throws ChatException {
+    @GetMapping("forgot-password/validate-account")
+    public ResponseEntity<Map<String, String>> validateAccount(@RequestParam String email) {
+        Account account = accountService.getAccount(email);
+        if (account == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Account not found"));
+        }
+        return ResponseEntity.ok(Map.of("username", account.getUsername()));
+    }
+
+    @PutMapping("/forgot-password/reset-password")
+    public ResponseEntity<AuthResponse> resetPassword(@RequestBody Map<String, String> request) throws ChatException {
         String email = request.get("email");
         String newPassword = request.get("newPassword");
-        ResetPasswordRequest resetPasswordRequest = new ResetPasswordRequest(email, newPassword);
-        return ResponseEntity.ok(authService.getNewPassword(resetPasswordRequest));
+        return ResponseEntity.ok(authService.updatePassword(new AuthRequestWithEmail(email, newPassword)));
     }
 
     @PutMapping("/reset-password")

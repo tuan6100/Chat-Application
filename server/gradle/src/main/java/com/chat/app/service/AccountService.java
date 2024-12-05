@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public interface AccountService {
 
-    public Account createAccount(Account account) throws ChatException;
+    public Account createAccount(Account account);
 
     public AccountResponse getAccountInfo(Long accountId) throws ChatException;
 

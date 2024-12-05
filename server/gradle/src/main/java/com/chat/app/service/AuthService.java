@@ -24,7 +24,7 @@ public interface AuthService {
 
     public AuthResponse logout(HttpServletRequest request) throws ChatException;
 
-    public AuthResponse getNewPassword(ResetPasswordRequest resetPasswordRequest) throws ChatException;
+    public AuthResponse updatePassword(AuthRequestWithEmail authRequest) throws ChatException;
 
     public Account resetPassword(ResetPasswordRequest resetPasswordRequest) throws ChatException;
 }

@@ -102,20 +102,7 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResponse("Account created successfully", HttpStatus.CREATED.value(), responseHeader);
     }
 
-    @Override
-    public AuthResponse getNewPassword(ResetPasswordRequest resetPasswordRequest) throws ChatException {
-        String email = resetPasswordRequest.getEmail();
-        String newPassword = resetPasswordRequest.getNewPassword();
-        Account account = accountService.getAccount(email);
-        if (account == null) {
-            throw new ChatException("Invalid email");
-        }
-        account.setPassword(passwordEncoder.encode(newPassword));
-        accountRepository.save(account);
-        Authentication auth = new UsernamePasswordAuthenticationToken(email, newPassword);
-        HttpHeaders responseHeader = getResponseHeader(auth, account);
-        return new AuthResponse("OK", HttpStatus.OK.value(), responseHeader);
-    }
+
 
     @Override
     public Account resetPassword(ResetPasswordRequest resetPasswordRequest) throws ChatException {
@@ -149,6 +136,16 @@ public class AuthServiceImpl implements AuthService {
         } else {
             return new AuthResponse("Logout failed", HttpStatus.BAD_REQUEST.value(), null);
         }
+    }
+
+    @Override
+    public AuthResponse updatePassword(AuthRequestWithEmail authRequest) throws ChatException {
+        Account account = accountService.getAccount(authRequest.getEmail());
+        String newPassword = authRequest.getPassword();
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+        account.getRefreshTokens().forEach(refreshToken -> refreshTokenService.deleteRefreshToken(refreshToken.getToken()));
+        return login(new AuthRequestWithEmail(authRequest.getEmail(), newPassword));
     }
 
     private void removeAccessTokenFromHeader(HttpServletRequest request) {

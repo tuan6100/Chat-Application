@@ -1,6 +1,6 @@
 import { Link, Stack, Typography, Paper, Container } from "@mui/material";
 import React from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router";
 import LoginForm from "../../section/auth/LoginForm";
 
 const Login = () => {

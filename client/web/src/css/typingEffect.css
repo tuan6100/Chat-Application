@@ -1,0 +1,27 @@
+/* typingEffect.css */
+
+@keyframes typing {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+.typing-text {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typing 4s steps(30) 1s forwards, blink-caret 0.75s step-end infinite;
+}
+
+.typing-text.typing-complete {
+    border-right: none;
+}
+
+@keyframes blink-caret {
+    50% {
+        border-color: transparent;
+    }
+}

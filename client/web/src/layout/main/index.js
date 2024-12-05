@@ -1,16 +1,57 @@
-import { Container, Stack } from "@mui/material";
-import React from "react";
-import { Outlet } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { Container, Stack, Typography } from '@mui/material';
+import {Outlet, useLocation} from 'react-router';
+import '../../css/typingEffect.css';
 
 const MainLayout = () => {
+    const [isTypingComplete, setIsTypingComplete] = useState(false);
+    const location = useLocation();
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsTypingComplete(true);
+        }, 4000);
+
+        return () => clearTimeout(timer);
+    }, [location]);
+
     return (
-        <Container sx={{ mt: 5 }} maxWidth="sm">
-            <Stack spacing={5}>
-                <Stack sx={{ width: "100%" }} direction="column" alignItems="center">
-                    <img style={{ height: 120, width: 120 }} src="https://www.pixiv.net/artworks/113579214" alt="Logo" />
+        <Container
+            sx={{
+                mt: 2,
+                maxWidth: 'sm',
+                height: '100vh',
+                backgroundColor: '#f4f6f8',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}
+        >
+            <Stack spacing={5} alignItems="top" sx={{ mt: 1 }}>
+                <Stack direction="column" alignItems="center">
+                    <img
+                        style={{ height: 80, width: 80, marginTop: '-200px' }}
+                        src="/logo192.png"
+                        alt="App Logo"
+                    />
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            mt: 2,
+                            textAlign: 'center',
+                            fontWeight: 'bold',
+                            fontSize: '1.5rem',
+                        }}
+                    >
+                        <span className={`typing-text ${isTypingComplete ? 'typing-complete' : ''}`}>
+                            Opensource Messaging App For Everyone
+                        </span>
+                    </Typography>
                 </Stack>
+
+                <Outlet />
             </Stack>
-            <Outlet />
         </Container>
     );
 };

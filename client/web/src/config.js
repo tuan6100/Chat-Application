@@ -2,12 +2,12 @@
 import { PATH_DASHBOARD } from "./route/paths";
 
 export const defaultSettings = {
-  themeMode: "light",
+  themeMode: "dark",
   themeDirection: "ltr",
   themeContrast: "default",
   themeLayout: "horizontal",
   themeColorPresets: "default",
-  themeStretch: false,
+  themeStretch: true,
 };
 
 export const NAVBAR = {

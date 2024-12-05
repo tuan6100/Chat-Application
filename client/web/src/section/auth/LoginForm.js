@@ -110,7 +110,7 @@ const LoginForm = () => {
             </Stack>
 
             <Stack alignItems="flex-end" sx={{ my: 2 }}>
-                <Link to="/auth/reset-password" style={{ textDecoration: "none", color: "aquamarine" }}>
+                <Link to="/auth/reset-password" style={{ textDecoration: "none", color: "revert-layer" }}>
                     Forgot Password?
                 </Link>
             </Stack>

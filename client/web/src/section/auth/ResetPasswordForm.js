@@ -1,10 +1,10 @@
 import React , { useState } from 'react';
 import * as Yup from 'yup';
 import { useForm } from 'react-hook-form';
-import FormProvider from '../../components/hook-form/FormProvider'
+import FormProvider from '../../component/hook-form/FormProvider'
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Alert, Button, Stack } from '@mui/material';
-import { RHFTextField } from '../../components/hook-form';
+import { TextField, Alert, Button, Stack } from '@mui/material';
+
 
 const ResetPasswordForm = () => {
 
@@ -44,7 +44,7 @@ const ResetPasswordForm = () => {
         <Stack spacing={3}>
             {!!errors.afterSubmit && <Alert severity='error'>{errors.afterSubmit.message}</Alert>}
         
-        <RHFTextField name='email' label='Email address'/>
+        <TextField name='email' label='Email address'/>
         <Button fullWidth color='inherit' size='large' type='submit' variant='contained'
         sx={{bgcolor:'text.primary', color:(theme)=> theme.palette.mode === 'light' ?
          'common.white':'grey.800',

@@ -15,6 +15,7 @@ const Loadable = (Component) => (props) => {
 
 const LoginPage = Loadable(lazy(() => import("../page/auth/Login")));
 const RegisterPage = Loadable(lazy(() => import("../page/auth/Register")));
+const ResetPasswordPage = Loadable(lazy(() => import("../page/auth/ResetPassword")));
 
 export default function Router() {
   const { isAuthenticated } = useContext(AuthContext);
@@ -26,6 +27,7 @@ export default function Router() {
       children: [
         { path: "login", element: <LoginPage /> },
         { path: "register", element: <RegisterPage /> },
+        { path: "reset-password", element: <ResetPasswordPage /> }
       ],
     },
     {

@@ -53,7 +53,7 @@ const ValidateUsername = () => {
                             Yes, it's me
                         </Button>
                         <Button variant="outlined" color="secondary" onClick={handleReject}>
-                            No, I don't have this account
+                            No, this account isn't mine
                         </Button>
                     </Stack>
                 </>

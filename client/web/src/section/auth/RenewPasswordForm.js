@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 import { useForm } from 'react-hook-form';
 import FormProvider from '../../component/hook-form/FormProvider'
 import { yupResolver } from '@hookform/resolvers/yup';
-import {TextField, Alert, Button, IconButton, InputAdornment, Link, Stack, Tooltip} from '@mui/material';
+import {TextField, Alert, Button, IconButton, InputAdornment, Stack, Tooltip} from '@mui/material';
 import {RiEye2Fill, RiEyeCloseLine} from "react-icons/ri";
 
 const RenewPasswordForm = () => {
@@ -34,7 +34,7 @@ const RenewPasswordForm = () => {
     defaultValues
   });
 
-  const { register, reset, setError, handleSubmit, formState:{errors, isSubmitting, isSubmitSuccessful}}
+  const { register, reset, setError, handleSubmit, formState:{errors}}
    = methods;
 
     const onSubmit = async (formData) => {
@@ -71,6 +71,9 @@ const RenewPasswordForm = () => {
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
                 setErrorMessage('');
+                localStorage.removeItem('email');
+                localStorage.removeItem('username');
+                localStorage.removeItem('avatar');
                 window.location.href = '/app';
             } else {
                 setErrorMessage('Failed to retrieve tokens.');

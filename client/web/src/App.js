@@ -1,13 +1,15 @@
 import React from "react";
 import { AuthProvider } from "./context/AuthContext";
 import Router from "./route";
+// import ThemeProvider from "./theme";
 
-const App = () => {
+
+function App() {
     return (
-        <AuthProvider>
-            <Router />
-        </AuthProvider>
+            <AuthProvider>
+                <Router />
+            </AuthProvider>
     );
-};
+}
 
 export default App;

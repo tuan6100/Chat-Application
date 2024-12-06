@@ -49,7 +49,6 @@ const MainLayout = () => {
                         </span>
                     </Typography>
                 </Stack>
-
                 <Outlet />
             </Stack>
         </Container>

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import {Link as RouterLink, useNavigate} from "react-router";
-import {Stack, Button, Typography, Alert, Avatar, Link} from "@mui/material";
-import {CaretLeft, CaretRight} from "phosphor-react";
+import {Stack, Button, Typography, Alert, Avatar, Link, Box} from "@mui/material";
+import {CaretLeft} from "phosphor-react";
+import ClearIcon from '@mui/icons-material/Clear';
+import CheckIcon from '@mui/icons-material/Check';
+
 
 const ValidateUsername = () => {
     const [username, setUsername] = useState("");
@@ -34,28 +37,82 @@ const ValidateUsername = () => {
     };
 
     return (
-        <Stack spacing={3} sx={{ maxWidth: 400, margin: "0 auto", mt: 5, textAlign: "center" }}>
-            <Typography variant="h4">Is this your account?</Typography>
+        <Stack spacing={5} sx={{mt: 5, textAlign: "center" }} justifyContent="center">
+            <Typography variant="h4" justifyContent="center">Is this your account?</Typography>
             {errorMessage ? (
                 <Alert severity="error">{errorMessage}</Alert>
             ) : (
                 <>
-                    <Stack direction="row" alignItems="center" justifyContent="center" spacing={2} sx={{ mt: 2 }}>
-                        <Avatar
-                            alt={username}
-                            src={avatar}
-                            sx={{ width: 56, height: 56, border: "2px solid #ddd" }}
-                        />
-                        <Typography variant="h5">{username}</Typography>
-                    </Stack>
-                    <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 4 }}>
-                        <Button variant="contained" color="primary" onClick={handleConfirm}>
-                            Yes, it's me
+                <Stack direction="column" alignItems="center" justifyContent="center" spacing={2} sx={{ mt: 2 }}>
+                        <Box
+                            sx={{
+                                border: "2px solid #ddd",
+                                borderRadius: 2,
+                                padding: 2,
+                                width: 150,
+                                height: 150,
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                            }}
+                        >
+                            <Typography variant="h5" sx={{ textAlign: "center", mb: 2 }}>
+                                {username}
+                            </Typography>
+                            <Avatar
+                                alt={username}
+                                src={avatar}
+                                sx={{
+                                    width: 75,
+                                    height: 75,
+                                    border: "2px solid #ddd",
+                                }}
+                            />
+                        </Box>
+                </Stack>
+
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        spacing={20}
+                        sx={{ mt: 5 }}
+                    >
+                        <Button
+                            onClick={handleConfirm}
+                            sx={{
+                                backgroundColor: "transparent",
+                                color: "green",
+                                border: "1px solid green",
+                                borderRadius: 2,
+                                textTransform: "none",
+                                width: "250px",
+                                height: "50px",
+                                "&:hover": {
+                                    backgroundColor: "rgba(0, 255, 0, 0.1)",
+                                },
+                            }}
+                        >
+                            <CheckIcon sx={{ mr: 1, color: "green" }} /> Yes, it's me
                         </Button>
-                        <Button variant="outlined" color="secondary" onClick={handleReject}>
-                            No, this account isn't mine
+                        <Button
+                            onClick={handleReject}
+                            sx={{
+                                backgroundColor: "transparent",
+                                color: "red",
+                                border: "1px solid red",
+                                borderRadius: 2,
+                                textTransform: "none",
+                                width: "250px",
+                                height: "50px",
+                                "&:hover": {
+                                    backgroundColor: "rgba(255, 0, 0, 0.1)",
+                                },
+                            }}
+                        >
+                            <ClearIcon sx={{ mr: 2, color: "red" }} /> No, this account isn't mine
                         </Button>
                     </Stack>
+
                 </>
             )}
             {showRedirectLink && (
@@ -65,7 +122,7 @@ const ValidateUsername = () => {
                     color='inherit'
                     variant='subtitle1'
                     sx={{
-                        mt:3,
+                        mt: 3,
                         color: 'text.primary',
                         alignItems: 'center',
                         display: 'inline-flex',

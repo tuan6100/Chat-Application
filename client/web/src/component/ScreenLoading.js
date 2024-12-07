@@ -42,37 +42,33 @@ const loadingCircleTransition = {
     ease: 'easeInOut'
 }
 
-const LoadingScreen = () => {
+const ScreenLoading = ({ justifyContent = "center" }) => {
     return (
-        <div>
-            <div className="fixed  w-full min-h-screen z-50 bg-black opacity-30" />
-            <div className="flex fixed w-full justify-center items-center h-screen">
-                <motion.div
-                    style={loadingContainer}
-                    variants={loadingContainerVariants}
-                    initial="start"
-                    animate="end"
-                >
-                    <motion.span
-                        style={loadingCircle}
-                        variants={loadingCircleVariants}
-                        transition={loadingCircleTransition}
-                    ></motion.span>
-                    <motion.span
-                        style={loadingCircle}
-                        variants={loadingCircleVariants}
-                        transition={loadingCircleTransition}
-                    ></motion.span>
-                    <motion.span
-                        style={loadingCircle}
-                        variants={loadingCircleVariants}
-                        transition={loadingCircleTransition}
-                    ></motion.span>
-                </motion.div>
-            </div>
+        <div className="fixed w-full min-h-screen z-50 bg-black opacity-30 flex items-center" style={{ justifyContent }}>
+            <motion.div
+                style={loadingContainer}
+                variants={loadingContainerVariants}
+                initial="start"
+                animate="end"
+            >
+                <motion.span
+                    style={loadingCircle}
+                    variants={loadingCircleVariants}
+                    transition={loadingCircleTransition}
+                ></motion.span>
+                <motion.span
+                    style={loadingCircle}
+                    variants={loadingCircleVariants}
+                    transition={loadingCircleTransition}
+                ></motion.span>
+                <motion.span
+                    style={loadingCircle}
+                    variants={loadingCircleVariants}
+                    transition={loadingCircleTransition}
+                ></motion.span>
+            </motion.div>
         </div>
     );
 };
 
-
-export default LoadingScreen;
+export default ScreenLoading;

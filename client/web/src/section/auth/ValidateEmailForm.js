@@ -78,7 +78,8 @@ const ValidateEmailForm = () => {
                     {isSubmitting ? 'Validating your email...' : 'Validate'}
                 </Button>
             </Stack>
-            <Stack direction="row" spacing={2} justifyContent="space-between">
+
+            <Stack spacing={3} direction="row"  justifyContent="space-between" sx={{ mt: 3 }}>
                 <Link
                     component={RouterLink}
                     to='/auth/login'
@@ -86,6 +87,7 @@ const ValidateEmailForm = () => {
                     variant='subtitle1'
                     sx={{
                         mt:3,
+                        mx:"auto",
                         alignItems: 'center',
                         display: 'inline-flex',
                         textDecoration: 'none',

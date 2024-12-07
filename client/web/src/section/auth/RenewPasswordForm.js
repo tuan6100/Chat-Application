@@ -34,7 +34,7 @@ const RenewPasswordForm = () => {
     defaultValues
   });
 
-  const { register, reset, setError, handleSubmit, formState:{errors}}
+  const { register, setError, handleSubmit, formState:{errors}}
    = methods;
 
     const onSubmit = async (formData) => {
@@ -63,6 +63,7 @@ const RenewPasswordForm = () => {
                 }
                 return;
             }
+
             const authHeader = response.headers.get('Authorization');
             const refreshTokenHeader = response.headers.get('X-Refresh-Token');
             if (authHeader && refreshTokenHeader) {
@@ -135,13 +136,7 @@ const RenewPasswordForm = () => {
                 />
 
         
-        <Button fullWidth color='inherit' size='large' type='submit' variant='contained'
-        sx={{bgcolor:'text.primary', color:(theme)=> theme.palette.mode === 'light' ?
-         'common.white':'grey.800',
-         '&:hover':{
-            bgcolor:'text.primary',
-            color:(theme)=> theme.palette.mode === 'light' ? 'common.white':'grey.800',
-         }}}>Submit</Button>
+        <Button fullWidth size='large' type='submit' variant='contained'>Submit</Button>
         </Stack>
 
     </FormProvider>

@@ -14,12 +14,11 @@ const Login = () => {
             </Typography>
             <Stack direction="row" spacing={0.5} justifyContent="center">
               <Typography variant="body2">New User?</Typography>
-              <Link to="/auth/register" component={RouterLink} variant="subtitle2">
+              <Link to="/auth/register" component={RouterLink} variant="subtitle2" color="info" underline="none" >
                 Create an account
               </Link>
             </Stack>
           </Stack>
-
           <LoginForm />
         </Paper>
       </Container>

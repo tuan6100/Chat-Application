@@ -4,7 +4,7 @@ import {Stack, Button, Typography, Alert, Avatar, Link, Box} from "@mui/material
 import {CaretLeft} from "phosphor-react";
 import ClearIcon from '@mui/icons-material/Clear';
 import CheckIcon from '@mui/icons-material/Check';
-
+import ScreenLoading from "../../component/ScreenLoading";
 
 const ValidateUsername = () => {
     const [username, setUsername] = useState("");
@@ -12,6 +12,7 @@ const ValidateUsername = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const [showRedirectLink, setShowRedirectLink] = useState(false);
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const savedUsername = localStorage.getItem("username");
@@ -33,17 +34,38 @@ const ValidateUsername = () => {
         localStorage.removeItem("username");
         localStorage.removeItem("avatar");
         localStorage.removeItem("email");
-        navigate("/auth/register");
-    };
+        setLoading(true);
+        setTimeout(() => {
+            setLoading(false);
+            navigate("/auth/register");
+        }, 3000);
+    }
 
     return (
-        <Stack spacing={5} sx={{mt: 5, textAlign: "center" }} justifyContent="center">
-            <Typography variant="h4" justifyContent="center">Is this your account?</Typography>
+        <Stack
+            spacing={5}
+            sx={{
+                mt: 5,
+                textAlign: "center",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+            }}
+        >
+            <Typography variant="h4" sx={{ textAlign: "center" }}>
+                Is this your account?
+            </Typography>
             {errorMessage ? (
                 <Alert severity="error">{errorMessage}</Alert>
             ) : (
                 <>
-                <Stack direction="column" alignItems="center" justifyContent="center" spacing={2} sx={{ mt: 2 }}>
+                    <Stack
+                        direction="column"
+                        alignItems="center"
+                        justifyContent="center"
+                        spacing={2}
+                        sx={{ mt: 2 }}
+                    >
                         <Box
                             sx={{
                                 border: "2px solid #ddd",
@@ -69,13 +91,17 @@ const ValidateUsername = () => {
                                 }}
                             />
                         </Box>
-                </Stack>
+                    </Stack>
 
                     <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        spacing={20}
-                        sx={{ mt: 5 }}
+                        direction={{ xs: "column", sm: "row" }}
+                        justifyContent="center"
+                        alignItems="center"
+                        spacing={2}
+                        sx={{
+                            mt: 5,
+                            width: "100%",
+                        }}
                     >
                         <Button
                             onClick={handleConfirm}
@@ -85,7 +111,7 @@ const ValidateUsername = () => {
                                 border: "1px solid green",
                                 borderRadius: 2,
                                 textTransform: "none",
-                                width: "250px",
+                                width: { xs: "40%", sm: "250px" },
                                 height: "50px",
                                 "&:hover": {
                                     backgroundColor: "rgba(0, 255, 0, 0.1)",
@@ -102,7 +128,7 @@ const ValidateUsername = () => {
                                 border: "1px solid red",
                                 borderRadius: 2,
                                 textTransform: "none",
-                                width: "250px",
+                                width: { xs: "40%", sm: "250px" },
                                 height: "50px",
                                 "&:hover": {
                                     backgroundColor: "rgba(255, 0, 0, 0.1)",
@@ -112,21 +138,28 @@ const ValidateUsername = () => {
                             <ClearIcon sx={{ mr: 2, color: "red" }} /> No, this account isn't mine
                         </Button>
                     </Stack>
-
                 </>
             )}
+            {loading && (
+                    <Alert severity="info">
+                        You have not registered an account yet. Please create your new one.
+                    </Alert>
+                ) &&
+                <ScreenLoading />
+            }
+
             {showRedirectLink && (
                 <Link
                     component={RouterLink}
-                    to='/auth/validate-email'
-                    color='inherit'
-                    variant='subtitle1'
+                    to="/auth/validate-email"
+                    color="inherit"
+                    variant="subtitle1"
                     sx={{
                         mt: 3,
-                        color: 'text.primary',
-                        alignItems: 'center',
-                        display: 'inline-flex',
-                        textDecoration: 'none',
+                        color: "text.primary",
+                        alignItems: "center",
+                        display: "inline-flex",
+                        textDecoration: "none",
                     }}
                 >
                     <CaretLeft />

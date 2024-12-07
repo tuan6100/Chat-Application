@@ -4,7 +4,6 @@ import ScreenLoading from '../component/ScreenLoading';
 import MainLayout from '../layout/main';
 import ProtectedRoute from './ProtectRouter';
 import AuthContext from '../context/AuthContext';
-import ThemeProvider from "../theme";
 
 const Loadable = (Component) => (props) => {
   return (
@@ -19,6 +18,7 @@ const RegisterPage = Loadable(lazy(() => import('../page/auth/Register')));
 const ValidateEmail = Loadable(lazy(() => import('../page/auth/ValidateEmail')));
 const ValidateUsername = Loadable(lazy(() => import('../page/auth/ValidateUsername')));
 const RenewPassword = Loadable(lazy(() => import('../page/auth/RenewPassword')));
+const SetupProfile = Loadable(lazy(() => import('../page/auth/SetupProfile')));
 
 export default function Router() {
   const { isAuthenticated } = useContext(AuthContext);
@@ -28,11 +28,12 @@ export default function Router() {
       path: '/auth',
       element: <MainLayout />,
       children: [
-        { path: 'login', element: <ThemeProvider> <LoginPage /> </ThemeProvider>},
+        { path: 'login', element:  <LoginPage /> },
         { path: 'register', element: <RegisterPage /> },
         { path: 'validate-email', element: <ValidateEmail /> },
         { path: 'validate-username', element: <ValidateUsername /> },
-        { path: 'renew-password', element: <RenewPassword /> }
+        { path: 'renew-password', element: <RenewPassword /> },
+        { path: 'setup-profile', element:<ProtectedRoute isAuthenticated={isAuthenticated}> <SetupProfile /> </ProtectedRoute> }
       ],
     },
     {

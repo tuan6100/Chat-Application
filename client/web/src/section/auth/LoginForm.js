@@ -31,7 +31,7 @@ const LoginForm = () => {
 
     const onSubmit = async (data) => {
         try {
-            const response = await fetch('/api/auth/login/email', {
+            const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ const LoginForm = () => {
             </Stack>
 
             <Stack alignItems='flex-end' sx={{ my: 2 }}>
-                <Link to='/auth/validate-email' style={{ textDecoration: 'none', color: 'revert-layer' }}>
+                <Link to='/auth/validate-email' style={{ textDecoration: 'aliceblue', color: 'aliceblue' }}>
                     Forgot Password?
                 </Link>
             </Stack>
@@ -116,7 +116,7 @@ const LoginForm = () => {
                 variant='contained'
                 disabled={isSubmitting}
             >
-                {isSubmitting ? 'Logging in...' : 'Login'}
+                {isSubmitting ? 'Logging in...' : 'Log in'}
             </Button>
         </FormProvider>
     );

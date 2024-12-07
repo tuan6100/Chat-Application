@@ -64,7 +64,7 @@ const RegisterForm = () => {
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
                 setErrorMessage('');
-                window.location.href = '/app';
+                window.location.href = '/auth/setup-profile';
             } else {
                 setErrorMessage('Failed to retrieve tokens.');
             }

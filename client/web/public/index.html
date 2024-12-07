@@ -46,4 +46,15 @@
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
   </body>
+  <script>
+    (function () {
+      const defaultSettings = {
+        themeMode: "dark",
+        themeDirection: "ltr",
+      };
+      document.documentElement.classList.add(defaultSettings.themeMode === "dark" ? "dark-mode" : "light-mode");
+      document.documentElement.setAttribute("dir", defaultSettings.themeDirection);
+    })();
+  </script>
+
 </html>

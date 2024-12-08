@@ -17,7 +17,7 @@ const ValidateEmailForm = () => {
     });
 
     const defaultValues = {
-        email: '',
+        email: localStorage.getItem('email') || '',
     };
 
     const methods = useForm({

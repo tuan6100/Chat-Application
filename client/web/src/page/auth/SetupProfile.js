@@ -1,9 +1,14 @@
 import React, {useState} from 'react';
-import { TextField, Button, Avatar, Stack, MenuItem, Typography, Box, Alert } from '@mui/material';
+import { TextField, Button, Avatar, Stack, MenuItem, Typography, Box, Alert , Link} from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import useAuth from "../../hook/useAuth";
+import {useNavigate} from "react-router";
+import ScreenLoading from "../../component/ScreenLoading";
+import "../../css/handWaving.css"
+
+const username = localStorage.getItem('username');
 
 const ProfileSchema = Yup.object().shape({
     birthday: Yup.date()
@@ -19,6 +24,7 @@ const ProfileSchema = Yup.object().shape({
 
 const ProfileForm = () => {
     const [avatarPreview, setAvatarPreview] = useState(null);
+    const [success, setSuccess] = useState('');
     const [serverError, setServerError] = useState('');
 
     const { control, handleSubmit, formState: { errors } } = useForm({
@@ -26,11 +32,15 @@ const ProfileForm = () => {
     });
 
     const {authFetch} = useAuth()
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+
+    const defaultAvatar = 'https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2281862025.jpg'
 
     const onSubmit = async (data) => {
         try {
             const payload = {
-                avatar: avatarPreview || 'https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2281862025.jpg',
+                avatar: avatarPreview || defaultAvatar,
                 birthdate: data.birthday,
                 gender: data.gender ? (data.gender === 'Male' ? 'M' : 'F') : null,
                 bio: data.bio || null,
@@ -46,54 +56,59 @@ const ProfileForm = () => {
                 }
                 throw new Error('Failed to update profile. Please try again.');
             }
-            console.log('Profile updated successfully!');
+            setSuccess('Your profile updated successfully');
+            setLoading(true);
+            setTimeout(() => {
+                setLoading(false);
+                navigate("/app");
+            }, 1000);
         } catch (error) {
             setServerError(error.message);
         }
     };
 
-    const resizeImage = (file, maxWidth, maxHeight) => {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                img.src = e.target.result;
-            };
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                let width = img.width;
-                let height = img.height;
-                if (width > height) {
-                    if (width > maxWidth) {
-                        height = Math.floor((height * maxWidth) / width);
-                        width = maxWidth;
-                    }
-                } else {
-                    if (height > maxHeight) {
-                        width = Math.floor((width * maxHeight) / height);
-                        height = maxHeight;
-                    }
-                }
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-                canvas.toBlob((blob) => {
-                    resolve(blob);
-                }, 'image/jpeg', 1);
-            };
-            reader.onerror = (error) => reject(error);
-            reader.readAsDataURL(file);
-        });
-    };
+    // const resizeImage = (file, maxWidth, maxHeight) => {
+    //     return new Promise((resolve, reject) => {
+    //         const img = new Image();
+    //         const reader = new FileReader();
+    //         reader.onload = (e) => {
+    //             img.src = e.target.result;
+    //         };
+    //         img.onload = () => {
+    //             const canvas = document.createElement('canvas');
+    //             const ctx = canvas.getContext('2d');
+    //             let width = img.width;
+    //             let height = img.height;
+    //             if (width > height) {
+    //                 if (width > maxWidth) {
+    //                     height = Math.floor((height * maxWidth) / width);
+    //                     width = maxWidth;
+    //                 }
+    //             } else {
+    //                 if (height > maxHeight) {
+    //                     width = Math.floor((width * maxHeight) / height);
+    //                     height = maxHeight;
+    //                 }
+    //             }
+    //             canvas.width = width;
+    //             canvas.height = height;
+    //             ctx.drawImage(img, 0, 0, width, height);
+    //             canvas.toBlob((blob) => {
+    //                 resolve(blob);
+    //             }, 'image/jpeg', 1);
+    //         };
+    //         reader.onerror = (error) => reject(error);
+    //         reader.readAsDataURL(file);
+    //     });
+    // };
 
 
     const handleAvatarChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
             try {
-                const resizedImage = await resizeImage(file, 512, 512);
-                setAvatarPreview(URL.createObjectURL(resizedImage));
+                // const resizedImage = await resizeImage(file, 512, 512);
+                setAvatarPreview(URL.createObjectURL(file));
             } catch (error) {
                 console.error('Error resizing image:', error);
             }
@@ -105,8 +120,8 @@ const ProfileForm = () => {
         const file = e.dataTransfer.files[0];
         if (file) {
             try {
-                const resizedImage = await resizeImage(file, 512, 512); // Resize ảnh về kích thước tối đa 512x512
-                setAvatarPreview(URL.createObjectURL(resizedImage));
+                // const resizedImage = await resizeImage(file, 512, 512);
+                setAvatarPreview(URL.createObjectURL(file));
             } catch (error) {
                 console.error('Error resizing image:', error);
             }
@@ -116,8 +131,10 @@ const ProfileForm = () => {
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={3} sx={{ mb: 5, textAlign: 'center' }}>
-                <Typography variant="h4">Setup your profile here</Typography>
+                <Typography variant="h4">Hi {username || "there "} <span className="wave"> 👋 </span> <br/> Setup your
+                    profile here to continue</Typography>
                 {serverError && <Alert severity="error">{serverError}</Alert>}
+                {success && <Alert severity="success">{success}</Alert>}
                 <Controller
                     name="avatar"
                     control={control}
@@ -157,6 +174,19 @@ const ProfileForm = () => {
                                     )}
                                 </Box>
                             </label>
+                            <Link
+                                variant="h5"
+                                justifyContent="center"
+                                onClick={() => setAvatarPreview(defaultAvatar)}
+                                sx={{
+                                    mt:3,
+                                    alignItems: 'center',
+                                    display: 'inline-flex',
+                                    textDecoration: 'none',
+                                }}
+                                >
+                                Use default avatar
+                            </Link>
                         </>
                     )}
                 />
@@ -207,6 +237,8 @@ const ProfileForm = () => {
                 />
                 <Button type="submit" variant="contained">Save Profile</Button>
             </Stack>
+
+            {loading && <ScreenLoading />}
         </form>
     );
 };

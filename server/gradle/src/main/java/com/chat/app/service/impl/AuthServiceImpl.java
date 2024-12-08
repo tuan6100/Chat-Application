@@ -58,21 +58,6 @@ public class AuthServiceImpl implements AuthService {
         return responseHeader;
     }
 
-    @Override
-    public AuthResponse login(AuthRequestWithUsername authRequest) throws ChatException {
-        List<Account> accounts = accountService.searchAccounts(authRequest.getUsername());
-        if (accounts.isEmpty()) {
-            throw new ChatException("Invalid username");
-        }
-        for (Account account : accounts) {
-            if (passwordEncoder.matches(authRequest.getPassword(), account.getPassword())) {
-                Authentication auth = new UsernamePasswordAuthenticationToken(account.getEmail(), authRequest.getPassword());
-                HttpHeaders responseHeader = getResponseHeader(auth, account);
-                return new AuthResponse("Login successful", HttpStatus.OK.value(), responseHeader);
-            }
-        }
-        throw new ChatException("Password does not match");
-    }
 
     @Override
     public AuthResponse login(AuthRequestWithEmail authRequest) throws ChatException {
@@ -85,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
         }
         Authentication auth = new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword());
         HttpHeaders responseHeader = getResponseHeader(auth, account);
-        return new AuthResponse("Login successful", HttpStatus.OK.value(), responseHeader);
+        return new AuthResponse("Login successful", HttpStatus.OK.value(), account.getAccountId(), responseHeader);
     }
 
     @Override
@@ -99,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
         Account savedAccount = accountService.createAccount(account);
         Authentication auth = new UsernamePasswordAuthenticationToken(email, password);
         HttpHeaders responseHeader = getResponseHeader(auth, savedAccount);
-        return new AuthResponse("Account created successfully", HttpStatus.CREATED.value(), responseHeader);
+        return new AuthResponse("Account created successfully", HttpStatus.CREATED.value(), savedAccount.getAccountId(), responseHeader);
     }
 
 
@@ -132,9 +117,9 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = refreshTokenService.getLatestRefreshTokenByAccount(account.getAccountId()).get();
         if (refreshTokenService.isRefreshTokenValid(refreshToken)) {
             refreshTokenService.deleteRefreshToken(refreshToken);
-            return new AuthResponse("Logout successful", HttpStatus.OK.value(), null);
+            return new AuthResponse("Logout successful", HttpStatus.OK.value(), null, null);
         } else {
-            return new AuthResponse("Logout failed", HttpStatus.BAD_REQUEST.value(), null);
+            return new AuthResponse("Logout failed", HttpStatus.BAD_REQUEST.value(), null, null);
         }
     }
 

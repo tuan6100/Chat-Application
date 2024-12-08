@@ -99,79 +99,81 @@ const RenewPasswordForm = () => {
     };
 
     return (
-        <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
-            <Stack spacing={3}>
-                {!!errors.afterSubmit && <Alert severity='error'>{errors.afterSubmit.message}</Alert>}
-                {!!errorMessage && <Alert severity='error'>{errorMessage}</Alert>}
+        <>
+            {showRedirectLink ? (
+                <Stack spacing={3} textAlign="center">
+                    <Alert severity="error">{errorMessage}</Alert>
+                    <Link
+                        component={Link}
+                        to="/auth/validate-email"
+                        color="inherit"
+                        variant="subtitle1"
+                        sx={{
+                            mt: 3,
+                            color: "text.primary",
+                            textDecoration: "none",
+                        }}
+                    >
+                        <CaretLeft />
+                        Return to email validation page
+                    </Link>
+                </Stack>
+            ) : (
+                <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
+                    <Stack spacing={3}>
+                        {!!errors.afterSubmit && <Alert severity='error'>{errors.afterSubmit.message}</Alert>}
+                        {!!errorMessage && <Alert severity='error'>{errorMessage}</Alert>}
 
-                <TextField
-                    {...register('password')}
-                    label='Password'
-                    type={showPassword ? 'text' : 'password'}
-                    error={!!errors.password}
-                    helperText={errors.password?.message}
-                    InputProps={{
-                        endAdornment: (
-                            <InputAdornment position='end'>
-                                <Tooltip title={showPassword ? 'Hide password' : 'Show password'}>
-                                    <IconButton
-                                        aria-label={showPassword ? 'hide the password' : 'display the password'}
-                                        onClick={() => setShowPassword(!showPassword)}
-                                    >
-                                        {showPassword ? <RiEye2Fill/> : <RiEyeCloseLine/>}
-                                    </IconButton>
-                                </Tooltip>
-                            </InputAdornment>
-                        ),
-                    }}
-                />
+                        <TextField
+                            {...register('password')}
+                            label='Password'
+                            type={showPassword ? 'text' : 'password'}
+                            error={!!errors.password}
+                            helperText={errors.password?.message}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position='end'>
+                                        <Tooltip title={showPassword ? 'Hide password' : 'Show password'}>
+                                            <IconButton
+                                                aria-label={showPassword ? 'hide the password' : 'display the password'}
+                                                onClick={() => setShowPassword(!showPassword)}
+                                            >
+                                                {showPassword ? <RiEye2Fill /> : <RiEyeCloseLine />}
+                                            </IconButton>
+                                        </Tooltip>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
 
-                <TextField
-                    {...register('confirmPassword')}
-                    label='Confirm Password'
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    error={!!errors.confirmPassword}
-                    helperText={errors.confirmPassword?.message}
-                    InputProps={{
-                        endAdornment: (
-                            <InputAdornment position='end'>
-                                <Tooltip title={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}>
-                                    <IconButton
-                                        aria-label={showConfirmPassword ? 'hide the password' : 'display the password'}
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    >
-                                        {showConfirmPassword ? <RiEye2Fill /> : <RiEyeCloseLine />}
-                                    </IconButton>
-                                </Tooltip>
-                            </InputAdornment>
-                        ),
-                    }}
-                />
+                        <TextField
+                            {...register('confirmPassword')}
+                            label='Confirm Password'
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            error={!!errors.confirmPassword}
+                            helperText={errors.confirmPassword?.message}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position='end'>
+                                        <Tooltip title={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}>
+                                            <IconButton
+                                                aria-label={showConfirmPassword ? 'hide the password' : 'display the password'}
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            >
+                                                {showConfirmPassword ? <RiEye2Fill /> : <RiEyeCloseLine />}
+                                            </IconButton>
+                                        </Tooltip>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
 
-        
-        <Button fullWidth size='large' type='submit' variant='contained'>Submit</Button>
-        </Stack>
-
-            {showRedirectLink && (
-                <Link
-                    component={Link}
-                    to="/auth/validate-email"
-                    color="inherit"
-                    variant="subtitle1"
-                    sx={{
-                        mt: 3,
-                        color: "text.primary",
-                        alignItems: "center",
-                        display: "inline-flex",
-                        textDecoration: "none",
-                    }}
-                >
-                    <CaretLeft />
-                    Return to email validation page
-                </Link>
+                        <Button fullWidth size='large' type='submit' variant='contained'>Submit</Button>
+                    </Stack>
+                </FormProvider>
             )}
-    </FormProvider>
-  )
-}
+        </>
+    );
+};
 
 export default RenewPasswordForm

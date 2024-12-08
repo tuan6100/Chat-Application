@@ -55,7 +55,8 @@ const RegisterForm = () => {
                 }
                 return;
             }
-
+            const data = await response.json();
+            localStorage.setItem('username', data.username);
             const authHeader = response.headers.get('Authorization');
             const refreshTokenHeader = response.headers.get('X-Refresh-Token');
             if (authHeader && refreshTokenHeader) {

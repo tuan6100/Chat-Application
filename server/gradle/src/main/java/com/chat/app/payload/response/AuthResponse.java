@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 public class AuthResponse {
     private String message;
     private Integer statusCode;
+    private Long accountId;
     @JsonIgnore
     private HttpHeaders headers;
 }

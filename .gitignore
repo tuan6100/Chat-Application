@@ -18,4 +18,6 @@ target/
 server/app/build
 
 /server/app/src/main/java/com/chat/app/security/MySecretKey.java
-!/client/web/node_modules/
+/client/web/node_modules/
+/client/web/package-lock.json
+/client/web/build/

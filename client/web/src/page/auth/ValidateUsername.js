@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import {Link as RouterLink, useNavigate} from "react-router";
 import {Stack, Button, Typography, Alert, Avatar, Link, Box} from "@mui/material";
-import {CaretLeft} from "phosphor-react";
+import {CaretLeft, CaretRight} from "phosphor-react";
 import ClearIcon from '@mui/icons-material/Clear';
 import CheckIcon from '@mui/icons-material/Check';
-import ScreenLoading from "../../component/ScreenLoading";
+
 
 const ValidateUsername = () => {
     const [username, setUsername] = useState("");
@@ -12,14 +12,13 @@ const ValidateUsername = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const [showRedirectLink, setShowRedirectLink] = useState(false);
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const savedUsername = localStorage.getItem("username");
         const savedAvatar = localStorage.getItem("avatar");
-        if (savedUsername) {
+        if (savedUsername && savedAvatar) {
             setUsername(savedUsername);
-            setAvatar(savedAvatar || "");
+            setAvatar(savedAvatar);
         } else {
             setErrorMessage("Username not found. Please validate your email again.");
             setShowRedirectLink(true)
@@ -30,15 +29,11 @@ const ValidateUsername = () => {
         navigate("/auth/renew-password");
     };
 
+    const [reject, setReject] = useState(false);
     const handleReject = () => {
         localStorage.removeItem("username");
         localStorage.removeItem("avatar");
-        localStorage.removeItem("email");
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-            navigate("/auth/register");
-        }, 3000);
+        setReject(true);
     }
 
     return (
@@ -103,7 +98,7 @@ const ValidateUsername = () => {
                             width: "100%",
                         }}
                     >
-                        <Button
+                        {!reject && (  <Button
                             onClick={handleConfirm}
                             sx={{
                                 backgroundColor: "transparent",
@@ -119,7 +114,7 @@ const ValidateUsername = () => {
                             }}
                         >
                             <CheckIcon sx={{ mr: 1, color: "green" }} /> Yes, it's me
-                        </Button>
+                        </Button> )}
                         <Button
                             onClick={handleReject}
                             sx={{
@@ -138,15 +133,46 @@ const ValidateUsername = () => {
                             <ClearIcon sx={{ mr: 2, color: "red" }} /> No, this account isn't mine
                         </Button>
                     </Stack>
+
+                    {reject && (
+                        <Stack spacing={3} direction="row"  justifyContent="space-between" sx={{ mt: 3 }}>
+                            <Link
+                                component={RouterLink}
+                                to='/auth/validate-email'
+                                color='inherit'
+                                variant='subtitle1'
+                                sx={{
+                                    mt:3,
+                                    mx:"auto",
+                                    alignItems: 'center',
+                                    display: 'inline-flex',
+                                    textDecoration: 'none',
+                                }}
+                            >
+                                <CaretLeft />
+                                Edit your email
+                            </Link>
+                            <Link
+                                component={RouterLink}
+                                to='/auth/register'
+                                color='inherit'
+                                variant='subtitle1'
+                                onClick={() => localStorage.removeItem("email")}
+                                sx={{
+                                    mt:3,
+                                    alignItems: 'center',
+                                    display: 'inline-flex',
+                                    textDecoration: 'none',
+                                }}
+                            >
+                                Create your own now
+                                <CaretRight />
+                            </Link>
+                        </Stack>
+                    )}
                 </>
             )}
-            {loading && (
-                    <Alert severity="info">
-                        You have not registered an account yet. Please create your new one.
-                    </Alert>
-                ) &&
-                <ScreenLoading />
-            }
+
 
             {showRedirectLink && (
                 <Link

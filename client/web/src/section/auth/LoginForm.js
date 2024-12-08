@@ -57,6 +57,21 @@ const LoginForm = () => {
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
                 setIsAuthenticated(true);
+                const newResponse = await fetch('/api/account/me', {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    credentials: 'include',
+                })
+                if (!newResponse.ok) {
+                    const newErrorData = await newResponse.json();
+                    setErrorMessage(newErrorData);
+                    return;
+                }
+                const newData = await newResponse.json();
+                localStorage.setItem('accountId', newData.accountId);
+                localStorage.setItem('username', newData.username);
+                localStorage.setItem('avatar', newData.avatar);
                 setErrorMessage('');
                 window.location.href = '/app';
             } else {

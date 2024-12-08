@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface AuthService {
 
-    public HttpHeaders getResponseHeader(Authentication auth, Account account) throws ChatException;
-
-    public AuthResponse login(AuthRequestWithUsername authRequestr) throws ChatException;
+    public HttpHeaders getResponseHeader(Authentication auth, Account account) throws ChatException;;
 
     public AuthResponse login(AuthRequestWithEmail authRequest) throws ChatException;
 

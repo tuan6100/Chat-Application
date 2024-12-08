@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 @Service
 public class TokenProvider {
     private final SecretKey key = Keys.hmacShaKeyFor(MySecretKey.JWT_SECRET.getBytes());
-    public static final long ACCESS_TOKEN_EXPIRATION_TIME = 3600;
-    public static final long REFRESH_TOKEN_EXPIRATION_TIME = 3600 * 24 * 30;
+    public static final long ACCESS_TOKEN_EXPIRATION_TIME = 3600 * 1000;
+    public static final long REFRESH_TOKEN_EXPIRATION_TIME = 3600L * 24 * 30 * 1000;
 
     public String generateAccessToken(Authentication authentication) {
         List<String> authorities = authentication.getAuthorities().stream()
@@ -30,7 +30,7 @@ public class TokenProvider {
                 .claim("email", authentication.getPrincipal().toString())
                 .claim("authorities", String.join(",", authorities))
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME))
+                .expiration(new Date(System.currentTimeMillis()  + ACCESS_TOKEN_EXPIRATION_TIME))
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
@@ -40,7 +40,7 @@ public class TokenProvider {
                 .issuer("ChatApp")
                 .subject(authentication.getPrincipal().toString())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME))
+                .expiration(new Date(System.currentTimeMillis()  + REFRESH_TOKEN_EXPIRATION_TIME))
                 .claim("refresh_token_id", UUID.randomUUID().toString())
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();

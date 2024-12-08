@@ -38,15 +38,7 @@ public class AuthController {
     private RefreshTokenService refreshTokenService;
 
 
-    @PostMapping("/login/username")
-    public ResponseEntity<AuthResponse> loginWithUsername(@RequestBody AuthRequestWithUsername authRequest) throws ChatException {
-        AuthResponse authResponse = authService.login(authRequest);
-        return ResponseEntity.ok()
-                .headers(authResponse.getHeaders())
-                .body(authResponse);
-    }
-
-    @PostMapping("/login/email")
+    @PostMapping("/login")
     public ResponseEntity<AuthResponse> loginWithEmail(@RequestBody AuthRequestWithEmail authRequest) throws ChatException {
         AuthResponse authResponse = authService.login(authRequest);
         return ResponseEntity.ok()

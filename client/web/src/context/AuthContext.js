@@ -10,30 +10,29 @@ export const AuthProvider = ({ children }) => {
 
     const refreshToken = async () => {
         const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) return false;
-
+        if (!refreshToken) return null;
         try {
-            const response = await fetch("http://localhost:8000/api/auth/refresh-token", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            const response = await fetch('/api/auth/refresh-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({ refreshToken }),
             });
-
-            if (response.ok) {
-                const { accessToken } = await response.json();
-                localStorage.setItem("accessToken", accessToken);
-                setIsAuthenticated(true);
-                return true;
+            if (!response.ok) {
+                console.error('Failed to refresh token.');
+                setIsAuthenticated(false);
             }
-
-            setIsAuthenticated(false);
-            return false;
+            const data = await response.json();
+            localStorage.setItem('accessToken', data.accessToken);
+            setIsAuthenticated(true);
+            return data.accessToken;
         } catch (error) {
             console.error("Error refreshing token:", error);
-            setIsAuthenticated(false);
-            return false;
+            return null;
         }
     };
+
 
     const logout = async () => {
         if (typeof window !== "undefined") {
@@ -56,11 +55,44 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const authFetch = async (url, options = {}) => {
+        const accessToken = localStorage.getItem("accessToken");
+        const headers = {
+            ...options.headers,
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+        };
+        const sendRequest = async (retry = false) => {
+            const response = await fetch(url, {
+                method: options.method || 'GET',
+                headers,
+                body: options.body || null,
+                credentials: options.credentials,
+            });
+            if (response.status === 401 && !retry) {
+                try {
+                    const newToken = await refreshToken();
+                    if (!newToken) {
+                        throw new Error("Unable to refresh token");
+                    }
+                    headers.Authorization = `Bearer ${newToken}`;
+                    return sendRequest(true);
+                } catch (error) {
+                    console.error("Failed to refresh token or re-authenticate:", error);
+                    await logout();
+                    return Promise.reject(error);
+                }
+            }
+            return response;
+        };
+        return sendRequest();
+    };
 
     return (
         <AuthContext.Provider value={{
             isAuthenticated,
             setIsAuthenticated,
+            authFetch,
             logout,
             refreshToken
         }}>

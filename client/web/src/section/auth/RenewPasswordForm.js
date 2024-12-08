@@ -1,13 +1,17 @@
-import React , { useState } from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import * as Yup from 'yup';
 import { useForm } from 'react-hook-form';
 import FormProvider from '../../component/hook-form/FormProvider'
 import { yupResolver } from '@hookform/resolvers/yup';
 import {TextField, Alert, Button, IconButton, InputAdornment, Stack, Tooltip} from '@mui/material';
 import {RiEye2Fill, RiEyeCloseLine} from "react-icons/ri";
+import AuthContext from "../../context/AuthContext";
+import {Link} from "react-router";
+import {CaretLeft} from "phosphor-react";
 
 const RenewPasswordForm = () => {
 
+    const { setIsAuthenticated } = useContext(AuthContext);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -33,6 +37,14 @@ const RenewPasswordForm = () => {
     resolver: yupResolver(NewPasswordSchema),
     defaultValues
   });
+
+  const [showRedirectLink, setShowRedirectLink] = useState(false);
+    useEffect(() => {
+        const savedUsername = localStorage.getItem("username");
+        if (!savedUsername) {
+            setErrorMessage("Username not found. Please validate your email again.");
+            setShowRedirectLink(true)
+        }}, []);
 
   const { register, setError, handleSubmit, formState:{errors}}
    = methods;
@@ -71,6 +83,7 @@ const RenewPasswordForm = () => {
                 const refreshToken = refreshTokenHeader.split(' ')[1];
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
+                setIsAuthenticated(true);
                 setErrorMessage('');
                 localStorage.removeItem('email');
                 localStorage.removeItem('username');
@@ -139,6 +152,24 @@ const RenewPasswordForm = () => {
         <Button fullWidth size='large' type='submit' variant='contained'>Submit</Button>
         </Stack>
 
+            {showRedirectLink && (
+                <Link
+                    component={Link}
+                    to="/auth/validate-email"
+                    color="inherit"
+                    variant="subtitle1"
+                    sx={{
+                        mt: 3,
+                        color: "text.primary",
+                        alignItems: "center",
+                        display: "inline-flex",
+                        textDecoration: "none",
+                    }}
+                >
+                    <CaretLeft />
+                    Return to email validation page
+                </Link>
+            )}
     </FormProvider>
   )
 }

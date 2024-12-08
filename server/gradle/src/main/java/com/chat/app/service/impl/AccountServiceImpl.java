@@ -91,14 +91,11 @@ public class AccountServiceImpl implements AccountService {
         if (account == null) {
             throw new ChatException("Account not found");
         }
-        if (accountDto.getUsername() != null) {
-            account.setUsername(accountDto.getUsername());
+        if (accountDto.getAvatar() != null) {
+            account.setAvatar(accountDto.getAvatar());
         }
-        if (accountDto.getAvatarImagePath() != null) {
-            account.setAvatar(accountDto.getAvatarImagePath());
-        }
-        if (accountDto.getBirthDate() != null) {
-            account.setBirthDate(accountDto.getBirthDate());
+        if (accountDto.getBirthdate() != null) {
+            account.setBirthDate(accountDto.getBirthdate());
         }
         if (accountDto.getGender() != null) {
             account.setGender(accountDto.getGender());

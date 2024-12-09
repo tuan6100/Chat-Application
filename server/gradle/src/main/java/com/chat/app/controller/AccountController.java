@@ -45,6 +45,7 @@ public class AccountController {
         return SecurityContextHolder.getContext().getAuthentication();
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public ResponseEntity<AccountResponse> getCurrentAccountInfo() throws ChatException {
         Account account = getAuthenticatedAccount();
@@ -63,14 +64,21 @@ public class AccountController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{accountId}")
-    public ResponseEntity<Account> getAccountInfo(@PathVariable Long accountId) throws ChatException {
+    public ResponseEntity<AccountResponse> getAccountInfo(@PathVariable Long accountId) throws ChatException {
         Account currentAccount = getAuthenticatedAccount();
         if (!currentAccount.getAccountId().equals(accountId)) {
             throw new ChatException("You do not have permission to view this account");
         }
         Account account = accountService.getAccount(accountId);
-        return ResponseEntity.ok(account);
+        AccountResponse response = new AccountResponse(
+                account.getAccountId(),
+                account.getUsername(),
+                account.getAvatar(),
+                relationshipService.getFriendsList(account.getAccountId())
+        );
+        return ResponseEntity.ok(response);
     }
+
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/avatar")
@@ -81,10 +89,16 @@ public class AccountController {
 
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/me/update")
-    public ResponseEntity<Account> updateAccount(@RequestBody AccountDTO accountDTO) throws ChatException {
+    public ResponseEntity<AccountResponse> updateAccount(@RequestBody AccountDTO accountDTO) throws ChatException {
         Account account = getAuthenticatedAccount();
         accountService.updateAccount(account.getAccountId(), accountDTO);
-        return ResponseEntity.ok(account);
+        AccountResponse response = new AccountResponse(
+                account.getAccountId(),
+                account.getUsername(),
+                account.getAvatar(),
+                relationshipService.getFriendsList(account.getAccountId())
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("isAuthenticated()")

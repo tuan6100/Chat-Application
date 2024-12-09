@@ -1,12 +1,16 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import React, { useState } from 'react';
+import React, {useContext, useState} from 'react';
 import { useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 import FormProvider from '../../component/hook-form/FormProvider';
 import {TextField, Alert, Button, IconButton, InputAdornment, Stack, Tooltip} from '@mui/material';
 import { RiEyeCloseLine, RiEye2Fill } from 'react-icons/ri';
+import AuthContext from "../../context/AuthContext";
 
 const RegisterForm = () => {
+
+    const { setIsAuthenticated } = useContext(AuthContext);
+
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -55,8 +59,6 @@ const RegisterForm = () => {
                 }
                 return;
             }
-            const data = await response.json();
-            localStorage.setItem('username', data.username);
             const authHeader = response.headers.get('Authorization');
             const refreshTokenHeader = response.headers.get('X-Refresh-Token');
             if (authHeader && refreshTokenHeader) {
@@ -64,6 +66,22 @@ const RegisterForm = () => {
                 const refreshToken = refreshTokenHeader.split(' ')[1];
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
+                setIsAuthenticated(true);
+                const newResponse = await fetch('/api/account/me', {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    credentials: 'include',
+                })
+                if (!newResponse.ok) {
+                    const newErrorData = await newResponse.json();
+                    setErrorMessage(newErrorData);
+                    return;
+                }
+                const newData = await newResponse.json();
+                localStorage.setItem('accountId', newData.accountId);
+                localStorage.setItem('username', newData.username);
+                localStorage.setItem('avatar', newData.avatar);
                 setErrorMessage('');
                 window.location.href = '/auth/setup-profile';
             } else {

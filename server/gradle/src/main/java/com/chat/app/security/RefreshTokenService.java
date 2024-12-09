@@ -62,7 +62,7 @@ public class RefreshTokenService {
 
     public String getAccessTokenByRefreshToken(String refreshToken) throws ChatException {
         Account account = getAccountByRefreshToken(refreshToken);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(account.getUsername(), account.getPassword());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(account.getEmail(), account.getPassword());
         return tokenProvider.generateAccessToken(authentication);
     }
 

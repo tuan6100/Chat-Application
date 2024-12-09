@@ -49,7 +49,7 @@ public class Account {
 
     private UserStatus status;
 
-    @OneToMany(mappedBy = "firstAccount", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "firstAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<Relationship> firstRelationships;
 

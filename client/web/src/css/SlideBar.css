@@ -1,0 +1,26 @@
+.sidebar {
+    transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+.sidebar-collapsed {
+    width: 0;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.sidebar-expanded {
+    width: 100px;
+    opacity: 1;
+    visibility: visible;
+}
+
+.appbar-icon {
+    position: absolute;
+    top: 4px;
+    transition: left 0.3s ease-in-out;
+}
+
+.sidebar-expanded .appbar-icon {
+    left: 1px;
+}

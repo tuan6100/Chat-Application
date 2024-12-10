@@ -31,7 +31,7 @@ const ProfileForm = () => {
         resolver: yupResolver(ProfileSchema),
     });
 
-    const {authFetch} = useAuth()
+    const {authFetch} = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
@@ -147,63 +147,65 @@ const ProfileForm = () => {
                     profile here to continue</Typography>
                 {serverError && <Alert severity="error">{serverError}</Alert>}
                 {success && <Alert severity="success">{success}</Alert>}
-                <Tooltip title="Upload, drop or paste image link" >
-                <Controller
-                    name="avatar"
-                    control={control}
-                    render={({ field }) => (
-                        <>
-                            <input
-                                accept="image/*"
-                                style={{ display: 'none' }}
-                                id="avatar-upload"
-                                type="file"
-                                onChange={(e) => {
-                                    field.onChange(e.target.files[0]);
-                                    handleAvatarChange(e);
-                                }}
-                            />
-                            <label htmlFor="avatar-upload">
-                                <Box
-                                    onDrop={handleDrop}
-                                    onDragOver={(e) => e.preventDefault()}
-                                    onPaste={handlePaste}
+                <Tooltip title="Click to upload or drop here" >
+                    <Controller
+                        name="avatar"
+                        control={control}
+                        render={({ field }) => (
+                            <>
+                                <input
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    id="avatar-upload"
+                                    type="file"
+                                    onChange={(e) => {
+                                        field.onChange(e.target.files[0]);
+                                        handleAvatarChange(e);
+                                    }}
+                                />
+                                <label htmlFor="avatar-upload">
+                                    <Tooltip title="Upload, drop, or paste image link here" placement="right">
+                                        <Box
+                                            onDrop={handleDrop}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onPaste={handlePaste}
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                mt: 2,
+                                                mx: 'auto',
+                                                width: 150,
+                                                height: 150,
+                                                border: '2px dashed #ddd',
+                                                borderRadius: '50%',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {avatarPreview ? (
+                                                <Avatar src={avatarPreview} sx={{ width: 140, height: 140 }} />
+                                            ) : (
+                                                <Typography>Upload your avatar here</Typography>
+                                            )}
+                                        </Box>
+                                    </Tooltip>
+                                </label>
+                                <Link
+                                    variant="h5"
+                                    justifyContent="center"
+                                    onClick={() => setAvatarPreview(defaultAvatar)}
                                     sx={{
-                                        display: 'flex',
+                                        mt: 3,
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        mt: 2,
-                                        mx: 'auto',
-                                        width: 150,
-                                        height: 150,
-                                        border: '2px dashed #ddd',
-                                        borderRadius: '50%',
-                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        textDecoration: 'none',
                                     }}
                                 >
-                                    {avatarPreview ? (
-                                        <Avatar src={avatarPreview} sx={{ width: 140, height: 140 }} />
-                                    ) : (
-                                        <Typography>Upload your avatar here</Typography>
-                                    )}
-                                </Box>
-                            </label>
-                            <Link
-                                variant="h5"
-                                justifyContent="center"
-                                onClick={() => setAvatarPreview(defaultAvatar)}
-                                sx={{
-                                    mt: 3,
-                                    alignItems: 'center',
-                                    display: 'inline-flex',
-                                    textDecoration: 'none',
-                                }}
-                            >
-                                Use default avatar
-                            </Link>
-                        </>
-                    )}
-                />
+                                    Use default avatar
+                                </Link>
+                            </>
+                        )}
+                    />
                 </Tooltip>
 
                 <Controller

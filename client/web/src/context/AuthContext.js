@@ -1,4 +1,5 @@
 import React, { createContext, useState } from "react";
+import {useNavigate} from "react-router";
 
 const AuthContext = createContext(undefined);
 
@@ -44,6 +45,7 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const navigate = useNavigate();
 
     const logout = async () => {
         if (typeof window !== "undefined") {
@@ -62,6 +64,8 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error("Error logging out:", error);
+        } finally {
+            navigate("/auth/login");
         }
     };
 

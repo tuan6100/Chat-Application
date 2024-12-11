@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { TextField, Button, Avatar, Stack, MenuItem, Typography, Box, Alert , Link} from '@mui/material';
+import {TextField, Button, Avatar, Stack, MenuItem, Typography, Box, Alert, Link, Tooltip} from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
@@ -31,7 +31,7 @@ const ProfileForm = () => {
         resolver: yupResolver(ProfileSchema),
     });
 
-    const {authFetch} = useAuth()
+    const {authFetch} = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
@@ -118,13 +118,25 @@ const ProfileForm = () => {
     const handleDrop = async (e) => {
         e.preventDefault();
         const file = e.dataTransfer.files[0];
+        const url = e.dataTransfer.getData('text/uri-list');
         if (file) {
-            try {
-                // const resizedImage = await resizeImage(file, 512, 512);
-                setAvatarPreview(URL.createObjectURL(file));
-            } catch (error) {
-                console.error('Error resizing image:', error);
-            }
+            setAvatarPreview(URL.createObjectURL(file));
+        } else if (url && /\.(jpeg|jpg|png|gif)$/.test(url)) {
+            console.info(url);
+            setAvatarPreview(url);
+        } else {
+            console.info(url);
+            console.warn("Dropped content is not a valid image file or URL.");
+        }
+    };
+
+
+    const handlePaste = async (e) => {
+        const clipboardText = e.clipboardData.getData('text');
+        if (clipboardText && /\.(jpeg|jpg|png|gif)$/.test(clipboardText)) {
+            setAvatarPreview(clipboardText);
+        } else {
+            console.warn('Pasted content is not a valid image URL.');
         }
     };
 
@@ -135,61 +147,67 @@ const ProfileForm = () => {
                     profile here to continue</Typography>
                 {serverError && <Alert severity="error">{serverError}</Alert>}
                 {success && <Alert severity="success">{success}</Alert>}
-                <Controller
-                    name="avatar"
-                    control={control}
-                    render={({ field }) => (
-                        <>
-                            <input
-                                accept="image/*"
-                                style={{ display: 'none' }}
-                                id="avatar-upload"
-                                type="file"
-                                onChange={(e) => {
-                                    field.onChange(e.target.files[0]);
-                                    handleAvatarChange(e);
-                                }}
-                            />
-                            <label htmlFor="avatar-upload">
-                                <Box
-                                    onDrop={handleDrop}
-                                    onDragOver={(e) => e.preventDefault()}
+                <Tooltip title="Click to upload or drop here" >
+                    <Controller
+                        name="avatar"
+                        control={control}
+                        render={({ field }) => (
+                            <>
+                                <input
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    id="avatar-upload"
+                                    type="file"
+                                    onChange={(e) => {
+                                        field.onChange(e.target.files[0]);
+                                        handleAvatarChange(e);
+                                    }}
+                                />
+                                <label htmlFor="avatar-upload">
+                                    <Tooltip title="Upload, drop, or paste image link here" placement="right">
+                                        <Box
+                                            onDrop={handleDrop}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onPaste={handlePaste}
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                mt: 2,
+                                                mx: 'auto',
+                                                width: 150,
+                                                height: 150,
+                                                border: '2px dashed #ddd',
+                                                borderRadius: '50%',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {avatarPreview ? (
+                                                <Avatar src={avatarPreview} sx={{ width: 140, height: 140 }} />
+                                            ) : (
+                                                <Typography>Upload your avatar here</Typography>
+                                            )}
+                                        </Box>
+                                    </Tooltip>
+                                </label>
+                                <Link
+                                    variant="h5"
+                                    justifyContent="center"
+                                    onClick={() => setAvatarPreview(defaultAvatar)}
                                     sx={{
-                                        display: 'flex',
+                                        mt: 3,
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        mt: 2,
-                                        mx: 'auto',
-                                        width: 150,
-                                        height: 150,
-                                        border: '2px dashed #ddd',
-                                        borderRadius: '50%',
-                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        textDecoration: 'none',
                                     }}
                                 >
-                                    {avatarPreview ? (
-                                        <Avatar src={avatarPreview} sx={{ width: 140, height: 140 }} />
-                                    ) : (
-                                        <Typography>Click here to upload avatar or drop image</Typography>
-                                    )}
-                                </Box>
-                            </label>
-                            <Link
-                                variant="h5"
-                                justifyContent="center"
-                                onClick={() => setAvatarPreview(defaultAvatar)}
-                                sx={{
-                                    mt:3,
-                                    alignItems: 'center',
-                                    display: 'inline-flex',
-                                    textDecoration: 'none',
-                                }}
-                                >
-                                Use default avatar
-                            </Link>
-                        </>
-                    )}
-                />
+                                    Use default avatar
+                                </Link>
+                            </>
+                        )}
+                    />
+                </Tooltip>
+
                 <Controller
                     name="birthday"
                     control={control}
@@ -204,6 +222,7 @@ const ProfileForm = () => {
                         />
                     )}
                 />
+
                 <Controller
                     name="gender"
                     control={control}
@@ -221,6 +240,7 @@ const ProfileForm = () => {
                         </TextField>
                     )}
                 />
+
                 <Controller
                     name="bio"
                     control={control}

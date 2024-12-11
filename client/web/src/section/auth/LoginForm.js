@@ -9,6 +9,7 @@ import { TextField, Alert, Button, IconButton, InputAdornment, Stack, Tooltip } 
 import { RiEyeCloseLine, RiEye2Fill } from 'react-icons/ri';
 
 const LoginForm = () => {
+
     const { setIsAuthenticated } = useContext(AuthContext);
 
     const [showPassword, setShowPassword] = useState(false);
@@ -42,9 +43,12 @@ const LoginForm = () => {
             if (!response.ok) {
                 const errorData = await response.json();
                 setErrorMessage(errorData.message || 'Login failed');
-                if (errorData.message) {
+                if (errorData.field === 'email') {
                     setError('email', { type: 'manual', message: errorData.message });
+                } else if (errorData.field === 'password') {
                     setError('password', { type: 'manual', message: errorData.message });
+                } else {
+                    setErrorMessage(errorData.message || 'Login failed');
                 }
                 return;
             }

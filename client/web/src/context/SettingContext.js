@@ -1,4 +1,3 @@
-// provider === component
 import { createContext } from "react";
 import { defaultSettings } from "../config";
 import useLocalStorage from "../hook/useLocalStorage";
@@ -13,7 +12,6 @@ const initialState = {
   onChangeMode: () => {},
   onToggleDirection: () => {},
   onChangeDirection: () => {},
-  onChangeDirectionByLang: () => {},
   onToggleLayout: () => {},
   onChangeLayout: () => {},
   onToggleContrast: () => {},
@@ -27,7 +25,7 @@ const initialState = {
 
 const SettingContext = createContext(initialState);
 
-const SettingProvider = ({ children }) => {
+export const SettingProvider = ({ children }) => {
   const [settings, setSettings] = useLocalStorage("settings", {
     themeMode: initialState.themeMode,
     themeLayout: initialState.themeLayout,
@@ -38,13 +36,17 @@ const SettingProvider = ({ children }) => {
   });
 
 
-
   const onToggleMode = () => {
-    setSettings({
-      ...settings,
-      themeMode: settings.themeMode === "light" ? "dark" : "light",
+    setSettings((prevSettings) => {
+      const newThemeMode = prevSettings.themeMode === "dark" ? "light" : "dark";
+      console.info('theme now is: ' + newThemeMode);
+      return {
+        ...prevSettings,
+        themeMode: newThemeMode,
+      };
     });
   };
+
 
   const onChangeMode = (event) => {
     setSettings({
@@ -52,7 +54,6 @@ const SettingProvider = ({ children }) => {
       themeMode: event.target.value,
     });
   };
-
 
   const onToggleDirection = () => {
     setSettings({
@@ -67,14 +68,6 @@ const SettingProvider = ({ children }) => {
       themeDirection: event.target.value,
     });
   };
-
-  const onChangeDirectionByLang = (lang) => {
-    setSettings({
-      ...settings,
-      themeDirection: lang === "ar" ? "rtl" : "ltr",
-    });
-  };
-
 
   const onToggleLayout = () => {
     setSettings({
@@ -106,7 +99,6 @@ const SettingProvider = ({ children }) => {
     });
   };
 
-
   const onChangeColor = (event) => {
     setSettings({
       ...settings,
@@ -114,14 +106,12 @@ const SettingProvider = ({ children }) => {
     });
   };
 
-
   const onToggleStretch = () => {
     setSettings({
       ...settings,
       themeStretch: !settings.themeStretch,
     });
   };
-
 
   const onResetSetting = () => {
     setSettings({
@@ -142,7 +132,6 @@ const SettingProvider = ({ children }) => {
             onChangeMode,
             onToggleDirection,
             onChangeDirection,
-            onChangeDirectionByLang,
             onToggleLayout,
             onChangeLayout,
             onChangeContrast,
@@ -162,6 +151,5 @@ const SettingProvider = ({ children }) => {
   );
 };
 
-export {SettingContext};
 
-export default SettingProvider;
+export default SettingContext;

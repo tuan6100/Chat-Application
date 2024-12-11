@@ -4,6 +4,8 @@ import ScreenLoading from '../component/ScreenLoading';
 import MainLayout from '../layout/main';
 import ProtectedRoute from './ProtectRouter';
 import AuthContext from '../context/AuthContext';
+import DashboardLayout from "../layout/dashboard";
+
 
 const Loadable = (Component) => (props) => {
   return (
@@ -40,7 +42,7 @@ export default function Router() {
       path: '/app',
       element: (
           <ProtectedRoute isAuthenticated={isAuthenticated}>
-
+              <DashboardLayout />
           </ProtectedRoute>
       ),
       children: [

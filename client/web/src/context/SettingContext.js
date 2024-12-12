@@ -10,8 +10,6 @@ const initialState = {
   ...defaultSettings,
   onToggleMode: () => {},
   onChangeMode: () => {},
-  onToggleDirection: () => {},
-  onChangeDirection: () => {},
   onToggleLayout: () => {},
   onChangeLayout: () => {},
   onToggleContrast: () => {},
@@ -55,19 +53,6 @@ export const SettingProvider = ({ children }) => {
     });
   };
 
-  const onToggleDirection = () => {
-    setSettings({
-      ...settings,
-      themeDirection: settings.themeDirection === "rtl" ? "ltr" : "rtl",
-    });
-  };
-
-  const onChangeDirection = (event) => {
-    setSettings({
-      ...settings,
-      themeDirection: event.target.value,
-    });
-  };
 
   const onToggleLayout = () => {
     setSettings({
@@ -130,8 +115,6 @@ export const SettingProvider = ({ children }) => {
             ...settings,
             onToggleMode,
             onChangeMode,
-            onToggleDirection,
-            onChangeDirection,
             onToggleLayout,
             onChangeLayout,
             onChangeContrast,

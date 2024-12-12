@@ -1,13 +1,9 @@
 import PropTypes from 'prop-types';
-// @mui
 import { styled, alpha } from '@mui/material/styles';
-import { Grid, RadioGroup, CardActionArea, Box, Stack } from '@mui/material';
-// hooks
-import useSettings from '../../../hooks/useSettings';
-//
+import { Grid2, RadioGroup, CardActionArea, Box, Stack } from '@mui/material';
+import useSettings from '../../../hook/useSettings';
 import BoxMask from './BoxMask';
 
-// ----------------------------------------------------------------------
 
 const BoxStyle = styled(CardActionArea)(({ theme }) => ({
   display: 'flex',
@@ -18,20 +14,18 @@ const BoxStyle = styled(CardActionArea)(({ theme }) => ({
   borderRadius: Number(theme.shape.borderRadius) * 1.25,
 }));
 
-// ----------------------------------------------------------------------
-
 export default function SettingLayout() {
   const { themeLayout, onChangeLayout } = useSettings();
 
   return (
     <RadioGroup name="themeLayout" value={themeLayout} onChange={onChangeLayout}>
-      <Grid dir="ltr" container spacing={2.5}>
+      <Grid2 dir="ltr" container spacing={2.5}>
         {['horizontal', 'vertical'].map((layout) => {
           const isSelected = themeLayout === layout;
           const isVertical = layout === 'vertical';
 
           return (
-            <Grid key={layout} item xs={6}>
+            <Grid2 key={layout} item xs={6}>
               <BoxStyle
                 sx={{
                   ...(isSelected && {
@@ -43,10 +37,10 @@ export default function SettingLayout() {
                 {isVertical ? <VerticalBox isSelected={isSelected} /> : <HorizontalBox isSelected={isSelected} />}
                 <BoxMask value={layout} />
               </BoxStyle>
-            </Grid>
+            </Grid2>
           );
         })}
-      </Grid>
+      </Grid2>
     </RadioGroup>
   );
 }

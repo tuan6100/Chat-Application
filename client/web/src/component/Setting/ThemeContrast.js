@@ -1,14 +1,10 @@
 import PropTypes from 'prop-types';
 import { useMemo } from 'react';
-// @mui
 import { CssBaseline } from '@mui/material';
 import { alpha, ThemeProvider, createTheme, useTheme } from '@mui/material/styles';
-// hooks
-import useSettings from '../../hooks/useSettings';
-//
-import componentsOverride from '../../theme/overrides';
+import useSettings from '../../hook/useSettings';
+import componentsOverride from '../../theme/override';
 
-// ----------------------------------------------------------------------
 
 ThemeContrast.propTypes = {
   children: PropTypes.node,

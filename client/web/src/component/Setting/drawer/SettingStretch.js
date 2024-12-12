@@ -1,12 +1,8 @@
-// @mui
+
 import { styled } from '@mui/material/styles';
 import { CardActionArea, Stack } from '@mui/material';
-// hooks
-import useSettings from '../../../hooks/useSettings';
-//
+import useSettings from '../../../hook/useSettings';
 import Iconify from '../../Iconify';
-
-// ----------------------------------------------------------------------
 
 const BoxStyle = styled(CardActionArea)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -16,7 +12,6 @@ const BoxStyle = styled(CardActionArea)(({ theme }) => ({
   borderRadius: Number(theme.shape.borderRadius) * 1.25,
 }));
 
-// ----------------------------------------------------------------------
 
 export default function SettingStretch() {
   const { themeStretch, onToggleStretch } = useSettings();

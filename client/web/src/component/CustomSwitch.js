@@ -1,7 +1,7 @@
 import { Switch } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
-const AntSwitch = styled(Switch)(({ theme }) => ({
+const CustomSwitch = styled(Switch)(({ theme }) => ({
   width: 40,
   height: 20,
   padding: 0,
@@ -43,4 +43,4 @@ const AntSwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-export default AntSwitch;
+export default CustomSwitch;

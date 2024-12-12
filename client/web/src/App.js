@@ -3,13 +3,16 @@ import { AuthProvider } from "./context/AuthContext";
 import Router from "./route";
 import ThemeProvider from "./theme";
 import {SettingProvider} from "./context/SettingContext";
+import ThemeSettings from "./component/Setting";
 
 function App() {
     return (
         <ThemeProvider>
             <AuthProvider>
                 <SettingProvider>
-                    <Router />
+                    <ThemeSettings>
+                        <Router />
+                    </ThemeSettings>
                 </SettingProvider>
             </AuthProvider>
         </ThemeProvider>

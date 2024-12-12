@@ -1,13 +1,12 @@
-// theme
 import palette from "../theme/palette";
 
 export const colorPresets = [
-  // DEFAULT
+
   {
     name: "default",
     ...palette.light.primary,
   },
-  // PURPLE
+
   {
     name: "purple",
     lighter: "#EBD6FD",
@@ -17,7 +16,7 @@ export const colorPresets = [
     darker: "#200A69",
     contrastText: "#fff",
   },
-  // CYAN
+
   {
     name: "cyan",
     lighter: "#D1FFFC",
@@ -27,18 +26,18 @@ export const colorPresets = [
     darker: "#053D7A",
     contrastText: palette.light.grey[800],
   },
-  // BLUE
-  {
-    name: "blue",
-    lighter: "#D1E9FC",
-    light: "#76B0F1",
-    main: "#2065D1",
-    dark: "#103996",
-    darker: "#061B64",
 
-    contrastText: "#fff",
-  },
-  // ORANGE
+  // {
+  //   name: "blue",
+  //   lighter: "#D1E9FC",
+  //   light: "#76B0F1",
+  //   main: "#2065D1",
+  //   dark: "#103996",
+  //   darker: "#061B64",
+  //
+  //   contrastText: "#fff",
+  // },
+
   {
     name: "orange",
     lighter: "#FEF4D4",
@@ -48,7 +47,7 @@ export const colorPresets = [
     darker: "#793908",
     contrastText: palette.light.grey[800],
   },
-  // RED
+
   {
     name: "red",
     lighter: "#FFE3D5",
@@ -63,15 +62,15 @@ export const colorPresets = [
 export const defaultPreset = colorPresets[0];
 export const purplePreset = colorPresets[1];
 export const cyanPreset = colorPresets[2];
-export const bluePreset = colorPresets[3];
-export const orangePreset = colorPresets[4];
-export const redPreset = colorPresets[5];
+// export const bluePreset = colorPresets[3];
+export const orangePreset = colorPresets[3];
+export const redPreset = colorPresets[4];
 
 export default function getColorPresets(presetsKey) {
   return {
     purple: purplePreset,
     cyan: cyanPreset,
-    blue: bluePreset,
+    // blue: bluePreset,
     orange: orangePreset,
     red: redPreset,
     default: defaultPreset,

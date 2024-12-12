@@ -3,7 +3,6 @@ import { PATH_DASHBOARD } from "./route/paths";
 
 export const defaultSettings = {
   themeMode: "dark",
-  themeDirection: "ltr",
   themeContrast: "default",
   themeLayout: "horizontal",
   themeColorPresets: "default",

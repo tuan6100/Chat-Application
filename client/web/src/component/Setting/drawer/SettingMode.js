@@ -1,13 +1,10 @@
-// @mui
+
 import { styled } from '@mui/material/styles';
-import { Grid, RadioGroup, CardActionArea } from '@mui/material';
-// hooks
-import useSettings from '../../../hooks/useSettings';
-//
+import { Grid2, RadioGroup, CardActionArea } from '@mui/material';
+import useSettings from '../../../hook/useSettings';
 import Iconify from '../../Iconify';
 import BoxMask from './BoxMask';
 
-// ----------------------------------------------------------------------
 
 const BoxStyle = styled(CardActionArea)(({ theme }) => ({
   height: 72,
@@ -26,12 +23,12 @@ export default function SettingMode() {
 
   return (
     <RadioGroup name="themeMode" value={themeMode} onChange={onChangeMode}>
-      <Grid dir="ltr" container spacing={2.5}>
+      <Grid2 dir="ltr" container spacing={2.5}>
         {['light', 'dark'].map((mode, index) => {
           const isSelected = themeMode === mode;
 
           return (
-            <Grid key={mode} item xs={6}>
+            <Grid2 key={mode} item xs={6}>
               <BoxStyle
                 sx={{
                   bgcolor: mode === 'light' ? 'common.white' : 'grey.800',
@@ -44,10 +41,10 @@ export default function SettingMode() {
                 <Iconify icon={index === 0 ? 'ph:sun-duotone' : 'ph:moon-duotone'} width={28} height={28} />
                 <BoxMask value={mode} />
               </BoxStyle>
-            </Grid>
+            </Grid2>
           );
         })}
-      </Grid>
+      </Grid2>
     </RadioGroup>
   );
 }

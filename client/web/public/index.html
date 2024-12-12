@@ -10,6 +10,7 @@
       content="Web site created using create-react-app"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo512.png" />
+    <link rel="stylesheet" href="global.css">
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -50,7 +51,6 @@
     (function () {
       const defaultSettings = {
         themeMode: "dark",
-        themeDirection: "ltr",
       };
       document.documentElement.classList.add(defaultSettings.themeMode === "dark" ? "dark-mode" : "light-mode");
       document.documentElement.setAttribute("dir", defaultSettings.themeDirection);

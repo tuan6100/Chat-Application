@@ -5,6 +5,7 @@ import MainLayout from '../layout/main';
 import ProtectedRoute from './ProtectRouter';
 import AuthContext from '../context/AuthContext';
 import DashboardLayout from "../layout/dashboard";
+import {DEFAULT_PATH} from "../config";
 
 
 const Loadable = (Component) => (props) => {
@@ -22,6 +23,9 @@ const ValidateUsername = Loadable(lazy(() => import('../page/auth/ValidateUserna
 const RenewPassword = Loadable(lazy(() => import('../page/auth/RenewPassword')));
 const SetupProfile = Loadable(lazy(() => import('../page/auth/SetupProfile')));
 
+const Chat = Loadable(lazy(() => import('../page/dashboard/Chats')));
+const Groups = Loadable(lazy(() => import('../page/dashboard/Groups')));
+
 export default function Router() {
   const { isAuthenticated } = useContext(AuthContext);
 
@@ -38,18 +42,21 @@ export default function Router() {
         { path: 'setup-profile', element:<ProtectedRoute isAuthenticated={isAuthenticated}> <SetupProfile /> </ProtectedRoute> }
       ],
     },
+
     {
-      path: '/app',
+      path: '/me',
       element: (
           <ProtectedRoute isAuthenticated={isAuthenticated}>
               <DashboardLayout />
           </ProtectedRoute>
       ),
       children: [
-
+        { element: <Navigate to={DEFAULT_PATH} replace />, index: true },
+        { path: 'chat', element: <Chat />},
+        { path: 'groups', element: <Groups />}
       ],
     },
-    { path: '*', element: <Navigate to='/app' replace /> },
+    { path: '*', element: <Navigate to='/me/chat' replace /> },
   ]);
 
 }

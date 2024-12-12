@@ -1,5 +1,5 @@
 .sidebar {
-    transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    transition: width 0.5s ease-in-out, opacity 0.5s ease-in-out;
     overflow: hidden;
 }
 
@@ -7,18 +7,20 @@
     width: 0;
     opacity: 0;
     visibility: hidden;
+    transition: width 0.5s ease-in-out, opacity 0.5s ease-in-out;
 }
 
 .sidebar-expanded {
     width: 100px;
     opacity: 1;
     visibility: visible;
+    transition: width 0.5s ease-in-out, opacity 0.5s ease-in-out;
 }
 
 .appbar-icon {
     position: absolute;
     top: 4px;
-    transition: left 0.3s ease-in-out;
+    transition: left 0.5s ease-in-out;
 }
 
 .sidebar-expanded .appbar-icon {

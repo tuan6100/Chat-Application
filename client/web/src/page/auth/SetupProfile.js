@@ -39,7 +39,7 @@ const ProfileForm = () => {
 
     const onSubmit = async (data) => {
         try {
-            const payload = {
+            const request = {
                 avatar: avatarPreview || defaultAvatar,
                 birthdate: data.birthday,
                 gender: data.gender ? (data.gender === 'Male' ? 'M' : 'F') : null,
@@ -47,7 +47,7 @@ const ProfileForm = () => {
             };
             const response = await authFetch(`/api/account/me/update`, {
                 method: 'PUT',
-                body: JSON.stringify(payload),
+                body: JSON.stringify(request),
                 credentials: 'include',
             });
             if (!response.ok) {
@@ -58,6 +58,10 @@ const ProfileForm = () => {
             }
             setSuccess('Your profile updated successfully');
             setLoading(true);
+            if (localStorage.getItem('avatar')) {
+                const data = await response.json();
+                localStorage.setItem('avatar', data.avatar);
+            }
             setTimeout(() => {
                 setLoading(false);
                 navigate("/app");
@@ -117,11 +121,8 @@ const ProfileForm = () => {
 
     const handleDrop = async (e) => {
         e.preventDefault();
-        const file = e.dataTransfer.files[0];
         const url = e.dataTransfer.getData('text/uri-list');
-        if (file) {
-            setAvatarPreview(URL.createObjectURL(file));
-        } else if (url && /\.(jpeg|jpg|png|gif)$/.test(url)) {
+        if (url && /\.(jpeg|jpg|png|gif)$/.test(url)) {
             console.info(url);
             setAvatarPreview(url);
         } else {
@@ -160,7 +161,7 @@ const ProfileForm = () => {
                                     type="file"
                                     onChange={(e) => {
                                         field.onChange(e.target.files[0]);
-                                        handleAvatarChange(e);
+                                        handleAvatarChange(e).then(r => r.catch(console.error));
                                     }}
                                 />
                                 <label htmlFor="avatar-upload">

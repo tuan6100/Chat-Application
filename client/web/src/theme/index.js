@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useMemo } from "react";
+import {useEffect, useMemo, useState} from "react";
 import { CssBaseline } from "@mui/material";
 import {
   createTheme,
@@ -13,6 +13,8 @@ import palette from "./palette";
 import typography from "./typography";
 import breakpoints from "./breakpoints";
 import shadows, { customShadows } from "./shadows";
+import {defaultSettings} from "../config";
+import ScreenLoading from "../component/ScreenLoading";
 
 
 ThemeProvider.propTypes = {
@@ -38,6 +40,20 @@ export default function ThemeProvider({ children }) {
   );
 
   const theme = createTheme(themeOptions);
+
+    useEffect(() => {
+        localStorage.setItem('themeMode', themeMode);
+    }, [themeMode]);
+
+    const [isThemeReady, setThemeReady] = useState(false);
+
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('themeMode') || defaultSettings.themeMode;
+        document.documentElement.classList.add(savedTheme === 'dark' ? 'dark-mode' : 'light-mode');
+        setThemeReady(true);
+    }, []);
+
+    if (!isThemeReady) return <ScreenLoading />;
 
   return (
     <StyledEngineProvider injectFirst>

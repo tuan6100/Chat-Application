@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { AppBar, Avatar, Box, Divider, IconButton, Menu, MenuItem, Stack, Tooltip } from '@mui/material';
 import { useTheme } from "@mui/material/styles";
-import { ChatCircleDots, Gear, Phone, SignOut, User, Users } from "phosphor-react";
+import { ChatCircleDots, Gear, Phone, SignOut, User, Users, UserCircleGear } from "phosphor-react";
 import useSettings from '../../hook/useSettings';
 import CustomSwitch from '../../component/CustomSwitch';
 import { useNavigate } from 'react-router';
@@ -24,10 +24,10 @@ const Nav_Buttons = [
 
 const getPath = (index) => {
     switch (index) {
-        case 0: return '/chat';
-        case 1: return '/group';
+        case 0: return '/me/chat';
+        case 1: return '/me/group';
         case 2: return '/call';
-        case 3: return '/settings';
+        case 3: return '/me/custom';
         default: break;
     }
 };
@@ -122,10 +122,10 @@ const SideBar = () => {
                                 </Tooltip>
                             ))}
                             <Divider sx={{ width: "48px" }} />
-                            <Tooltip title="Settings" placement="right">
+                            <Tooltip title="Custom" placement="right">
                                 <IconButton onClick={() => { setSelected(3); navigate(getPath(3)); }}
                                             sx={{ width: "max-content", color: theme.palette.text.primary }}>
-                                    <Gear />
+                                    <UserCircleGear />
                                 </IconButton>
                             </Tooltip>
                         </Stack>

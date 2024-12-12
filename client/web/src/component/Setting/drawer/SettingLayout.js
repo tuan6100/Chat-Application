@@ -45,7 +45,6 @@ export default function SettingLayout() {
   );
 }
 
-// ----------------------------------------------------------------------
 
 VerticalBox.propTypes = {
   isSelected: PropTypes.bool,

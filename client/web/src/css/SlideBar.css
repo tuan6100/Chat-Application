@@ -26,3 +26,14 @@
 .sidebar-expanded .appbar-icon {
     left: 1px;
 }
+
+.selected-icon {
+    background-color: #007bff;
+    border-radius: 50%;
+    transition: background-color 0.3s ease-in-out;
+}
+
+
+.custom-bar-button:hover {
+    background-color: #ddd; /* Change background color on hover for Custom Bar button */
+}

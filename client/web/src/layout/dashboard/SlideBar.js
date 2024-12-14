@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import { AppBar, Avatar, Box, Divider, IconButton, Menu, MenuItem, Stack, Tooltip } from '@mui/material';
 import { useTheme } from "@mui/material/styles";
 import { ChatCircleDots, Gear, Phone, SignOut, User, Users, UserCircleGear } from "phosphor-react";
@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router';
 import useAuth from "../../hook/useAuth";
 import AuthContext from "../../context/AuthContext";
 import { Menu as MenuIcon } from '@mui/icons-material';
+import CustomDrawer from "../../component/Custom/drawer";
 import '../../css/SlideBar.css';
 
 const Profile_Menu = [
@@ -27,7 +28,6 @@ const getPath = (index) => {
         case 0: return '/me/chat';
         case 1: return '/me/group';
         case 2: return '/call';
-        case 3: return '/me/custom';
         default: break;
     }
 };
@@ -45,6 +45,16 @@ const SideBar = () => {
     const { onToggleMode } = useSettings();
     const { logout } = useAuth();
     const { setIsAuthenticated } = useContext(AuthContext);
+    const [openCustomBar, setOpenCustomBar] = useState(false);
+    useEffect(() => {
+        if (openCustomBar) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+    }, [openCustomBar]);
+
+
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'row' }} className="sidebar-container">
@@ -61,7 +71,7 @@ const SideBar = () => {
                     <Stack alignItems={"center"} spacing={4}>
                         <Stack spacing={4}>
                             <Tooltip title="Profile Menu" placement="right">
-                                <Avatar id='basic-button' sx={{ cursor: 'pointer' }}
+                                <Avatar id='basic-button' sx={{ cursor: 'pointer', width: 60, height: 60 }}
                                         src={avatar}
                                         aria-controls={open ? 'basic-menu' : undefined}
                                         aria-haspopup="true"
@@ -106,6 +116,7 @@ const SideBar = () => {
                                 <Tooltip key={el.index} title={el.tooltip} placement="right">
                                     <IconButton
                                         onClick={() => { setSelected(el.index); navigate(getPath(el.index)); }}
+                                        className={`slide-in ${selected === el.index ? 'active' : ''}`} /* Apply slide-in class */
                                         sx={{
                                             width: "max-content",
                                             color: selected === el.index
@@ -115,6 +126,10 @@ const SideBar = () => {
                                                     : theme.palette.text.primary,
                                             backgroundColor: selected === el.index ? theme.palette.primary.main : "transparent",
                                             borderRadius: 1.5,
+                                            position: "relative",
+                                            '&:hover': {
+                                                backgroundColor: selected === el.index ? theme.palette.primary.main : "transparent",
+                                            },
                                         }}
                                     >
                                         {el.icon}
@@ -123,11 +138,23 @@ const SideBar = () => {
                             ))}
                             <Divider sx={{ width: "48px" }} />
                             <Tooltip title="Custom" placement="right">
-                                <IconButton onClick={() => { setSelected(3); navigate(getPath(3)); }}
-                                            sx={{ width: "max-content", color: theme.palette.text.primary }}>
+                                <IconButton
+                                    onClick={() => setOpenCustomBar(!openCustomBar)}
+                                    className={`slide-in ${openCustomBar ? 'active' : ''}`}
+                                    sx={{
+                                        width: "max-content",
+                                        color: theme.palette.text.primary,
+                                        position: "relative",
+                                        backgroundColor: openCustomBar ? theme.palette.primary.main : "transparent",
+                                        '&:hover': {
+                                            backgroundColor: openCustomBar ? theme.palette.primary.main : "transparent",
+                                        },
+                                    }}
+                                >
                                     <UserCircleGear />
                                 </IconButton>
                             </Tooltip>
+                            <CustomDrawer open={openCustomBar} onClose={() => setOpenCustomBar(false)} />
                         </Stack>
                         <CustomSwitch onChange={onToggleMode} defaultChecked />
                     </Stack>
@@ -136,11 +163,11 @@ const SideBar = () => {
 
             <Box sx={{ flexGrow: 1 }}>
                 <AppBar position="relative">
-                        <Stack direction="row" alignItems="center">
-                            <IconButton color="inherit" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="appbar-icon">
-                                <MenuIcon />
-                            </IconButton>
-                        </Stack>
+                    <Stack direction="row" alignItems="center">
+                        <IconButton color="inherit" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="appbar-icon">
+                            <MenuIcon />
+                        </IconButton>
+                    </Stack>
                 </AppBar>
             </Box>
         </Box>

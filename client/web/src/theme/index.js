@@ -41,9 +41,6 @@ export default function ThemeProvider({ children }) {
 
   const theme = createTheme(themeOptions);
 
-    useEffect(() => {
-        localStorage.setItem('themeMode', themeMode);
-    }, [themeMode]);
 
     const [isThemeReady, setThemeReady] = useState(false);
 

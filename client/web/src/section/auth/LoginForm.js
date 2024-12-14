@@ -123,7 +123,7 @@ const LoginForm = () => {
             </Stack>
 
             <Stack alignItems='flex-end' sx={{ my: 2 }}>
-                <Link to='/auth/validate-email' style={{ textDecoration: 'aliceblue', color: 'aliceblue' }}>
+                <Link  to='/auth/validate-email' variant="subtitle2" style={{ textDecoration: 'aliceblue', color: 'aliceblue' }}>
                     Forgot Password?
                 </Link>
             </Stack>

@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
-import SettingsDrawer from './drawer';
+import CustomDrawer from './drawer';
 import ThemeContrast from './ThemeContrast';
-// import ThemeRtlLayout from './ThemeRtlLayout';
 import ThemeColorPresets from './ThemeColorPresets';
+
 
 
 ThemeSettings.propTypes = {
@@ -14,7 +14,7 @@ export default function ThemeSettings({ children }) {
     <ThemeColorPresets>
       <ThemeContrast>
           {children}
-          <SettingsDrawer />
+          <CustomDrawer />
       </ThemeContrast>
     </ThemeColorPresets>
   );

@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------
+
 
 export default function Button(theme) {
   return {
@@ -12,7 +12,6 @@ export default function Button(theme) {
         sizeLarge: {
           height: 48,
         },
-        // contained
         containedInherit: {
           color: theme.palette.grey[800],
           boxShadow: theme.customShadows.z8,

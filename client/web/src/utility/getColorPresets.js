@@ -8,16 +8,6 @@ export const colorPresets = [
   },
 
   {
-    name: "purple",
-    lighter: "#EBD6FD",
-    light: "#B985F4",
-    main: "#7635dc",
-    dark: "#431A9E",
-    darker: "#200A69",
-    contrastText: "#fff",
-  },
-
-  {
     name: "cyan",
     lighter: "#D1FFFC",
     light: "#76F2FF",
@@ -26,6 +16,47 @@ export const colorPresets = [
     darker: "#053D7A",
     contrastText: palette.light.grey[800],
   },
+
+  {
+    name: "green",
+    lighter: "#D5F5E3",
+    light: "#81D48E",
+    main: "#4ad268",
+    dark: "#3bb556",
+    darker: "#32904d",
+    contrastText: "#fff",
+  },
+
+  {
+    name: "red",
+    lighter: "#FFE3D5",
+    light: "#FFC1AC",
+    main: "#ea8989",
+    dark: "#c25265",
+    darker: "#df3d76",
+    contrastText: "#fff",
+  },
+
+  {
+    name: "orange",
+    lighter: "#FEF4D4",
+    light: "#e59e78",
+    main: "#f15b2f",
+    dark: "#e55019",
+    darker: "#e25b23",
+    contrastText: palette.light.grey[800],
+  },
+
+  {
+    name: "purple",
+    lighter: "#f9d6fd",
+    light: "#B985F4",
+    main: "#b44af1",
+    dark: "#6b3dc9",
+    darker: "#443089",
+    contrastText: "#fff",
+  },
+
 
   // {
   //   name: "blue",
@@ -38,41 +69,25 @@ export const colorPresets = [
   //   contrastText: "#fff",
   // },
 
-  {
-    name: "orange",
-    lighter: "#FEF4D4",
-    light: "#FED680",
-    main: "#fda92d",
-    dark: "#B66816",
-    darker: "#793908",
-    contrastText: palette.light.grey[800],
-  },
 
-  {
-    name: "red",
-    lighter: "#FFE3D5",
-    light: "#FFC1AC",
-    main: "#FF3030",
-    dark: "#B71833",
-    darker: "#7A0930",
-    contrastText: "#fff",
-  },
+
 ];
 
 export const defaultPreset = colorPresets[0];
-export const purplePreset = colorPresets[1];
-export const cyanPreset = colorPresets[2];
-// export const bluePreset = colorPresets[3];
-export const orangePreset = colorPresets[3];
-export const redPreset = colorPresets[4];
+export const cyanPreset = colorPresets[1];
+export const greenPreset = colorPresets[2];
+export const redPreset = colorPresets[3];
+export const orangePreset = colorPresets[4];
+export const purplePreset = colorPresets[5];
+
 
 export default function getColorPresets(presetsKey) {
   return {
-    purple: purplePreset,
-    cyan: cyanPreset,
-    // blue: bluePreset,
-    orange: orangePreset,
-    red: redPreset,
     default: defaultPreset,
+    cyan: cyanPreset,
+    green: greenPreset,
+    red: redPreset,
+    orange: orangePreset,
+    purple: purplePreset,
   }[presetsKey];
 }

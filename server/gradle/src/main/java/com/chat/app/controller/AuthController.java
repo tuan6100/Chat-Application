@@ -9,7 +9,6 @@ import com.chat.app.payload.response.AuthResponse;
 import com.chat.app.security.RefreshTokenService;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.AuthService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,11 +45,6 @@ public class AuthController {
         return ResponseEntity.ok()
                 .headers(authResponse.getHeaders())
                 .body(authResponse);
-    }
-
-    @DeleteMapping("/logout")
-    public ResponseEntity<AuthResponse> logout(HttpServletRequest request) throws ChatException {
-        return ResponseEntity.ok(authService.logout(request));
     }
 
     @GetMapping("forgot-password/validate-account")

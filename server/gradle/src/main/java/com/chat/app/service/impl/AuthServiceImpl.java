@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -45,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    public HttpHeaders getResponseHeader(Authentication auth, Account account) throws ChatException {
+    public HttpHeaders getResponseHeader(Authentication auth, Account account) {
         HttpHeaders responseHeader = new HttpHeaders();
         SecurityContextHolder.getContext().setAuthentication(auth);
         String accessToken = tokenProvider.generateAccessToken(auth);
@@ -106,24 +107,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse logout(HttpServletRequest request) throws ChatException {
-        removeAccessTokenFromHeader(request);
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            throw new ChatException("User is not authenticated");
-        }
-        String email = auth.getName();
-        Account account =  accountService.getAccount(email);
-        String refreshToken = refreshTokenService.getLatestRefreshTokenByAccount(account.getAccountId()).get();
-        if (refreshTokenService.isRefreshTokenValid(refreshToken)) {
-            refreshTokenService.deleteRefreshToken(refreshToken);
-            return new AuthResponse("Logout successful", HttpStatus.OK.value(), null, null);
-        } else {
-            return new AuthResponse("Logout failed", HttpStatus.BAD_REQUEST.value(), null, null);
-        }
-    }
-
-    @Override
     public AuthResponse updatePassword(AuthRequestWithEmail authRequest) throws ChatException {
         Account account = accountService.getAccount(authRequest.getEmail());
         String newPassword = authRequest.getPassword();
@@ -133,11 +116,5 @@ public class AuthServiceImpl implements AuthService {
         return login(new AuthRequestWithEmail(authRequest.getEmail(), newPassword));
     }
 
-    private void removeAccessTokenFromHeader(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            bearerToken.replace(bearerToken, "");
-        }
-    }
 
 }

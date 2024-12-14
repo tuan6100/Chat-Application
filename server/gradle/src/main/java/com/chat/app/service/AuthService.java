@@ -11,16 +11,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public interface AuthService {
 
-    public HttpHeaders getResponseHeader(Authentication auth, Account account) throws ChatException;;
+    public HttpHeaders getResponseHeader(Authentication auth, Account account);
 
     public AuthResponse login(AuthRequestWithEmail authRequest) throws ChatException;
 
     public AuthResponse register(Account account) throws ChatException;
-
-    public AuthResponse logout(HttpServletRequest request) throws ChatException;
 
     public AuthResponse updatePassword(AuthRequestWithEmail authRequest) throws ChatException;
 

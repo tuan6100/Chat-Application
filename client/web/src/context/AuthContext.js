@@ -9,20 +9,21 @@ export const AuthProvider = ({ children }) => {
         return !!localStorage.getItem("accessToken") && !!localStorage.getItem("refreshToken");
     });
 
-    const refreshToken = async () => {
+    const refreshToken = async (url) => {
+        console.info("Trying to refresh token...");
         const storedRefreshToken = localStorage.getItem("refreshToken");
         if (!storedRefreshToken) {
             console.error("No refresh token found.");
             return null;
         }
         try {
-            const response = await fetch('http://localhost:8000/api/auth/refresh-token', {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-
                 },
                 body: JSON.stringify({ refreshToken: storedRefreshToken }),
+                credentials: 'include',
             });
             if (!response.ok) {
                 console.error("Failed to refresh token:", response.statusText);
@@ -48,68 +49,56 @@ export const AuthProvider = ({ children }) => {
 
     const navigate = useNavigate();
 
-    const logout = async () => {
-        try {
-            const response = await fetch("http://localhost:8000/api/auth/logout", {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-            });
-            if (response.ok) {
-                setIsAuthenticated(false);
-            } else {
-                console.error("Error during logout:", response.status);
-            }
-        } catch (error) {
-            console.error("Error logging out:", error);
-        } finally {
-            if (typeof window !== "undefined") {
-                localStorage.clear();
-            }
-            navigate("/auth/login");
-        }
+    const logout = () => {
+        setIsAuthenticated(false);
+        localStorage.clear();
+        navigate(
+            "/auth/login",
+            { replace: true }
+        )
     };
 
     const authFetch = async (url, options = {}) => {
-        const fullUrl = 'http://localhost:8000' + url;
         const accessToken = localStorage.getItem("accessToken");
         const headers = {
             ...options.headers,
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
         };
-
         const sendRequest = async (retry = false) => {
             try {
-                const response = await fetch(fullUrl, {
+                const response = await fetch(url, {
                     method: options.method || 'GET',
                     headers,
                     body: options.body || null,
-                    credentials: options.credentials,
+                    credentials: "include",
                 });
-                if ((response.status === 401 || response.status === 500) && !retry) {
-                    console.warn("Access token expired, attempting to refresh...");
-                    const newToken = await refreshToken();
+                if (response.ok) {
+                    return response;
+                }
+                if (response.status === 401 && !retry) {
+                    const newToken = await refreshToken('/api/auth/refresh-token');
                     if (!newToken) {
                         console.error("Unable to refresh token, logging out...");
-                        await logout();
+                        logout();
                         return Promise.reject("Failed to refresh token or re-authenticate.");
                     }
                     headers.Authorization = `Bearer ${newToken}`;
                     console.info("Retrying the request with new token...");
                     return sendRequest(true);
                 }
-                return response;
+                return Promise.reject(response);
+
             } catch (error) {
-                console.error("Error during authFetch:", error);
                 if (!retry) {
-                    await logout();
+                    logout();
                 }
                 return Promise.reject(error);
             }
         };
         return sendRequest();
     };
+
+
 
 
     return (

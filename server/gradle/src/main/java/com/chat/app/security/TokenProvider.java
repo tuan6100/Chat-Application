@@ -46,7 +46,7 @@ public class TokenProvider {
                 .compact();
     }
 
-    public String getemailFromToken(String jwt) {
+    public String getEmailFromToken(String jwt) {
         if (jwt.startsWith("Bearer ")) {
             jwt = jwt.substring(7);
         }

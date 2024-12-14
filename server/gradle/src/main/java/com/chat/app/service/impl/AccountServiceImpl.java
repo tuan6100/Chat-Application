@@ -7,6 +7,7 @@ import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.repository.AccountRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.RelationshipService;
+import com.chat.app.service.aws.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,6 +28,11 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     private RelationshipService relationshipService;
 
+    private final S3Service s3Service;
+    @Autowired
+    public AccountServiceImpl(S3Service s3Service) {
+        this.s3Service = s3Service;
+    }
 
     @Override
     public Account createAccount(Account account) {
@@ -72,16 +78,11 @@ public class AccountServiceImpl implements AccountService {
                 return account;
             }
         }
-        accounts.forEach(account -> {
-            if (passwordEncoder.matches(password, account.getPassword())) {
-                return ;
-            }
-        });
         throw new ChatException("Invalid username or password");
     }
 
     @Override
-    public List<Account> searchAccounts(String username) throws ChatException {
+    public List<Account> searchAccounts(String username) {
         return accountRepository.findByUsername(username);
     }
 
@@ -90,6 +91,17 @@ public class AccountServiceImpl implements AccountService {
         Account account = getAccount(accountId);
         if (account == null) {
             throw new ChatException("Account not found");
+        }
+        if (accountDto.getAvatar() != null && account.getAvatar() != null) {
+            try {
+                String defaultAvatar = "https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2281862025.jpg";
+                if (!account.getAvatar().equals(defaultAvatar)) {
+                    s3Service.deleteFile(account.getAvatar());
+                }
+
+            } catch (Exception e) {
+                throw new ChatException("Failed to delete old avatar: " + e.getMessage());
+            }
         }
         if (accountDto.getAvatar() != null) {
             account.setAvatar(accountDto.getAvatar());

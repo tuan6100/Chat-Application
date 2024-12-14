@@ -42,8 +42,16 @@ dependencies {
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation("software.amazon.awssdk:s3:2.29.32")
+    implementation("software.amazon.awssdk:auth:2.29.32")
+    implementation("software.amazon.awssdk:regions:2.29.32")
+
+
+
+
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+

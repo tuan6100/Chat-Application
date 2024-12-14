@@ -47,15 +47,11 @@ const ProfileForm = () => {
             };
             const response = await authFetch(`/api/account/me/update`, {
                 method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify(request),
-                credentials: 'include',
             });
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error("You are not authorized to access this page.");
-                }
-                throw new Error('Failed to update profile. Please try again.');
-            }
             setSuccess('Your profile updated successfully');
             setLoading(true);
             if (localStorage.getItem('avatar')) {
@@ -71,53 +67,47 @@ const ProfileForm = () => {
         }
     };
 
-    // const resizeImage = (file, maxWidth, maxHeight) => {
-    //     return new Promise((resolve, reject) => {
-    //         const img = new Image();
-    //         const reader = new FileReader();
-    //         reader.onload = (e) => {
-    //             img.src = e.target.result;
-    //         };
-    //         img.onload = () => {
-    //             const canvas = document.createElement('canvas');
-    //             const ctx = canvas.getContext('2d');
-    //             let width = img.width;
-    //             let height = img.height;
-    //             if (width > height) {
-    //                 if (width > maxWidth) {
-    //                     height = Math.floor((height * maxWidth) / width);
-    //                     width = maxWidth;
-    //                 }
-    //             } else {
-    //                 if (height > maxHeight) {
-    //                     width = Math.floor((width * maxHeight) / height);
-    //                     height = maxHeight;
-    //                 }
-    //             }
-    //             canvas.width = width;
-    //             canvas.height = height;
-    //             ctx.drawImage(img, 0, 0, width, height);
-    //             canvas.toBlob((blob) => {
-    //                 resolve(blob);
-    //             }, 'image/jpeg', 1);
-    //         };
-    //         reader.onerror = (error) => reject(error);
-    //         reader.readAsDataURL(file);
-    //     });
-    // };
-
 
     const handleAvatarChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
             try {
-                // const resizedImage = await resizeImage(file, 512, 512);
-                setAvatarPreview(URL.createObjectURL(file));
+                if (avatarPreview && avatarPreview !== defaultAvatar) {
+                    await authFetch(`/api/file/delete?fileUrl=${encodeURIComponent(avatarPreview)}`, {
+                        method: "DELETE",
+                    });
+                }
+                const formData = new FormData();
+                formData.append("file", file);
+                const response = await authFetch(`/api/file/upload`, {
+                    method: "POST",
+                    body: formData,
+                });
+                if (!response.ok) {
+                    throw new Error("Failed to upload avatar");
+                }
+                const fileUrl = await response.text();
+                setAvatarPreview(fileUrl);
             } catch (error) {
-                console.error('Error resizing image:', error);
+                console.error("Error uploading avatar:", error.message);
             }
         }
     };
+
+    const handleUseDefaultAvatar = async () => {
+        if (avatarPreview && avatarPreview !== defaultAvatar) {
+            try {
+                await fetch(`/api/file/delete?fileUrl=${encodeURIComponent(avatarPreview)}`, {
+                    method: "DELETE",
+                });
+            } catch (error) {
+                console.error("Error deleting avatar:", error.message);
+            }
+        }
+        setAvatarPreview(defaultAvatar);
+    };
+
+
 
     const handleDrop = async (e) => {
         e.preventDefault();
@@ -129,6 +119,16 @@ const ProfileForm = () => {
             console.info(url);
             console.warn("Dropped content is not a valid image file or URL.");
         }
+    };
+
+    const handleMouseEnter = () => {
+        console.info("Mouse entered the drop area. Ready for paste.");
+        document.addEventListener("paste", handlePaste);
+    };
+
+    const handleMouseLeave = () => {
+        console.info("Mouse left the drop area.");
+        document.removeEventListener("paste", handlePaste);
     };
 
 
@@ -148,7 +148,7 @@ const ProfileForm = () => {
                     profile here to continue</Typography>
                 {serverError && <Alert severity="error">{serverError}</Alert>}
                 {success && <Alert severity="success">{success}</Alert>}
-                <Tooltip title="Click to upload or drop here" >
+                <Tooltip title="" >
                     <Controller
                         name="avatar"
                         control={control}
@@ -161,15 +161,16 @@ const ProfileForm = () => {
                                     type="file"
                                     onChange={(e) => {
                                         field.onChange(e.target.files[0]);
-                                        handleAvatarChange(e).then(r => r.catch(console.error));
+                                        handleAvatarChange(e);
                                     }}
                                 />
                                 <label htmlFor="avatar-upload">
-                                    <Tooltip title="Upload, drop, or paste image link here" placement="right">
+                                    <Tooltip title="Click to upload, or drop, or paste image link here" placement="right">
                                         <Box
                                             onDrop={handleDrop}
                                             onDragOver={(e) => e.preventDefault()}
-                                            onPaste={handlePaste}
+                                            onMouseEnter={handleMouseEnter}
+                                            onMouseLeave={handleMouseLeave}
                                             sx={{
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -194,13 +195,14 @@ const ProfileForm = () => {
                                 <Link
                                     variant="h5"
                                     justifyContent="center"
-                                    onClick={() => setAvatarPreview(defaultAvatar)}
+                                    onClick={handleUseDefaultAvatar}
                                     sx={{
                                         mt: 3,
                                         alignItems: 'center',
                                         display: 'inline-flex',
                                         textDecoration: 'none',
                                     }}
+                                    underline="none"
                                 >
                                     Use default avatar
                                 </Link>

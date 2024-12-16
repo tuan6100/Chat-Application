@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -49,7 +50,7 @@ public class SecurityConfig {
         http.logout((logout) -> logout.logoutSuccessUrl("/api/auth/logout"));
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         http.csrf(CsrfConfigurer::disable);
-        http.headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin));
+        http.headers(headers -> headers.frameOptions(FrameOptionsConfig::disable));
         return http.build();
     }
 
@@ -58,8 +59,11 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-//        config.setAllowedOrigins(List.of("http://localhost:3000", "https://2b59-42-113-16-145.ngrok-free.app/"));
-        config.addAllowedOriginPattern("*");
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "https://vercel.live/api/feedback/sharing?hostname=chat-application-nu-ivory.vercel.app"
+        ));
+//        config.addAllowedOriginPattern("*");
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList(
                 "Authorization",
@@ -68,7 +72,7 @@ public class SecurityConfig {
                 "Cache-Control",
                 "accept",
                 "user-agent",
-                "x-requested-with"
+                "X-CSRF-Token", "X-Requested-With", "Accept", "Accept-Version", "Content-Length", "Content-MD5", "Date", "X-Api-Version"
         ));
         config.setExposedHeaders(Arrays.asList(
                 "Authorization",

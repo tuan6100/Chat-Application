@@ -12,7 +12,7 @@ RUN chmod +x ./gradlew
 RUN ./gradlew bootJar --no-daemon
 
 
-FROM openjdk:23-jre-slim
+FROM openjdk:23-jdk-slim
 
 WORKDIR /app
 

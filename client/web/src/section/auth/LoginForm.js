@@ -10,6 +10,8 @@ import { RiEyeCloseLine, RiEye2Fill } from 'react-icons/ri';
 
 const LoginForm = () => {
 
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
     const { setIsAuthenticated } = useContext(AuthContext);
 
     const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +34,7 @@ const LoginForm = () => {
 
     const onSubmit = async (data) => {
         try {
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -61,7 +63,7 @@ const LoginForm = () => {
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
                 setIsAuthenticated(true);
-                const newResponse = await fetch('/api/account/me', {
+                const newResponse = await fetch(`${API_BASE_URL}/api/account/me`, {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                     },

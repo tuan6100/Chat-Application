@@ -2,7 +2,6 @@
   "name": "web",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:8000",
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@emotion/cache": "^11.14.0",

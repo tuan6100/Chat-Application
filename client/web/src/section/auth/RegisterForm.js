@@ -9,6 +9,8 @@ import AuthContext from "../../context/AuthContext";
 
 const RegisterForm = () => {
 
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
     const { setIsAuthenticated } = useContext(AuthContext);
 
     const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +44,7 @@ const RegisterForm = () => {
 
     const onSubmit = async (data) => {
         try {
-            const response = await fetch('/api/auth/register', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -67,7 +69,7 @@ const RegisterForm = () => {
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
                 setIsAuthenticated(true);
-                const newResponse = await fetch('/api/account/me', {
+                const newResponse = await fetch(`${API_BASE_URL}/api/account/me`, {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                     },

@@ -61,7 +61,8 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
-                "https://vercel.live/api/feedback/sharing?hostname=chat-application-nu-ivory.vercel.app"
+                "https://vercel.live/api/feedback/sharing?hostname=chat-application-nu-ivory.vercel.app",
+                "http://160.191.50.248:3000"
         ));
 //        config.addAllowedOriginPattern("*");
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

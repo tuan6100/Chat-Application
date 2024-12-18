@@ -6,11 +6,17 @@ spring:
   application:
     name: real-time-chat-app
 
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/chatstorage
+#    username: postgres
+#    password:
+#    driver-class-name: org.postgresql.Driver
   datasource:
-    url: jdbc:postgresql://localhost:5432/chatstorage
+    url: jdbc:postgresql://160.191.50.248:5432/chatstorage
     username: postgres
-    password:
+    password: 20226100
     driver-class-name: org.postgresql.Driver
+
   jpa:
     database: postgresql
     show-sql: true

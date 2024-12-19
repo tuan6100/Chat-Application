@@ -50,7 +50,7 @@ public class SecurityConfig {
         http.logout((logout) -> logout.logoutSuccessUrl("/api/auth/logout"));
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         http.csrf(CsrfConfigurer::disable);
-        http.headers(headers -> headers.frameOptions(FrameOptionsConfig::disable));
+        http.headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin));
         return http.build();
     }
 
@@ -59,12 +59,13 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://192.168.6.*:3000",
-                "http://160.191.50.248:3000"
-        ));
-//        config.addAllowedOriginPattern("*");
+//        config.setAllowedOrigins(Arrays.asList(
+//                "http://localhost:3000",
+//                "http://160.191.50.248:3000",
+//                "http://192.168.6.101:3000",
+//                "http://192.168.6.102:3000"
+//        ));
+        config.addAllowedOriginPattern("*");
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList(
                 "Authorization",

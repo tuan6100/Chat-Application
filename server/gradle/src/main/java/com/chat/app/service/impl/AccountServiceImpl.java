@@ -2,14 +2,18 @@ package com.chat.app.service.impl;
 
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
+import com.chat.app.model.elasticsearch.AccountIndex;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.response.AccountResponse;
-import com.chat.app.repository.AccountRepository;
+import com.chat.app.repository.elasticsearch.AccountElasticsearchRepository;
+import com.chat.app.repository.jpa.AccountRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.RelationshipService;
 import com.chat.app.service.aws.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,11 +32,12 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     private RelationshipService relationshipService;
 
-    private final S3Service s3Service;
     @Autowired
-    public AccountServiceImpl(S3Service s3Service) {
-        this.s3Service = s3Service;
-    }
+    private S3Service s3Service;
+
+    @Autowired
+    private AccountElasticsearchRepository accountElasticsearchRepository;
+
 
     @Override
     public Account createAccount(Account account) {
@@ -71,20 +76,10 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account getAccount(String username, String password) throws ChatException {
-        List<Account> accounts = searchAccounts(username);
-        for (Account account : accounts) {
-            if (passwordEncoder.matches(password, account.getPassword())) {
-                return account;
-            }
-        }
-        throw new ChatException("Invalid username or password");
+    public Page<AccountIndex> searchAccount(String username, Pageable pageable) {
+        return accountElasticsearchRepository.searchByUsername(username, pageable);
     }
 
-    @Override
-    public List<Account> searchAccounts(String username) {
-        return accountRepository.findByUsername(username);
-    }
 
     @Override
     public void updateAccount(Long accountId, AccountDTO accountDto) throws ChatException {

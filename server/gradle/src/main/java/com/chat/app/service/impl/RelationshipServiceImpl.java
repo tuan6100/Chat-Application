@@ -6,7 +6,7 @@ import com.chat.app.model.dto.FriendStatusDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Relationship;
 import com.chat.app.payload.response.AccountResponse;
-import com.chat.app.repository.RelationshipRepository;
+import com.chat.app.repository.jpa.RelationshipRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.PrivateChatService;
 import com.chat.app.service.RelationshipService;

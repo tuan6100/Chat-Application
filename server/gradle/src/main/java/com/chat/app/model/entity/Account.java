@@ -1,6 +1,7 @@
 package com.chat.app.model.entity;
 
 import com.chat.app.enumeration.UserStatus;
+import com.chat.app.model.elasticsearch.AccountEntityListener;
 import com.chat.app.model.entity.extend.chat.GroupChat;
 import com.chat.app.security.RefreshTokenEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
+import org.springframework.data.elasticsearch.annotations.Document;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,6 +19,7 @@ import java.util.Set;
 
 @Data
 @Entity
+@EntityListeners(AccountEntityListener.class)
 @Table(name="account")
 public class Account {
 

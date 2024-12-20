@@ -3,15 +3,13 @@ package com.chat.app.service.impl;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.request.AuthRequestWithEmail;
-import com.chat.app.payload.request.AuthRequestWithUsername;
 import com.chat.app.payload.request.ResetPasswordRequest;
 import com.chat.app.payload.response.AuthResponse;
-import com.chat.app.repository.AccountRepository;
+import com.chat.app.repository.jpa.AccountRepository;
 import com.chat.app.security.RefreshTokenService;
 import com.chat.app.security.TokenProvider;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.AuthService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,10 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 
 @Service

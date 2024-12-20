@@ -8,7 +8,7 @@ import com.chat.app.model.entity.extend.message.FileMessage;
 import com.chat.app.model.entity.extend.message.ImageMessage;
 import com.chat.app.model.entity.extend.message.TextMessage;
 import com.chat.app.payload.request.MessageRequest;
-import com.chat.app.repository.MessageRepository;
+import com.chat.app.repository.jpa.MessageRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.ChatService;
 import com.chat.app.service.MessageService;

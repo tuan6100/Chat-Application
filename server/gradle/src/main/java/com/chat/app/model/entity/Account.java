@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
-import org.springframework.data.elasticsearch.annotations.Document;
+
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -21,7 +21,6 @@ import java.util.Set;
 @Entity
 @EntityListeners(AccountEntityListener.class)
 @Table(name="account")
-@EntityListeners(AccountEntityListener.class)
 public class Account {
 
     @Id

@@ -1,0 +1,22 @@
+.sidebar {
+    transition: left 0.5s ease-in-out;
+    position: absolute;
+    left: 0;
+}
+
+.sidebar-collapsed {
+    left: -100px;
+    transition: left 0.5s ease-in-out;
+}
+
+.sidebar-expanded {
+    left: 0;
+    transition: left 0.5s ease-in-out;
+}
+
+.chat-box {
+    transition: left 0.5s ease-in-out, width 0.5s ease-in-out;
+    position: absolute;
+
+}
+

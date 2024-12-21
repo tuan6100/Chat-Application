@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router";
 import { Stack } from '@mui/material';
-import SideBar from "./SlideBar";
+import SideBar from "./SideBar";
 
 const isAuthenticated = true;
 

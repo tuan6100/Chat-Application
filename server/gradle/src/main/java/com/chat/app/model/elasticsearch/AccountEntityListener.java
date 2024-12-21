@@ -6,24 +6,25 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AccountEntityListener {
 
     @Autowired
-    private AccountSyncService accountSyncService;
-
+    private ApplicationEventPublisher eventPublisher;
 
     @PostPersist
     @PostUpdate
     public void handleAccountChange(Account account) {
-        accountSyncService.syncAccountToElasticsearch(account.getAccountId());
+        eventPublisher.publishEvent(new AccountSyncEvent(account.getAccountId()));
     }
 
     @PostRemove
     public void handleAccountDelete(Account account) {
-        accountSyncService.deleteAccountFromElasticsearch(account.getAccountId());
+        eventPublisher.publishEvent(new AccountDeleteEvent(account.getAccountId()));
     }
 
 }
+

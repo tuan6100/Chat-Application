@@ -10,6 +10,7 @@ import com.chat.app.model.entity.Relationship;
 import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.RelationshipService;
+import com.chat.app.service.elasticsearch.AccountSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/account")
@@ -29,6 +31,9 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private AccountSearchService accountSearchService;
 
     @Autowired
     private RelationshipService relationshipService;
@@ -64,8 +69,8 @@ public class AccountController {
     }
 
     @GetMapping("/search")
-    public Page<AccountIndex> searchAccounts(@RequestParam String keyword, Pageable pageable) {
-        return accountService.searchAccount(keyword, pageable);
+    public ResponseEntity<List<AccountIndex>> searchAccounts(@RequestParam String username) {
+        return ResponseEntity.ok(accountSearchService.searchAccount(username));
     }
 
     @PreAuthorize("isAuthenticated()")

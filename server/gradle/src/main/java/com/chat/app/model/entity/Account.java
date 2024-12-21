@@ -21,6 +21,7 @@ import java.util.Set;
 @Entity
 @EntityListeners(AccountEntityListener.class)
 @Table(name="account")
+@EntityListeners(AccountEntityListener.class)
 public class Account {
 
     @Id

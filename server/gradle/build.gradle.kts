@@ -32,7 +32,7 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt:0.12.6")
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis:3.4.0")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 //    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
@@ -45,6 +45,7 @@ dependencies {
     implementation("software.amazon.awssdk:s3:2.29.32")
     implementation("software.amazon.awssdk:auth:2.29.32")
     implementation("software.amazon.awssdk:regions:2.29.32")
+    implementation("org.springframework.data:spring-data-elasticsearch:5.4.1")
 
 
 

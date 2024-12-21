@@ -2,10 +2,9 @@ package com.chat.app.service.impl;
 
 import com.chat.app.enumeration.Theme;
 import com.chat.app.exception.ChatException;
-import com.chat.app.model.entity.Chat;
 import com.chat.app.model.entity.Relationship;
 import com.chat.app.model.entity.extend.chat.PrivateChat;
-import com.chat.app.repository.PrivateChatRepository;
+import com.chat.app.repository.jpa.PrivateChatRepository;
 import com.chat.app.service.PrivateChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

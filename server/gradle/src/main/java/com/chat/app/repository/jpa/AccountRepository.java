@@ -1,8 +1,7 @@
-package com.chat.app.repository;
+package com.chat.app.repository.jpa;
 
 import com.chat.app.model.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

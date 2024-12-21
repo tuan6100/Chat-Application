@@ -5,7 +5,7 @@ import com.chat.app.model.dto.GroupChatDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Chat;
 import com.chat.app.model.entity.extend.chat.GroupChat;
-import com.chat.app.repository.GroupChatRepository;
+import com.chat.app.repository.jpa.GroupChatRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.ChatService;
 import com.chat.app.service.GroupChatService;

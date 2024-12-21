@@ -1,4 +1,4 @@
-package com.chat.app.repository;
+package com.chat.app.repository.jpa;
 
 import com.chat.app.enumeration.RelationshipStatus;
 import com.chat.app.model.entity.Relationship;

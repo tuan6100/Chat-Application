@@ -29,6 +29,18 @@ spring:
         jdbc:
           time_zone: UTC+7
 
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+
+  elasticsearch:
+    uris: http://160.191.50.248:9200
+#    uris: http://localhost:9200
+#    username: elastic
+#    password: 20226100
+    socket-timeout: 30s
+
   devtools:
     restart:
       exclude: logs/**
@@ -37,11 +49,26 @@ spring:
     aws:
       bucket-name: chatstoragebucket
 
+  task:
+    execution:
+        pool:
+            core-size: 10
+            max-size: 20
+            queue-capacity: 100
+
 
 logging:
 #  file:
 #    name: server/app/src/main/resources/logs/application.log
   level:
-    org.springframework.security: DEBUG
+    org:
+      springframework:
+        security: DEBUG
+
+        data:
+          elasticsearch:
+            core: DEBUG
+            client:
+              WIRE: trace
 
 

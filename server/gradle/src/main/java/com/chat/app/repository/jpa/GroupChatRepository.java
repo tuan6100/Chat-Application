@@ -1,4 +1,4 @@
-package com.chat.app.repository;
+package com.chat.app.repository.jpa;
 
 import org.springframework.stereotype.Repository;
 

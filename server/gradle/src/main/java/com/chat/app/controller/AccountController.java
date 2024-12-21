@@ -4,12 +4,16 @@ import com.chat.app.enumeration.RelationshipStatus;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.dto.FriendStatusDTO;
+import com.chat.app.model.elasticsearch.AccountIndex;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Relationship;
 import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.RelationshipService;
+import com.chat.app.service.elasticsearch.AccountSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,6 +31,9 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private AccountSearchService accountSearchService;
 
     @Autowired
     private RelationshipService relationshipService;
@@ -59,6 +66,11 @@ public class AccountController {
                 friends
         );
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<AccountIndex>> searchAccounts(@RequestParam String username) {
+        return ResponseEntity.ok(accountSearchService.searchAccount(username));
     }
 
     @PreAuthorize("isAuthenticated()")

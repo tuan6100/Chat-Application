@@ -1,4 +1,4 @@
-package com.chat.app.repository;
+package com.chat.app.repository.jpa;
 
 import com.chat.app.model.entity.extend.chat.PrivateChat;
 import org.springframework.data.jpa.repository.Query;

@@ -34,7 +34,7 @@ const MainLayout = () => {
                 <Stack direction="column" alignItems="center">
                     <img
                         style={{ height: 80, width: 80, marginTop: '-200px' }}
-                        src="/logo192.png"
+                        src="http://localhost:3000/Chat-Application/logo192.png"
                         alt="App Logo"
                     />
                     <Typography

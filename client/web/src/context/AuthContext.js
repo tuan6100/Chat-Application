@@ -1,9 +1,14 @@
 import React, { createContext, useState } from "react";
 import {useNavigate} from "react-router";
 
+
+
 const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
+
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
     const [isAuthenticated, setIsAuthenticated] = useState(() => {
         if (typeof window === "undefined") return false;
         return !!localStorage.getItem("accessToken") && !!localStorage.getItem("refreshToken");
@@ -64,9 +69,10 @@ export const AuthProvider = ({ children }) => {
             ...options.headers,
             'Authorization': `Bearer ${accessToken}`,
         };
+        const apiUrl = API_BASE_URL + url;
         const sendRequest = async (retry = false) => {
             try {
-                const response = await fetch(url, {
+                const response = await fetch(apiUrl, {
                     method: options.method || 'GET',
                     headers,
                     body: options.body || null,
@@ -76,7 +82,7 @@ export const AuthProvider = ({ children }) => {
                     return response;
                 }
                 if (response.status === 401 && !retry) {
-                    const newToken = await refreshToken('/api/auth/refresh-token');
+                    const newToken = await refreshToken(`${API_BASE_URL}/api/auth/refresh-token`);
                     if (!newToken) {
                         console.error("Unable to refresh token, logging out...");
                         logout();

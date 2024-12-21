@@ -1,6 +1,7 @@
 package com.chat.app.model.entity;
 
 import com.chat.app.enumeration.UserStatus;
+import com.chat.app.model.elasticsearch.AccountEntityListener;
 import com.chat.app.model.entity.extend.chat.GroupChat;
 import com.chat.app.security.RefreshTokenEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -18,6 +19,7 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name="account")
+@EntityListeners(AccountEntityListener.class)
 public class Account {
 
     @Id

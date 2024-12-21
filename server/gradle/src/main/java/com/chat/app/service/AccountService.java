@@ -19,8 +19,6 @@ public interface AccountService {
 
     public Account getAccount(String email);
 
-    public Account getAccount(String username, String password) throws ChatException;
-
     public List<Account> searchAccounts(String username) throws ChatException;
 
     public void updateAccount(Long accountId, AccountDTO accountDto) throws ChatException;

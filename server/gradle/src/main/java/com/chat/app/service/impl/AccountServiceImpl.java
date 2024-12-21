@@ -4,7 +4,7 @@ import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.response.AccountResponse;
-import com.chat.app.repository.AccountRepository;
+import com.chat.app.repository.jpa.AccountRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.RelationshipService;
 import com.chat.app.service.aws.S3Service;
@@ -68,17 +68,6 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account getAccount(String email) {
         return accountRepository.findByEmail(email);
-    }
-
-    @Override
-    public Account getAccount(String username, String password) throws ChatException {
-        List<Account> accounts = searchAccounts(username);
-        for (Account account : accounts) {
-            if (passwordEncoder.matches(password, account.getPassword())) {
-                return account;
-            }
-        }
-        throw new ChatException("Invalid username or password");
     }
 
     @Override

@@ -43,7 +43,7 @@ public class Account {
     @Column(name = "gender")
     private Character gender;
 
-    @Column(name = "bio")
+    @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
 
     @Column(name = "avatar")

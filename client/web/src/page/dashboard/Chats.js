@@ -1,24 +1,30 @@
-import {useTheme} from "@mui/material/styles";
-import {Box, IconButton, Stack, Typography} from "@mui/material";
-import {MagnifyingGlass} from "phosphor-react";
-import {Search, SearchIconWrapper, StyledInputBase} from "../../component/Search";
+import {alpha, useTheme} from "@mui/material/styles";
+import {Avatar, Box, IconButton, List, ListItem, ListItemAvatar, ListItemText, Stack, Typography} from "@mui/material";
+import {Search} from "../../component/Search";
 import { Menu as MenuIcon } from '@mui/icons-material';
 import useMediaQuery from "@mui/material/useMediaQuery";
 import useSidebar from "../../hook/useSideBar";
 import '../../css/SideBar.css';
+import useSearchResult from "../../hook/useSearchResult";
+import useSelectedUser from "../../hook/useSelectedUser";
+
+
 
 const Chats = () => {
 
     const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isMobile = useMediaQuery("(max-width: 600px)");
+    const {searchResults} = useSearchResult();
+    const {setSelectedUser} = useSelectedUser();
+    const haveAnyFriend = searchResults.length > 0;
 
     return (
         <Box className="chat-box" sx={{
             position: "absolute",
             left: isSidebarOpen ? 100 : 0,
-            width: isMobile ? (isSidebarOpen ? 'calc(100% - 100px)' : '100%') : 300,
-            maxWidth: isMobile ? '100%' : 300,
+            width: isMobile ? (isSidebarOpen ? 'calc(100% - 100px)' : '100%') : 400,
+            maxWidth: isMobile ? '100%' : 400,
             backgroundColor: theme.palette.mode === 'light' ? "#F8FAFF" : theme.palette.background.paper,
             boxShadow: '0px 0px 2px rgba(0,0,0,0.25)',
             transition: "left 0.5s ease-in-out, width 0.5s ease-in-out"
@@ -33,15 +39,81 @@ const Chats = () => {
                     </IconButton>
                 </Stack>
 
-                <Stack sx={{width: "100%"}}>
-                    <Search>
-                        <SearchIconWrapper>
-                            <MagnifyingGlass color="#709CE6"/>
-                        </SearchIconWrapper>
-                        <StyledInputBase placeholder='Search...' inputProps={{"aria-label": "search"}}/>
-                    </Search>
-                </Stack>
+
+                <Box sx={{ width: "100%", height: 50 }}>
+                    <Search
+                        placeholder="Find your friends..."
+                        onSearch={(value) => console.log("Searching for:", value)}
+                    />
+                </Box>
+
+
+                <Box sx={{
+                    flexGrow: 1,
+                    overflowY: 'auto',
+                    mt: 2
+                }}>
+                    <List sx={{
+                        width: '100%',
+                        bgcolor: 'background.paper',
+                        borderRadius: 2,
+                        boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)",
+                    }}>
+                        {searchResults
+                            .filter(result => result.accountId !== Number(localStorage.getItem('accountId')))
+                            .map((result) => (
+                            <ListItem
+                                key={result.accountId}
+                                sx={{
+                                    borderRadius: 2,
+                                    mb: 1,
+                                    '&:hover': {
+                                        backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                                    }
+                                }}
+                                button
+                                onClick={() => setSelectedUser(true)}
+                            >
+                                <ListItemAvatar>
+                                    <Avatar
+                                        src={result.avatar}
+                                        sx={{ width: 50, height: 50 }}
+                                    />
+                                </ListItemAvatar>
+
+                                <ListItemText
+                                    primary={result.username}
+                                    secondary={result.lastMessage || "No recent messages"}
+                                    primaryTypographyProps={{
+                                        fontWeight: 'bold',
+                                        fontSize: '1rem',
+                                    }}
+                                    secondaryTypographyProps={{
+                                        color: 'text.secondary',
+                                        fontSize: '0.85rem',
+                                    }}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Box>
             </Stack>
+
+            {!haveAnyFriend && (
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    textAlign: 'center',
+                    color: theme.palette.text.secondary,
+                }}>
+                    <Typography variant="h6" align="center">
+                        Let make friends with someone and start a new conversation now!
+                    </Typography>
+                </Box>
+            )}
+
         </Box>
     )
 }

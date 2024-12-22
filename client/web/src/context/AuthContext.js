@@ -1,6 +1,6 @@
 import React, { createContext, useState } from "react";
 import {useNavigate} from "react-router";
-
+import { toast } from "react-toastify";
 
 
 const AuthContext = createContext(undefined);
@@ -96,6 +96,7 @@ export const AuthProvider = ({ children }) => {
 
             } catch (error) {
                 if (!retry) {
+                    toast.warn("Your session has expired\nPlease login again to continue");
                     logout();
                 }
                 return Promise.reject(error);

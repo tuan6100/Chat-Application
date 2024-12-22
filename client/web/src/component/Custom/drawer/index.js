@@ -16,7 +16,7 @@ import Iconify from "../../Iconify";
 
 
 export default function CustomDrawer({ open, onClose }) {
-  const transition = { duration: 0.3, ease: "easeInOut" };
+  const transition = { duration: 0.5, ease: "easeInOut" };
   const isMobile = useMediaQuery("(max-width: 600px)");
 
   // const {

@@ -23,6 +23,7 @@ const ProfileSchema = Yup.object().shape({
 });
 
 const ProfileForm = () => {
+
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [success, setSuccess] = useState('');
     const [serverError, setServerError] = useState('');
@@ -204,7 +205,7 @@ const ProfileForm = () => {
                                     }}
                                     underline="none"
                                 >
-                                    Use default avatar
+                                    Or use default avatar
                                 </Link>
                             </>
                         )}

@@ -29,7 +29,7 @@ public class GroupChat extends Chat {
     @JoinColumn(name = "creator_id")
     private Account creator;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "admins_in_group",
             joinColumns = @JoinColumn(name = "chat_id"),
@@ -37,7 +37,7 @@ public class GroupChat extends Chat {
     )
     private HashSet<Account> admins;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "members_in_group",
             joinColumns = @JoinColumn(name = "chat_id"),

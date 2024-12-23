@@ -113,7 +113,7 @@ public class RelationshipServiceImpl implements RelationshipService {
 
     @Override
     public void acceptFriend(Long userId, Long friendId) throws ChatException {
-        Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(userId, friendId);
+        Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(friendId, userId);
         Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : null;
         if (relationship == null || relationship.getStatus() != RelationshipStatus.WAITING_TO_ACCEPT) {
             throw new ChatException("No pending invitation found.");

@@ -8,17 +8,19 @@ import org.springframework.stereotype.Service;
 @Service
 public interface MessageService {
 
-    public Message findMessage(Long messageId) throws ChatException;
+     Message getMessage(Long messageId) throws ChatException;
 
-    public Message filterMessage(String keyword) throws ChatException;
+     Message storeMessage(MessageRequest request) throws ChatException;
 
-    public Message sendMessage(Long chatId, MessageRequest request) throws ChatException;
+     Message viewMessage(Long messageId, long viewedId) throws ChatException;
 
-    public Message viewMessage(Long chatId, Long messageId, long viewedId) throws ChatException;
+     Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest request) throws ChatException;
 
-    public Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest request) throws ChatException;
+     Message editMessage( Long messageId, MessageRequest request) throws ChatException;
+    
+     void unsendMessage(Long messageId) throws ChatException;
 
-    public Message editMessage(Long chatId, Long messageId, MessageRequest request) throws ChatException;
+     void restoreMessage(Long messageId) throws ChatException;
 
-    public void removeMessage(Long messageId) throws ChatException;
+     void removeMessage(Long messageId);
 }

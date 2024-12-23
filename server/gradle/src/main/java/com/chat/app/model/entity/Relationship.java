@@ -12,7 +12,6 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
 @Entity
 @Table(name = "relationship")
 public class Relationship {
@@ -36,6 +35,10 @@ public class Relationship {
 
     @Column(name = "timeline", nullable = false)
     private Date timeline;
+
+
+    public Relationship() {
+    }
 
     public Relationship(Account firstAccount, Account secondAccount, RelationshipStatus status, Date timeline) {
         this.firstAccount = firstAccount;

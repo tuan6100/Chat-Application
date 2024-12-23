@@ -20,7 +20,7 @@ public class ChatWebSocketController {
     @MessageMapping("/{chatId}/message")
     @SendTo("/client/{chatId}")
     public Message sendMessage(@DestinationVariable Long chatId, MessageRequest request) throws ChatException {
-        return messageService.sendMessage(chatId, request);
+        return messageService.storeMessage(request);
     }
 
     @MessageMapping("/{chatId}/message/reply")

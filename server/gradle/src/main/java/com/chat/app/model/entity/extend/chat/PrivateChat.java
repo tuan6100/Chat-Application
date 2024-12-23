@@ -7,13 +7,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @EqualsAndHashCode(callSuper = true)
-@Getter
-@Setter
+@Data
 @Entity
 @Table(name = "private_chat")
 public class PrivateChat extends Chat {
 
-    @ManyToOne (cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne (cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "relationship_id")
     private Relationship relationship;
 
@@ -21,8 +20,8 @@ public class PrivateChat extends Chat {
         super();
     }
 
-    public PrivateChat(String chatName, String avatar, Theme theme, Relationship relationship) {
-        super(chatName, avatar, theme);
+    public PrivateChat(Theme theme, Relationship relationship) {
+        super(theme);
         this.relationship = relationship;
     }
 }

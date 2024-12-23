@@ -1,5 +1,6 @@
 package com.chat.app.service.impl;
 
+import com.chat.app.enumeration.GroupPermission;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.GroupChatDTO;
 import com.chat.app.model.entity.Account;
@@ -30,7 +31,7 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
 
     @Override
     public GroupChat getGroupChat(long chatId) throws ChatException {
-        Chat chat =  chatService.findChat(chatId);
+        Chat chat =  chatService.getChat(chatId);
         if (!(chat instanceof GroupChat groupChat)) {
             throw new ChatException("This chat is not a group chat");
         }
@@ -41,18 +42,18 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
     public GroupChat createGroupChat(Account creator, GroupChatDTO groupChatDTO) {
         GroupChat groupChat = new GroupChat();
         groupChat.setCreator(creator);
-        groupChat.setChatName(groupChatDTO.getRoomName());
-        groupChat.setAvatar(groupChatDTO.getAvatar());
+        groupChat.setGroupName(groupChatDTO.getRoomName());
+        groupChat.setGroupAvatar(groupChatDTO.getAvatar());
         groupChat.setTheme(groupChatDTO.getTheme());
         groupChat.setMembers((HashSet<Account>) groupChatDTO.getMembers());
         groupChat.setAdmins(new HashSet<>(Collections.singleton(creator)));
-        groupChat.setCreatedAt(new Date());
-        groupChat.setPermission(groupChatDTO.isPermission());
+        groupChat.setCreatedDate(new Date());
+        groupChat.setPermission(groupChatDTO.getPermission());
         return groupChatRepository.save(groupChat);
     }
 
     @Override
-    public GroupChat setPermission(Long groupChatId, Long accountId, boolean permission) throws ChatException {
+    public GroupChat setPermission(Long groupChatId, Long accountId, GroupPermission permission) throws ChatException {
         GroupChat groupChat = this.getGroupChat(groupChatId);
         if (accountId != groupChat.getCreator().getAccountId()) {
             throw new ChatException("You do not have permission to add a member to this group chat");
@@ -61,13 +62,21 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
         return groupChatRepository.save(groupChat);
     }
 
+
     @Override
-    public GroupChat joinGroup(Long groupChatId, Long accountId) throws ChatException {
-        GroupChat groupChat = this.getGroupChat(groupChatId);
-        Account newMember = accountService.getAccount(accountId);
-        if (!groupChat.getPermission()) {
-            groupChat.getMembers().add(newMember);
-        }
+    public GroupChat joinGroup(Long groupChatId, Long accountId, Long inviterId) throws ChatException {
+        GroupChat groupChat = getGroupChat(groupChatId);
+//        Account newMember = accountService.getAccount(accountId);
+//        Account
+//        if (groupChat.getMembers().contains(newMember)) {
+//            throw new ChatException("This user is already a member of this group chat");
+//        }
+//        if (groupChat.getPermission() == GroupPermission.PRIVATE) {
+//            if (groupChat.getAdmins().contains(newMember)) {
+//                throw new ChatException("You do not have permission to add a member to this group chat");
+//            }
+//            groupChat.getMembers().add(newMember);
+//        }
         return groupChatRepository.save(groupChat);
     }
 
@@ -82,30 +91,30 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
     @Override
     public GroupChat addMember(Long groupChatId, Long adminId, Long newMemberId) throws ChatException {
         GroupChat groupChat = this.getGroupChat(groupChatId);
-        Account admin = accountService.getAccount(adminId);
-        Account newMember = accountService.getAccount(newMemberId);
-        if (groupChat.getMembers().contains(newMember)) {
-            throw new ChatException("This user is already a member of this group chat");
-        }
-        if (groupChat.getPermission() && !groupChat.getAdmins().contains(admin)) {
-            throw new ChatException("You do not have permission to add a member to this group chat");
-        }
-        groupChat.getMembers().add(newMember);
+//        Account admin = accountService.getAccount(adminId);
+//        Account newMember = accountService.getAccount(newMemberId);
+//        if (groupChat.getMembers().contains(newMember)) {
+//            throw new ChatException("This user is already a member of this group chat");
+//        }
+//        if (groupChat.getPermission() && !groupChat.getAdmins().contains(admin)) {
+//            throw new ChatException("You do not have permission to add a member to this group chat");
+//        }
+//        groupChat.getMembers().add(newMember);
         return groupChatRepository.save(groupChat);
     }
 
     @Override
     public GroupChat removeMember(Long groupChatId, Long adminId, Long memberId) throws ChatException {
         GroupChat groupChat = this.getGroupChat(groupChatId);
-        Account admin = accountService.getAccount(adminId);
-        Account member = accountService.getAccount(memberId);
-        if (!groupChat.getMembers().contains(member)) {
-            throw new ChatException("This user is not a member of this group chat");
-        }
-        if (groupChat.getPermission() && !groupChat.getAdmins().contains(admin) ) {
-            throw new ChatException("You do not have permission to remove a member from this group chat");
-        }
-        groupChat.getMembers().remove(member);
+//        Account admin = accountService.getAccount(adminId);
+//        Account member = accountService.getAccount(memberId);
+//        if (!groupChat.getMembers().contains(member)) {
+//            throw new ChatException("This user is not a member of this group chat");
+//        }
+//        if (groupChat.getPermission() && !groupChat.getAdmins().contains(admin) ) {
+//            throw new ChatException("You do not have permission to remove a member from this group chat");
+//        }
+//        groupChat.getMembers().remove(member);
         return  groupChatRepository.save(groupChat);
     }
 

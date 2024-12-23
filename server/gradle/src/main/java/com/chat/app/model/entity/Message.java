@@ -1,36 +1,43 @@
 package com.chat.app.model.entity;
 
+import com.chat.app.enumeration.MessageType;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 @Data
 @Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "message_type", discriminatorType = DiscriminatorType.STRING)
-public abstract class Message {
+public class Message {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")
-    protected Long messageId;
+    private Long messageId;
 
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
-    protected Account sender;
+    private Account sender;
 
-    @Column(nullable = false)
-    protected Date timestamp = new Date();
+    @Column(name = "content", columnDefinition = "TEXT")
+    @Lob
+    private String content;
 
-//    @Column(name = "reactions")
-//    protected HashMap<String, String> reactions;
+    @Column(name = "type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private MessageType type;
+    
+    @Column(nullable = false, columnDefinition = "TIMESTAMP")
+    private Date sendingTime = new Date();
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Column(name = "unsend", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean unsend;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_id")
-    protected Chat chat;
+    private Chat chat;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -38,24 +45,25 @@ public abstract class Message {
             joinColumns = @JoinColumn(name = "original_message_id", referencedColumnName = "message_id"),
             inverseJoinColumns = @JoinColumn(name = "reply_message_id", referencedColumnName = "message_id")
     )
-    protected List<Message> repliedMessages;
+    private List<Message> repliedMessages = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "views",
+            name = "viewers",
             joinColumns = @JoinColumn(name = "message_id"),
             inverseJoinColumns = @JoinColumn(name = "viewer_id", referencedColumnName = "account_id")
     )
-    protected List<Account> viewers;
+    private List<Account> viewers = new ArrayList<>();
 
 
     public Message() {
     }
 
-    public Message(Account sender, Date date, Chat chat, List<Message> replies) {
+    public Message(Account sender, String content, MessageType type, Date date, Chat chat) {
         this.sender = sender;
-        this.timestamp = date;
+        this.sendingTime = date;
         this.chat = chat;
-        this.repliedMessages = replies;
+        this.content = content;
+        this.type = type;
     }
 }

@@ -4,12 +4,13 @@ import com.chat.app.enumeration.Theme;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Relationship;
 import com.chat.app.model.entity.extend.chat.PrivateChat;
+import com.chat.app.repository.jpa.ChatRepository;
 import com.chat.app.repository.jpa.PrivateChatRepository;
 import com.chat.app.service.PrivateChatService;
+import com.chat.app.service.RelationshipService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class PrivateChatServiceImpl extends ChatServiceImpl implements PrivateChatService {
@@ -17,40 +18,31 @@ public class PrivateChatServiceImpl extends ChatServiceImpl implements PrivateCh
     @Autowired
     private PrivateChatRepository privateChatRepository;
 
-    @Override
-    public PrivateChat getPrivateChat(Long chatId) throws ChatException {
-        return (PrivateChat) privateChatRepository.findById(chatId)
-                .orElseThrow(() -> new ChatException("Private chat not found"));
+    @Autowired
+    private ChatRepository chatRepository;
 
-    }
+    @Autowired
+    @Lazy
+    private RelationshipService relationshipService;
 
-    @Override
-    public void createPrivateChat(Relationship relationship) {
-        privateChatRepository.save(new PrivateChat(relationship.getFirstAccount().getUsername(),
-                                        relationship.getFirstAccount().getAvatar(),
-                                        Theme.SYSTEM, relationship));
-        privateChatRepository.save((new PrivateChat(relationship.getSecondAccount().getUsername(),
-                                        relationship.getSecondAccount().getAvatar(),
-                                        Theme.SYSTEM, relationship)));
-    }
 
     @Override
-    public PrivateChat findPrivateChatByRelationship(Long relationshipId) throws ChatException {
-        PrivateChat privateChat =   privateChatRepository.findByRelationshipId(relationshipId);
-        if (privateChat == null) {
-            throw new ChatException("Private chat not found");
+    public PrivateChat create(Theme theme, Long RelationshipId) throws ChatException {
+        Relationship relationship = relationshipService.getRelationship(RelationshipId);
+        if (relationship == null) {
+            throw new ChatException("Relationship not found");
         }
-        return privateChat;
+        PrivateChat privateChat = new PrivateChat(theme, relationship);
+        return chatRepository.save(privateChat);
     }
 
     @Override
-    public void removePrivateChat(Long chatId) {
-        privateChatRepository.deleteById(chatId);
+    public Long getByRelationshipId(Long relationshipId) {
+        return privateChatRepository.findByRelationshipId(relationshipId);
     }
 
     @Override
-    public void removePrivateChat(Long firstAccountId, Long secondAccountId) {
-        List<PrivateChat> privateChats = privateChatRepository.findByFirstAccountIdAndSecondAccountId(firstAccountId, secondAccountId);
-        privateChatRepository.deleteAll(privateChats);
+    public void remove(Long chatId) {
+        chatRepository.deleteById(chatId);
     }
 }

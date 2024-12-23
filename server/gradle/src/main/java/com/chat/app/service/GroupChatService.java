@@ -1,5 +1,6 @@
 package com.chat.app.service;
 
+import com.chat.app.enumeration.GroupPermission;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.GroupChatDTO;
 import com.chat.app.model.entity.Account;
@@ -13,9 +14,9 @@ public interface GroupChatService extends ChatService {
 
     public GroupChat createGroupChat(Account creator, GroupChatDTO groupChatDTO) ;
 
-    public GroupChat setPermission(Long groupChatId, Long accountId, boolean permission) throws ChatException;
+    public GroupChat setPermission(Long groupChatId, Long accountId, GroupPermission permission) throws ChatException;
 
-    public GroupChat joinGroup(Long groupChatId, Long accountId) throws ChatException;
+    public GroupChat joinGroup(Long groupChatId, Long accountId, Long inviterId) throws ChatException;
 
     public GroupChat leaveGroup(Long groupChatId, Long accountId) throws ChatException;
 

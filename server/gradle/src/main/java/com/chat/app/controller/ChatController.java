@@ -6,26 +6,22 @@ import com.chat.app.model.entity.Chat;
 import com.chat.app.model.entity.Message;
 import com.chat.app.model.entity.extend.chat.GroupChat;
 import com.chat.app.model.entity.extend.chat.PrivateChat;
-import com.chat.app.payload.request.MessageRequest;
 import com.chat.app.service.ChatService;
-import com.chat.app.service.MessageService;
+import com.chat.app.service.GroupChatService;
 import com.chat.app.service.PrivateChatService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+
 
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping("/api/chat/{chatId}")
 public class ChatController {
 
-    @Autowired
-    private MessageService messageService;
 
     @Autowired
     private ChatService chatService;
@@ -33,11 +29,14 @@ public class ChatController {
     @Autowired
     private PrivateChatService privateChatService;
 
+    @Autowired
+    private GroupChatService groupChatService;
+
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("{chatId}")
+    @GetMapping
     public ResponseEntity<? extends Chat> getChat(@PathVariable Long chatId) throws ChatException {
-        Chat chat = chatService.findChat(chatId);
+        Chat chat = chatService.getChat(chatId);
         if (chat instanceof PrivateChat privateChat) {
             return ResponseEntity.ok(privateChat);
         } else if (chat instanceof GroupChat groupChat) {
@@ -48,7 +47,7 @@ public class ChatController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PutMapping("{chatId}")
+    @PutMapping("/theme")
     public ResponseEntity<Chat> changeTheme(@PathVariable Long chatId, @RequestParam String theme) throws ChatException {
         Theme themeEnum = Theme.valueOf(theme.toUpperCase());
         Chat chat = chatService.changeTheme(chatId, themeEnum);
@@ -56,31 +55,9 @@ public class ChatController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @DeleteMapping("{chatId}/message")
-    public ResponseEntity<String> removeMessage(@PathVariable Long chatId, @RequestParam Long messageId) throws ChatException {
-        chatService.removeMessage(chatId, messageId);
-        return ResponseEntity.ok("Message removed");
+    @GetMapping("/messages")
+    public Page<Message> getMessages(@PathVariable Long chatId, @RequestParam int page, @RequestParam int size) throws ChatException {
+        return  chatService.getMessages(chatId, PageRequest.of(page, size));
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("{chatId}/message/viewed")
-    public ResponseEntity<Message> viewMessage(@PathVariable Long chatId, @RequestBody  Map<Long, Long> viewerMap) throws ChatException {
-        if (!(viewerMap.containsKey("messageId")) || (!viewerMap.containsKey("userId"))) {
-            throw new ChatException("Invalid viewer map");
-        }
-        Long messageId = viewerMap.get("messageId");
-        Long viewerId = viewerMap.get("viewerId");
-        Message message = messageService.viewMessage(chatId, messageId, viewerId);
-        return ResponseEntity.ok(message);
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @PutMapping("{chatId}/message")
-    public ResponseEntity<Message> editMessage(@PathVariable Long chatId,
-                                               @RequestParam Long messageId,
-                                               @RequestBody MessageRequest request
-                                               ) throws ChatException {
-        Message message = messageService.editMessage(chatId, messageId, request);
-        return ResponseEntity.ok(message);
-    }
 }

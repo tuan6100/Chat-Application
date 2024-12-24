@@ -12,7 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/chat/group")
+@RequestMapping("/api/chat/group/{chatId}")
 public class GroupChatController {
 
     @Autowired
@@ -28,27 +28,27 @@ public class GroupChatController {
         return groupChatService.createGroupChat(creator, groupChatDTO);
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @PutMapping("/setPermission")
-    public GroupChat setPermission(@RequestParam Long groupChatId, @RequestParam Long accountId, @RequestParam boolean permission) throws ChatException {
-        return groupChatService.setPermission(groupChatId, accountId, permission);
-    }
+//    @PreAuthorize("isAuthenticated()")
+//    @PutMapping("/setPermission")
+//    public GroupChat setPermission(@RequestParam Long groupChatId, @RequestParam Long accountId, @RequestParam boolean permission) throws ChatException {
+//        return groupChatService.setPermission(groupChatId, accountId, permission);
+//    }
 
     @PreAuthorize("isAuthenticated()")
-    @PutMapping("/join")
-    public GroupChat joinGroup(@RequestParam Long groupChatId, @RequestParam Long accountId) throws ChatException {
-        return groupChatService.joinGroup(groupChatId, accountId);
+    @PutMapping("/join/{adminId}")
+    public GroupChat joinGroup(@PathVariable Long chatId, @RequestParam Long accountId, @PathVariable Long adminId) throws ChatException {
+        return groupChatService.joinGroup(chatId, accountId, adminId);
     }
 
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/leave")
-    public GroupChat leaveGroup(@RequestParam Long groupChatId, @RequestParam Long accountId) throws ChatException {
-        return groupChatService.leaveGroup(groupChatId, accountId);
+    public GroupChat leaveGroup(@PathVariable Long chatId, @RequestParam Long accountId) throws ChatException {
+        return groupChatService.leaveGroup(chatId, accountId);
     }
 
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/addMember")
-    public GroupChat addMember(@RequestParam Long groupChatId, @RequestParam Long userId, @RequestParam Long newMemberId) throws ChatException {
-        return groupChatService.addMember(groupChatId, userId, newMemberId);
+    public GroupChat addMember(@PathVariable Long chatId, @RequestParam Long userId, @RequestParam Long newMemberId) throws ChatException {
+        return groupChatService.addMember(chatId, userId, newMemberId);
     }
 }

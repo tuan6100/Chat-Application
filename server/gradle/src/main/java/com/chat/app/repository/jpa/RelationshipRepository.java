@@ -11,10 +11,9 @@ import java.util.List;
 @Repository
 public interface RelationshipRepository extends JpaRepository<Relationship, Long> {
 
-    @Query("SELECT r FROM Relationship r " +
-            "WHERE (r.firstAccount.accountId = ?1 AND r.secondAccount.accountId = ?2) " +
-            "   OR (r.firstAccount.accountId = ?2 AND r.secondAccount.accountId = ?1)")
-    Relationship findByFirstAccountAndSecondAccount(Long firstAccountId, Long secondAccountId);
+    @Query("SELECT r.relationshipId FROM Relationship r " +
+            "WHERE (r.firstAccount.accountId = ?1 AND r.secondAccount.accountId = ?2)")
+    Long findByFirstAccountAndSecondAccount(Long firstAccountId, Long secondAccountId);
 
     @Query("SELECT r FROM Relationship r " +
             "WHERE (r.firstAccount.accountId = ?1 OR r.secondAccount.accountId = ?1) " +
@@ -23,6 +22,7 @@ public interface RelationshipRepository extends JpaRepository<Relationship, Long
 
     @Query("SELECT r FROM Relationship r " +
             "WHERE r.firstAccount.accountId = ?1 OR r.secondAccount.accountId = ?1")
-    List<Relationship> findAllByAccount(Long accountId);
+    List<Relationship> findAllFriendsByAccount(Long accountId);
+
 }
 

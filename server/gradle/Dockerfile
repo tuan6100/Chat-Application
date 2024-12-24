@@ -9,7 +9,7 @@ COPY . .
 
 RUN chmod +x ./gradlew
 
-RUN ./gradlew bootJar --no-daemon
+RUN ./gradlew bootJar
 
 
 FROM openjdk:23-jdk-slim

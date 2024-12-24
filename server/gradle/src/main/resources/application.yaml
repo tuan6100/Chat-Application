@@ -16,6 +16,10 @@ spring:
     username: postgres
     password: 20226100
     driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: false
+      maximum-pool-size: 100
+      maxLifetime: 60000
 
   jpa:
     database: postgresql

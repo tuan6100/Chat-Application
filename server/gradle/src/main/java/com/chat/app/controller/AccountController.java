@@ -12,8 +12,6 @@ import com.chat.app.service.AccountService;
 import com.chat.app.service.RelationshipService;
 import com.chat.app.service.elasticsearch.AccountSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/account")
@@ -58,12 +55,11 @@ public class AccountController {
         if (account == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        List<AccountResponse.FriendResponse> friends = relationshipService.getFriendsList(account.getAccountId());
         AccountResponse response = new AccountResponse(
                 account.getAccountId(),
                 account.getUsername(),
-                account.getAvatar(),
-                friends
+                account.getEmail(),
+                account.getAvatar()
         );
         return ResponseEntity.ok(response);
     }
@@ -89,6 +85,14 @@ public class AccountController {
     public ResponseEntity<String> getCurrentAccountAvatar() throws ChatException {
         Account account = getAuthenticatedAccount();
         return ResponseEntity.ok(account.getAvatar());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/friends")
+    public ResponseEntity<List<AccountResponse>> getFriendsList() throws ChatException {
+        Account user = getAuthenticatedAccount();
+        List<AccountResponse> friends = relationshipService.getFriendsList(user.getAccountId());
+        return ResponseEntity.ok(friends);
     }
 
     @PreAuthorize("isAuthenticated()")

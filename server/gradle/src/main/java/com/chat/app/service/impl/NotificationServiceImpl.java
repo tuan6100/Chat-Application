@@ -4,8 +4,6 @@ import com.chat.app.model.dto.NotificationDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Message;
 import com.chat.app.model.entity.extend.chat.GroupChat;
-import com.chat.app.model.entity.extend.message.ImageMessage;
-import com.chat.app.model.entity.extend.message.TextMessage;
 import com.chat.app.payload.response.NotificationResponse;
 import com.chat.app.service.NotificationService;
 import org.springframework.stereotype.Service;
@@ -29,28 +27,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public NotificationResponse notifyNewMessage(NotificationDTO notificationDTO, Message message) {
-        String aboutTime = notificationDTO.getAboutTime();
-        if (message instanceof TextMessage textMessage) {
-            return new NotificationResponse(notificationDTO.getSenderAccount().getUsername(),
-                                            ((TextMessage) message).getTextContent(),
-                                            aboutTime);
-        }
-        if (message instanceof ImageMessage) {
-            return new NotificationResponse("new message",
-                                    notificationDTO.getSenderAccount().getUsername() + "just sent a photo",
-                                            aboutTime);
-        }
-        return new NotificationResponse("new message",
-                                notificationDTO.getSenderAccount().getUsername() + "just sent a file",
-                                        aboutTime);
+        return null;
     }
 
     @Override
     public NotificationResponse notifyGroupInvitation(NotificationDTO notificationDTO, GroupChat groupChat) {
-        String title = "New request";
-        String message = "You are invited to the group" + groupChat.getChatName() + "by" + notificationDTO.getSenderAccount().getUsername();
-        String aboutTime = notificationDTO.getAboutTime();
-        return new NotificationResponse(title, message, aboutTime);
+        return null;
     }
 
     public static void sendNotification(Account account, NotificationResponse response) {

@@ -6,6 +6,11 @@ import {SettingProvider} from "./context/SettingContext";
 import { SidebarProvider } from "./context/SidebarContext";
 import ThemeSettings from "./component/Custom";
 import useApplyTheme from "./hook/useApplyTheme";
+import {SearchProvider} from "./context/SearchResultContext";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {SelectedUserProvider} from "./context/SelectedUserContext";
+import {FriendsProvider} from "./context/FriendsListContext";
 
 function App() {
     useApplyTheme();
@@ -15,7 +20,14 @@ function App() {
                 <SettingProvider>
                     <ThemeSettings>
                         <SidebarProvider>
-                            <Router />
+                            <SearchProvider>
+                                <SelectedUserProvider>
+                                    <FriendsProvider>
+                                        <Router />
+                                        <ToastContainer />
+                                    </FriendsProvider>
+                                </SelectedUserProvider>
+                            </SearchProvider>
                         </SidebarProvider>
                     </ThemeSettings>
                 </SettingProvider>

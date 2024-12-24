@@ -10,9 +10,9 @@ import com.chat.app.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.Objects;
 
 @Service
 @Primary
@@ -27,42 +27,48 @@ public class ChatServiceImpl implements ChatService {
 
 
     @Override
-    public Chat findChat(Long chatId) throws ChatException {
+    public Chat getChat(Long chatId) throws ChatException {
         return chatRepository.findById(chatId)
                 .orElseThrow(() -> new ChatException("Chat not found"));
     }
 
     @Override
-    public Chat addMessage(Long chatId, Long MessageId) throws ChatException {
-        Chat chat = findChat(chatId);
-        Message message = messageService.findMessage(MessageId);
+    public Page<Message> getMessages(Long chatId, Pageable pageable) throws ChatException {
+        return chatRepository.findMessagesByChatId(chatId, pageable);
+
+    }
+
+    @Override
+    public Chat addMessage(Long chatId, Message message) throws ChatException {
+        Chat chat = getChat(chatId);
         chat.getMessages().add(message);
         return chatRepository.save(chat);
     }
 
     @Override
-    public Chat removeMessage(Long chatId, Long MessageID) throws ChatException {
-        Chat chat = findChat(chatId);
-        Message message = messageService.findMessage(MessageID);
+    public Chat pinMessage(Long messageId) throws ChatException {
+        Message message = messageService.getMessage(messageId);
+        Chat chat = message.getChat();
+        chat.getPinnedMessages().add(message);
+        return chatRepository.save(chat);
+    }
+
+    @Override
+    public Chat removeMessage(Long messageId) throws ChatException {
+        Message message = messageService.getMessage(messageId);
+        Chat chat = message.getChat();
         chat.getMessages().remove(message);
         return chatRepository.save(chat);
     }
 
     @Override
     public Chat changeTheme(Long chatId, Theme theme) throws ChatException {
-        Chat chat = findChat(chatId);
+        Chat chat = getChat(chatId);
         chat.setTheme(theme);
         return chatRepository.save(chat);
     }
 
-    @Override
-    public Message findMessage(long chatId, Long messageId) throws ChatException {
-        Chat chat = findChat(chatId);
-        return chat.getMessages().stream()
-                .filter(message -> Objects.equals(message.getMessageId(), messageId))
-                .findFirst()
-                .orElseThrow(() -> new ChatException("Message not found in chat room"));
-    }
+
 
 
 }

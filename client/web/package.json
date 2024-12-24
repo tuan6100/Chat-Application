@@ -30,6 +30,7 @@
     "react-redux": "^9.1.2",
     "react-router": "^7.0.2",
     "react-scripts": "5.0.1",
+    "react-toastify": "^11.0.2",
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "simplebar-react": "^3.2.6",

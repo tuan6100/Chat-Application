@@ -1,9 +1,9 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import * as Yup from 'yup';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Link } from 'react-router';
-import AuthContext from '../../context/AuthContext';
+import useAuth from "../../hook/useAuth";
 import FormProvider from '../../component/hook-form/FormProvider';
 import { TextField, Alert, Button, IconButton, InputAdornment, Stack, Tooltip } from '@mui/material';
 import { RiEyeCloseLine, RiEye2Fill } from 'react-icons/ri';
@@ -12,7 +12,7 @@ const LoginForm = () => {
 
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-    const { setIsAuthenticated } = useContext(AuthContext);
+    const { setIsAuthenticated } = useAuth();
 
     const [showPassword, setShowPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -33,6 +33,8 @@ const LoginForm = () => {
     const { register, setError, handleSubmit, formState: { errors, isSubmitting } } = methods;
 
     const onSubmit = async (data) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         try {
             const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
@@ -41,7 +43,9 @@ const LoginForm = () => {
                 },
                 body: JSON.stringify(data),
                 credentials: 'include',
+                signal: controller.signal,
             });
+            clearTimeout(timeoutId);
             if (!response.ok) {
                 const errorData = await response.json();
                 setErrorMessage(errorData.message || 'Login failed');
@@ -63,12 +67,15 @@ const LoginForm = () => {
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
                 setIsAuthenticated(true);
+
                 const newResponse = await fetch(`${API_BASE_URL}/api/account/me`, {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                     },
                     credentials: 'include',
-                })
+                    signal: controller.signal,
+                });
+                clearTimeout(timeoutId);
                 if (!newResponse.ok) {
                     const newErrorData = await newResponse.json();
                     setErrorMessage(newErrorData);
@@ -78,8 +85,9 @@ const LoginForm = () => {
                 localStorage.setItem('accountId', newData.accountId);
                 localStorage.setItem('username', newData.username);
                 localStorage.setItem('avatar', newData.avatar);
+                localStorage.setItem('email', newData.email);
                 setErrorMessage('');
-                window.location.href = '/app';
+                window.location.href = '/me';
             } else {
                 setErrorMessage('Failed to retrieve tokens.');
             }

@@ -5,36 +5,34 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "chat_room")
+@Table(name = "chat")
 public abstract class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected long chatId;
 
-    @Column(name = "chat_name")
-    protected String chatName;
+    @OneToMany(mappedBy = "chat", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    protected List<Message> messages = new ArrayList<>();
 
-    @Column(name = "avatar")
-    protected String avatar;
+    @OneToMany(mappedBy = "chat", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    protected List<Message> pinnedMessages = new ArrayList<>();
 
-    @OneToMany(mappedBy = "chat", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    protected List<Message> messages;
-
-    @Column(name = "theme", columnDefinition = "smallint default 2")
+    @Column(name = "theme")
+    @Enumerated(EnumType.STRING)
     protected Theme theme;
+
 
     public Chat() {
     }
 
-    public Chat(String chatName, String avatar, Theme theme) {
-        this.chatName = chatName;
-        this.avatar = avatar;
+    public Chat(Theme theme) {
         this.theme = theme;
     }
 

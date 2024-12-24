@@ -44,7 +44,7 @@ public class Account {
     @Column(name = "gender")
     private Character gender;
 
-    @Column(name = "bio")
+    @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
 
     @Column(name = "avatar")
@@ -52,19 +52,18 @@ public class Account {
 
     private UserStatus status;
 
-    @OneToMany(mappedBy = "firstAccount", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "firstAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<Relationship> firstRelationships;
 
-    @OneToMany(mappedBy = "secondAccount", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "secondAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("second-account-relationships")
     private Set<Relationship> secondRelationships;
 
-    @ManyToMany(mappedBy = "admins", fetch = FetchType.LAZY)
-    @ToString.Exclude
+    @ManyToMany(mappedBy = "admins", fetch = FetchType.LAZY, targetEntity = GroupChat.class)
     private Set<GroupChat> adminOfGroup;
 
-    @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY, targetEntity = GroupChat.class)
     @ToString.Exclude
     private Set<GroupChat> memberOfGroup;
 

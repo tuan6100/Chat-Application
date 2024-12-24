@@ -7,17 +7,34 @@ import useSidebar from "../../hook/useSideBar";
 import '../../css/SideBar.css';
 import useSearchResult from "../../hook/useSearchResult";
 import useSelectedUser from "../../hook/useSelectedUser";
-
-
+import useFriendsList from "../../hook/useFriendsList";
+import {useEffect} from "react";
+import useAuth from "../../hook/useAuth";
 
 const Chats = () => {
-
     const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
     const theme = useTheme();
     const isMobile = useMediaQuery("(max-width: 600px)");
-    const {searchResults} = useSearchResult();
-    const {setSelectedUser} = useSelectedUser();
-    const haveAnyFriend = searchResults.length > 0;
+    const { searchResults, startedSearch } = useSearchResult();
+    const { setSelectedUser } = useSelectedUser();
+    const { friendsList, setFriendsList } = useFriendsList();
+    const anyResult = searchResults.length > 0;
+    const {authFetch} = useAuth();
+
+    useEffect(() => {
+        const getFriendsList = async () => {
+            try {
+                const response = await authFetch('/api/account/me/friends');
+                const data = await response.json();
+                setFriendsList(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+        getFriendsList();
+    }, [authFetch, setFriendsList]);
+
+    const haveAnyFriend = friendsList.length > 0;
 
     return (
         <Box className="chat-box" sx={{
@@ -39,14 +56,12 @@ const Chats = () => {
                     </IconButton>
                 </Stack>
 
-
                 <Box sx={{ width: "100%", height: 50 }}>
                     <Search
                         placeholder="Find your friends..."
                         onSearch={(value) => console.log("Searching for:", value)}
                     />
                 </Box>
-
 
                 <Box sx={{
                     flexGrow: 1,
@@ -59,47 +74,47 @@ const Chats = () => {
                         borderRadius: 2,
                         boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)",
                     }}>
-                        {searchResults
+                        {(startedSearch ? searchResults : friendsList)
                             .filter(result => result.accountId !== Number(localStorage.getItem('accountId')))
                             .map((result) => (
-                            <ListItem
-                                key={result.accountId}
-                                sx={{
-                                    borderRadius: 2,
-                                    mb: 1,
-                                    '&:hover': {
-                                        backgroundColor: alpha(theme.palette.primary.light, 0.1),
-                                    }
-                                }}
-                                button
-                                onClick={() => setSelectedUser(true)}
-                            >
-                                <ListItemAvatar>
-                                    <Avatar
-                                        src={result.avatar}
-                                        sx={{ width: 50, height: 50 }}
-                                    />
-                                </ListItemAvatar>
+                                <ListItem
+                                    key={result.accountId}
+                                    sx={{
+                                        borderRadius: 2,
+                                        mb: 1,
+                                        '&:hover': {
+                                            backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                                        }
+                                    }}
+                                    button
+                                    onClick={() => setSelectedUser(result)}
+                                >
+                                    <ListItemAvatar>
+                                        <Avatar
+                                            src={result.avatar}
+                                            sx={{ width: 50, height: 50 }}
+                                        />
+                                    </ListItemAvatar>
 
-                                <ListItemText
-                                    primary={result.username}
-                                    secondary={result.lastMessage || "No recent messages"}
-                                    primaryTypographyProps={{
-                                        fontWeight: 'bold',
-                                        fontSize: '1rem',
-                                    }}
-                                    secondaryTypographyProps={{
-                                        color: 'text.secondary',
-                                        fontSize: '0.85rem',
-                                    }}
-                                />
-                            </ListItem>
-                        ))}
+                                    <ListItemText
+                                        primary={result.username}
+                                        secondary={result.lastMessage || "No recent messages"}
+                                        primaryTypographyProps={{
+                                            fontWeight: 'bold',
+                                            fontSize: '1rem',
+                                        }}
+                                        secondaryTypographyProps={{
+                                            color: 'text.secondary',
+                                            fontSize: '0.85rem',
+                                        }}
+                                    />
+                                </ListItem>
+                            ))}
                     </List>
                 </Box>
             </Stack>
 
-            {!haveAnyFriend && (
+            {(!haveAnyFriend && !anyResult) && (
                 <Box sx={{
                     position: 'absolute',
                     top: '50%',
@@ -109,13 +124,13 @@ const Chats = () => {
                     color: theme.palette.text.secondary,
                 }}>
                     <Typography variant="h6" align="center">
-                        Let make friends with someone and start a new conversation now!
+                        Let's make friends and start a new conversation now!
                     </Typography>
                 </Box>
             )}
-
         </Box>
-    )
+    );
 }
+
 
 export default Chats;

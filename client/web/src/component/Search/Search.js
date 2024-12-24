@@ -27,11 +27,12 @@ const CustomSearch = styled(TextField)(({ theme }) => ({
 const Search = ({placeholder = "" }) => {
     const [query, setQuery] = useState("");
     const {authFetch} = useAuth();
-    const {setSearchResults} = useSearchResult();
+    const {setSearchResults, setStartedSearch} = useSearchResult();
     const handleSearch = async (e) => {
         const value = e.target.value;
         setQuery(value);
         if (value.length > 1) {
+            setStartedSearch(true);
             try {
                 const response = await authFetch(`/api/account/search?username=${value}`);
                 const data = await response.json();
@@ -39,6 +40,9 @@ const Search = ({placeholder = "" }) => {
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
+        } else {
+            setSearchResults([]);
+            setStartedSearch(false);
         }
     };
 

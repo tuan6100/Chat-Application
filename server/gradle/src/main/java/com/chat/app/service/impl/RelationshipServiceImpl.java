@@ -124,12 +124,12 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
-    public List<AccountResponse.FriendResponse> getFriendsList(Long userId) {
+    public List<AccountResponse> getFriendsList(Long userId) {
         List<Relationship> relationships = relationshipRepository.findByAccountAndStatus(userId, RelationshipStatus.ACCEPTED);
         return relationships.stream()
                 .map(rel -> {
                     Account friend = rel.getFirstAccount().getAccountId().equals(userId) ? rel.getSecondAccount() : rel.getFirstAccount();
-                    return new AccountResponse.FriendResponse(friend.getAccountId(), friend.getUsername(), friend.getAvatar(), friend.getStatus());
+                    return new AccountResponse(friend.getAccountId(), friend.getUsername(), friend.getAvatar());
                 })
                 .collect(Collectors.toList());
     }

@@ -55,12 +55,11 @@ public class AccountController {
         if (account == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        List<AccountResponse.FriendResponse> friends = relationshipService.getFriendsList(account.getAccountId());
         AccountResponse response = new AccountResponse(
                 account.getAccountId(),
                 account.getUsername(),
-                account.getAvatar(),
-                friends
+                account.getEmail(),
+                account.getAvatar()
         );
         return ResponseEntity.ok(response);
     }
@@ -86,6 +85,14 @@ public class AccountController {
     public ResponseEntity<String> getCurrentAccountAvatar() throws ChatException {
         Account account = getAuthenticatedAccount();
         return ResponseEntity.ok(account.getAvatar());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/friends")
+    public ResponseEntity<List<AccountResponse>> getFriendsList() throws ChatException {
+        Account user = getAuthenticatedAccount();
+        List<AccountResponse> friends = relationshipService.getFriendsList(user.getAccountId());
+        return ResponseEntity.ok(friends);
     }
 
     @PreAuthorize("isAuthenticated()")

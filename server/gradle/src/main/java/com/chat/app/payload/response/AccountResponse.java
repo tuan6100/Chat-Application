@@ -9,20 +9,25 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class AccountResponse {
+
     private Long accountId;
     private String username;
+    private String email;
     private String avatar;
-    private List<FriendResponse> friends;
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class FriendResponse {
-        private Long friendId;
-        private String username;
-        private String avatar;
-        private UserStatus status;
+
+    public AccountResponse(Long accountId, String username, String avatar) {
+        this.accountId = accountId;
+        this.username = username;
+        this.avatar = avatar;
     }
+
+    public AccountResponse(Long accountId, String username, String email, String avatar) {
+        this.accountId = accountId;
+        this.username = username;
+        this.email = email;
+        this.avatar = avatar;
+    }
+
 }

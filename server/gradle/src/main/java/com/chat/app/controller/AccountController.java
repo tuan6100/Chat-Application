@@ -188,7 +188,7 @@ public class AccountController {
         Account user = getAuthenticatedAccount();
         accountService.markUserOnline(user.getAccountId());
         broadcastOnlineStatus(user.getAccountId(), true);
-        return ResponseEntity.ok(Map.of("message", "User is now online"));
+        return ResponseEntity.ok(Map.of("message", "online"));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -197,7 +197,7 @@ public class AccountController {
         Account user = getAuthenticatedAccount();
         accountService.markUserOffline(user.getAccountId());
         broadcastOnlineStatus(user.getAccountId(), false);
-        return ResponseEntity.ok(Map.of("message", "User is now offline"));
+        return ResponseEntity.ok(Map.of("message", "offline"));
     }
 
     @GetMapping("/me/status")

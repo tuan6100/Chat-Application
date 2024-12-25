@@ -65,9 +65,12 @@ const Chats = () => {
             }
         };
         getFriendsList();
+        const intervalId = setInterval(getFriendsList, 60000);
+        return () => clearInterval(intervalId);
     }, [authFetch, setFriendsList]);
 
     const haveAnyFriend = friendsList.length > 0;
+
 
     return (
         <Box className="chat-box" sx={{

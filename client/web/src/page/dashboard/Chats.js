@@ -1,6 +1,17 @@
 import {alpha, useTheme} from "@mui/material/styles";
-import {Avatar, Box, IconButton, List, ListItem, ListItemAvatar, ListItemText, Stack, Typography} from "@mui/material";
-import {Search} from "../../component/Search";
+import {
+    Avatar,
+    Badge,
+    Box,
+    IconButton,
+    List,
+    ListItem,
+    ListItemAvatar,
+    ListItemText,
+    Stack,
+    Typography
+} from "@mui/material";
+import Search from "../../component/Search";
 import { Menu as MenuIcon } from '@mui/icons-material';
 import useMediaQuery from "@mui/material/useMediaQuery";
 import useSidebar from "../../hook/useSideBar";
@@ -11,6 +22,28 @@ import useFriendsList from "../../hook/useFriendsList";
 import {useEffect} from "react";
 import useAuth from "../../hook/useAuth";
 
+
+const StyledBadge = (props) => {
+    return (
+        <Badge
+            overlap="circular"
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            variant="dot"
+            sx={{
+                "& .MuiBadge-dot": {
+                    backgroundColor: props.isOnline ? "#44b700" : "gray",
+                    width: "15px",
+                    height: "15px",
+                    borderRadius: "50%",
+                    border: "2px solid white"
+                }
+            }}
+        >
+            {props.children}
+        </Badge>
+    );
+};
+
 const Chats = () => {
     const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
     const theme = useTheme();
@@ -19,7 +52,7 @@ const Chats = () => {
     const { setSelectedUser } = useSelectedUser();
     const { friendsList, setFriendsList } = useFriendsList();
     const anyResult = searchResults.length > 0;
-    const {authFetch} = useAuth();
+    const { authFetch } = useAuth();
 
     useEffect(() => {
         const getFriendsList = async () => {
@@ -90,10 +123,12 @@ const Chats = () => {
                                     onClick={() => setSelectedUser(result)}
                                 >
                                     <ListItemAvatar>
-                                        <Avatar
-                                            src={result.avatar}
-                                            sx={{ width: 50, height: 50 }}
-                                        />
+                                        <StyledBadge isOnline={result.isOnline}>
+                                            <Avatar
+                                                src={result.avatar}
+                                                sx={{ width: 50, height: 50 }}
+                                            />
+                                        </StyledBadge>
                                     </ListItemAvatar>
 
                                     <ListItemText
@@ -131,6 +166,5 @@ const Chats = () => {
         </Box>
     );
 }
-
 
 export default Chats;

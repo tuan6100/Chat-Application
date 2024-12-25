@@ -6,12 +6,12 @@ spring:
   application:
     name: real-time-chat-app
 
-#  datasource:
+  datasource:
 #    url: jdbc:postgresql://localhost:5432/chatstorage
 #    username: postgres
 #    password:
 #    driver-class-name: org.postgresql.Driver
-  datasource:
+
     url: jdbc:postgresql://160.191.50.248:5432/chatstorage
     username: postgres
     password: 20226100
@@ -37,6 +37,9 @@ spring:
     elasticsearch:
       repositories:
         enabled: true
+    redis:
+      host: 160.191.50.248
+      port: 6379
 
   elasticsearch:
     uris: http://160.191.50.248:9200
@@ -44,6 +47,9 @@ spring:
 #    username: elastic
 #    password: 20226100
     socket-timeout: 30s
+
+  main:
+    allow-bean-definition-overriding: true
 
   devtools:
     restart:

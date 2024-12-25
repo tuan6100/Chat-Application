@@ -28,7 +28,7 @@ public class Account {
     private Long accountId;
 
     @Column(name = "username", nullable = false)
-    private String username;
+    protected String username;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
@@ -73,5 +73,14 @@ public class Account {
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<RefreshTokenEntity> refreshTokens = new ArrayList<>();
+
+
+    public Account() {
+    }
+
+    public Account(Long accountId, String username) {
+        this.accountId = accountId;
+        this.username = username;
+    }
 }
 

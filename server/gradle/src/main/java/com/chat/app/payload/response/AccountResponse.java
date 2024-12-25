@@ -15,6 +15,7 @@ public class AccountResponse {
     private String username;
     private String email;
     private String avatar;
+    private Boolean isOnline;
 
 
     public AccountResponse(Long accountId, String username, String avatar) {
@@ -28,6 +29,13 @@ public class AccountResponse {
         this.username = username;
         this.email = email;
         this.avatar = avatar;
+    }
+
+    public AccountResponse(Long accountId, String username, String avatar, Boolean isOnline) {
+        this.accountId = accountId;
+        this.username = username;
+        this.avatar = avatar;
+        this.isOnline = isOnline;
     }
 
 }

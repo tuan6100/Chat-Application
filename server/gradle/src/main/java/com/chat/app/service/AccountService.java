@@ -5,6 +5,8 @@ import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+
 @Service
 public interface AccountService {
 
@@ -18,5 +20,11 @@ public interface AccountService {
 
     void deleteAccount(Long accountId);
 
+    void markUserOnline(Long accountId);
 
+    void markUserOffline(Long accountId);
+
+    boolean isUserOnline(Long accountId);
+
+    Date getLastOnlineTime(Long accountId);
 }

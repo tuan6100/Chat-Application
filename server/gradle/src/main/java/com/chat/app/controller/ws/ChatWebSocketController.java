@@ -1,4 +1,4 @@
-package com.chat.app.controller;
+package com.chat.app.controller.ws;
 
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Message;

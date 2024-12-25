@@ -3,14 +3,16 @@ package com.chat.app.service.impl;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
+import com.chat.app.model.redis.AccountOnlineStatus;
 import com.chat.app.repository.jpa.AccountRepository;
+import com.chat.app.repository.redis.AccountOnlineStatusRepository;
 import com.chat.app.service.AccountService;
-import com.chat.app.service.RelationshipService;
 import com.chat.app.service.aws.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -19,21 +21,20 @@ public class AccountServiceImpl implements AccountService {
     private AccountRepository accountRepository;
 
     @Autowired
+    private AccountOnlineStatusRepository accountOnlineStatusRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Lazy
     @Autowired
-    private RelationshipService relationshipService;
+    private S3Service s3Service;
 
-    private final S3Service s3Service;
-    @Autowired
-    public AccountServiceImpl(S3Service s3Service) {
-        this.s3Service = s3Service;
-    }
 
     @Override
     public Account createAccount(Account account) {
-        return accountRepository.save(account);
+        accountRepository.save(account);
+        accountOnlineStatusRepository.save(new AccountOnlineStatus(account.getAccountId(), false, new Date()));
+        return account;
     }
 
     @Override
@@ -82,6 +83,40 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void deleteAccount(Long accountId) {
         accountRepository.deleteById(accountId);
+    }
+
+    @Override
+    public void markUserOnline(Long accountId) {
+        AccountOnlineStatus accountStatus = accountOnlineStatusRepository.findByAccountId(accountId.toString());
+        if (accountStatus == null) {
+            accountStatus = new AccountOnlineStatus();
+            accountStatus.setAccountId(accountId.toString());
+        }
+        accountStatus.setIsOnline(true);
+        accountStatus.setLastOnlineTime(new Date());
+        accountOnlineStatusRepository.save(accountStatus);
+    }
+
+    @Override
+    public void markUserOffline(Long accountId) {
+        AccountOnlineStatus accountStatus = accountOnlineStatusRepository.findByAccountId(accountId.toString());
+        if (accountStatus != null) {
+            accountStatus.setIsOnline(false);
+            accountStatus.setLastOnlineTime(new Date());
+            accountOnlineStatusRepository.save(accountStatus);
+        }
+    }
+
+    @Override
+    public boolean isUserOnline(Long accountId) {
+        AccountOnlineStatus accountStatus = accountOnlineStatusRepository.findByAccountId(accountId.toString());
+        return accountStatus != null && Boolean.TRUE.equals(accountStatus.getIsOnline());
+    }
+
+    @Override
+    public Date getLastOnlineTime(Long accountId) {
+        AccountOnlineStatus accountStatus = accountOnlineStatusRepository.findByAccountId(accountId.toString());
+        return (accountStatus != null) ? accountStatus.getLastOnlineTime() : null;
     }
 
 

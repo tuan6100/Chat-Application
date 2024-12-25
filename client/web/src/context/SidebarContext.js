@@ -10,6 +10,6 @@ export const SidebarProvider = ({ children }) => {
             {children}
         </SidebarContext.Provider>
     );
-};
+}
 
 export default SidebarContext;

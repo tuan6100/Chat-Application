@@ -2,8 +2,8 @@ import { styled, alpha } from '@mui/material/styles';
 import { TextField, InputAdornment } from '@mui/material';
 import { MagnifyingGlass } from 'phosphor-react';
 import { useState } from 'react';
-import useAuth from "../../hook/useAuth";
-import useSearchResult from "../../hook/useSearchResult";
+import useAuth from "../hook/useAuth";
+import useSearchResult from "../hook/useSearchResult";
 
 const CustomSearch = styled(TextField)(({ theme }) => ({
     width: "100%",

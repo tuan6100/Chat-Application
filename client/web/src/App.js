@@ -11,6 +11,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {SelectedUserProvider} from "./context/SelectedUserContext";
 import {FriendsProvider} from "./context/FriendsListContext";
+import {ConversationPropertiesProvider} from "./context/ConversationPropertiesContext";
 
 function App() {
     useApplyTheme();
@@ -23,8 +24,10 @@ function App() {
                             <SearchProvider>
                                 <SelectedUserProvider>
                                     <FriendsProvider>
-                                        <Router />
-                                        <ToastContainer />
+                                        <ConversationPropertiesProvider>
+                                            <Router />
+                                            <ToastContainer />
+                                        </ConversationPropertiesProvider>
                                     </FriendsProvider>
                                 </SelectedUserProvider>
                             </SearchProvider>

@@ -10,6 +10,6 @@ export const FriendsProvider = ({ children }) => {
             {children}
         </FriendsListContext.Provider>
     );
-};
+}
 
 export default FriendsListContext;

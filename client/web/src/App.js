@@ -9,7 +9,7 @@ import useApplyTheme from "./hook/useApplyTheme";
 import {SearchProvider} from "./context/SearchResultContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {SelectedUserProvider} from "./context/SelectedUserContext";
+import {SelectedProvider} from "./context/SelectedContext";
 import {FriendsProvider} from "./context/FriendsListContext";
 import {ConversationPropertiesProvider} from "./context/ConversationPropertiesContext";
 
@@ -22,14 +22,14 @@ function App() {
                     <ThemeSettings>
                         <SidebarProvider>
                             <SearchProvider>
-                                <SelectedUserProvider>
+                                <SelectedProvider>
                                     <FriendsProvider>
                                         <ConversationPropertiesProvider>
                                             <Router />
                                             <ToastContainer />
                                         </ConversationPropertiesProvider>
                                     </FriendsProvider>
-                                </SelectedUserProvider>
+                                </SelectedProvider>
                             </SearchProvider>
                         </SidebarProvider>
                     </ThemeSettings>

@@ -1,32 +1,24 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import {
-  Avatar,
-  Badge,
-  Box,
-  Divider,
-  Fade,
-  IconButton,
-  Menu,
-  MenuItem,
-  Stack,
-  Tooltip,
-  Typography,
+    Avatar,
+    Badge,
+    Box,
+    Divider,
+    Fade,
+    IconButton,
+    Menu,
+    MenuItem, Paper,
+    Stack,
+    Tooltip,
+    Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import {
-  VideoCameraFront,
-  Call,
-  Search,
-  MoreVert,
-} from "@mui/icons-material";
-import { useSearchParams } from "react-router";
+import { CameraEnhance, Call, Search, MoreVert } from "@mui/icons-material";
 import useConversationProperties from "../../hook/useConversationProperties";
 
 const ConversationHeader = () => {
-
-  const [searchParams, setSearchParams] = useSearchParams();
   const theme = useTheme();
-  const {avatar, name, isOnline} = useConversationProperties();
+  const { avatar, name, isOnline } = useConversationProperties();
   const [menuAnchor, setMenuAnchor] = useState(null);
   const openMenu = Boolean(menuAnchor);
   const handleMenuOpen = (event) => {
@@ -37,125 +29,121 @@ const ConversationHeader = () => {
   };
 
   return (
-      <Box
-          p={2}
-          width="100%"
+      <Paper
+          component="form"
           sx={{
-            backgroundColor:
-                theme.palette.mode === "light" ? "#F0F2F5" : theme.palette.background.paper,
-            boxShadow: "0px 1px 5px rgba(0, 0, 0, 0.1)",
-            borderBottom: `1px solid ${theme.palette.divider}`,
+              display: "flex",
+              alignItems: "center",
+              p: 1,
+              backgroundColor: "white",
+              borderTop: "1px solid #E0E0E0",
+              boxShadow: "0px -1px 5px rgba(0, 0, 0, 0.1)",
+              width: '100%',
           }}
       >
-        <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{ width: "100%" }}
+      <Stack
+        direction="row"
+        spacing={2}
+        alignItems="center"
+        sx={{
+          cursor: "pointer",
+        }}
+      >
+        <Badge
+          overlap="circular"
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+          badgeContent={isOnline ? <OnlineBadge /> : null}
         >
-          {/* User Info Section */}
-          <Stack
-              direction="row"
-              spacing={2}
-              alignItems="center"
-              onClick={() => {
-                searchParams.set("open", "true");
-                setSearchParams(searchParams);
-              }}
-              sx={{
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor: theme.palette.action.hover,
-                  borderRadius: "8px",
-                  p: 1,
-                },
-              }}
-          >
-            <Badge
-                overlap="circular"
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "right",
-                }}
-                badgeContent={<OnlineBadge />}
-            >
-              <Avatar
-                  alt="User Avatar"
-                  src="https://source.unsplash.com/random/40x40"
-                  sx={{ width: 48, height: 48 }}
-              />
-            </Badge>
-            <Stack spacing={0.3}>
-              <Typography variant="subtitle1" fontWeight="600">
-                name
-              </Typography>
-              <Typography variant="caption" color="textSecondary">
-                Online
-              </Typography>
-            </Stack>
-          </Stack>
+          <Avatar alt="User Avatar" src={avatar} sx={{ width: 60, height: 60 }} />
+        </Badge>
 
-          {/* Action Buttons */}
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Tooltip title="Video Call">
-              <IconButton>
-                <VideoCameraFront />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Voice Call">
-              <IconButton>
-                <Call />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Search in Chat">
-              <IconButton>
-                <Search />
-              </IconButton>
-            </Tooltip>
-
-            <Divider orientation="vertical" flexItem />
-
-            <Tooltip title="Options">
-              <IconButton onClick={handleMenuOpen}>
-                <MoreVert />
-              </IconButton>
-            </Tooltip>
-
-            {/* Dropdown Menu */}
-            <Menu
-                anchorEl={menuAnchor}
-                open={openMenu}
-                onClose={handleMenuClose}
-                TransitionComponent={Fade}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "right",
-                }}
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-            >
-            </Menu>
-          </Stack>
+        <Stack spacing={0.3}>
+          <Typography variant="subtitle1" fontWeight="600">
+            {name}
+          </Typography>
+          <Typography variant="caption" color="textSecondary">
+            {isOnline ? "Online" : "Offline"}
+          </Typography>
         </Stack>
-      </Box>
+      </Stack>
+
+      <Box sx={{ flexGrow: 1 }} />
+
+      <Stack direction="row" spacing={3} alignItems="center">
+        <Tooltip title="Video Call">
+          <IconButton>
+            <CameraEnhance
+                sx={{
+                    color: theme.palette.primary.main
+                }}
+            />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Voice Call">
+          <IconButton>
+            <Call
+                sx={{
+                  color: theme.palette.primary.main
+                }}
+              />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="SearchBarjs in Chat">
+          <IconButton>
+            <Search
+                sx={{
+                    color: theme.palette.primary.main
+                }}
+            />
+          </IconButton>
+        </Tooltip>
+
+        <Divider orientation="vertical" flexItem />
+
+        <Tooltip title="Options">
+          <IconButton onClick={handleMenuOpen}>
+            <MoreVert />
+          </IconButton>
+        </Tooltip>
+
+        <Menu
+          anchorEl={menuAnchor}
+          open={openMenu}
+          onClose={handleMenuClose}
+          TransitionComponent={Fade}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
+        >
+          <MenuItem onClick={handleMenuClose}>Option 1</MenuItem>
+          <MenuItem onClick={handleMenuClose}>Option 2</MenuItem>
+          <MenuItem onClick={handleMenuClose}>Option 3</MenuItem>
+        </Menu>
+      </Stack>
+      </Paper>
   );
 };
 
-// Online Badge Component
 const OnlineBadge = () => (
-    <Box
-        sx={{
-          width: 12,
-          height: 12,
-          backgroundColor: "#44b700",
-          borderRadius: "50%",
-          border: "2px solid white",
-        }}
-    />
+  <Box
+    sx={{
+      width: 12,
+      height: 12,
+      backgroundColor: "#44b700",
+      borderRadius: "50%",
+      border: "2px solid white",
+    }}
+  />
 );
 
 export default ConversationHeader;

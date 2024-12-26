@@ -6,7 +6,7 @@ import * as Yup from 'yup';
 import useAuth from "../../hook/useAuth";
 import {useNavigate} from "react-router";
 import ScreenLoading from "../../component/ScreenLoading";
-import "../../css/handWaving.css"
+import "../../css/HandWaving.css"
 
 const username = localStorage.getItem('username');
 

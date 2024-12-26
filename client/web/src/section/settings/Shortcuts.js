@@ -33,12 +33,12 @@ const Transition = React.forwardRef(function Transition(props, ref) {
      },
      {
         key:5,
-        title: 'Search ',
+        title: 'SearchBar.js ',
         combination:['Cmd','F'] 
      },
      {
         key:6,
-        title: 'Search Chat ',
+        title: 'SearchBar.js Chat ',
         combination:['Cmd','Shift','F'] 
      },
      {

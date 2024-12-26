@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Stack, Typography } from '@mui/material';
 import {Outlet, useLocation} from 'react-router';
-import '../../css/typingEffect.css';
+import '../../css/TypingEffect.css';
 
 const MainLayout = () => {
     const [isTypingComplete, setIsTypingComplete] = useState(false);

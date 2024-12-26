@@ -6,6 +6,7 @@ import SockJS from "sockjs-client";
 const ConversationPropertiesContext = createContext(undefined);
 
 export const ConversationPropertiesProvider = ({ children }) => {
+
     const [avatar, setAvatar] = useState(null);
     const [name, setName] = useState(null);
     const [isOnline, setIsOnline] = useState(false);

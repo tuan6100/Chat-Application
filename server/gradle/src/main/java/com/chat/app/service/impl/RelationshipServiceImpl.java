@@ -56,39 +56,31 @@ public class RelationshipServiceImpl implements RelationshipService {
     public RelationshipResponse getRelationshipStatus(Long firstAccountId, Long secondAccountId) throws ChatException {
         Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(firstAccountId, secondAccountId);
         Long reverseRelationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(secondAccountId, firstAccountId);
-        Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : getRelationship(reverseRelationshipId);
+        Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : (reverseRelationshipId != null ? getRelationship(reverseRelationshipId) : null);
         Account account = accountService.getAccount(secondAccountId);
-        if (relationship.getStatus() == RelationshipStatus.ACCEPTED) {
-            Long chatId = privateChatService.getByRelationshipId(relationship.getRelationshipId());
-            return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar()
-                    , "FRIENDS", privateChatService.getMessages(chatId, PageRequest.of(0, 50)));
-        }
-        if (relationship.getStatus() == RelationshipStatus.WAITING_TO_ACCEPT) {
-            if (relationshipId != null) {
-                return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                        "WAITING RESPONSE", null);
+        if (relationship != null) {
+            if (relationship.getStatus() == RelationshipStatus.ACCEPTED) {
+                Long chatId = privateChatService.getByRelationshipId(relationship.getRelationshipId());
+                return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "FRIEND", privateChatService.getMessages(chatId, PageRequest.of(0, 50)));
             }
-            if (reverseRelationshipId != null) {
-                return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                        "WAITING TO ACCEPT", null);
+            if (relationship.getStatus() == RelationshipStatus.WAITING_TO_ACCEPT) {
+                if (relationshipId != null) {
+                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "WAITING RESPONSE", null);
+                }
+                if (reverseRelationshipId != null) {
+                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "WAITING TO ACCEPT", null);
+                }
+            }
+            if (relationship.getStatus() == RelationshipStatus.BLOCKED) {
+                if (relationshipId != null) {
+                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "BLOCKED", null);
+                }
+                if (reverseRelationshipId != null) {
+                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "BLOCKED BY USER", null);
+                }
             }
         }
-        if (relationship.getStatus() == RelationshipStatus.BLOCKED) {
-            return new RelationshipResponse(null, null, null, null,
-                    "BLOCKED", null);
-        }
-        if (relationship.getStatus() == RelationshipStatus.STRANGER) {
-            Long spamchatId = spamChatService.getSpamChatId(firstAccountId, secondAccountId);
-            if (spamchatId == null) {
-                spamchatId = spamChatService.getSpamChatId(secondAccountId, firstAccountId);
-            }
-            return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                    "STRANGER", spamChatService.getMessages(spamchatId, PageRequest.of(0, 10)));
-        }
-        else {
-            return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                    "NO_RELATIONSHIP", null);
-        }
+        return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "NO_RELATIONSHIP", null);
     }
 
     @Override

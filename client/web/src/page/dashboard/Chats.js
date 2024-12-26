@@ -1,4 +1,13 @@
+import {useEffect, useState} from "react";
+import { useNavigate } from "react-router";
+import useSidebar from "../../hook/useSideBar";
 import {alpha, useTheme} from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import useFriendsList from "../../hook/useFriendsList";
+import useSearchResult from "../../hook/useSearchResult";
+import useSelected from "../../hook/useSelected";
+import useAuth from "../../hook/useAuth";
+import useConversationProperties from "../../hook/useConversationProperties";
 import {
     Avatar,
     Badge,
@@ -11,16 +20,8 @@ import {
     Stack,
     Typography
 } from "@mui/material";
-import Search from "../../component/Search";
+import Search from "../../component/SearchBar";
 import { Menu as MenuIcon } from '@mui/icons-material';
-import useMediaQuery from "@mui/material/useMediaQuery";
-import useSidebar from "../../hook/useSideBar";
-import '../../css/SideBar.css';
-import useSearchResult from "../../hook/useSearchResult";
-import useSelectedUser from "../../hook/useSelectedUser";
-import useFriendsList from "../../hook/useFriendsList";
-import {useEffect} from "react";
-import useAuth from "../../hook/useAuth";
 
 
 const StyledBadge = (props) => {
@@ -49,10 +50,13 @@ const Chats = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery("(max-width: 600px)");
     const { searchResults, startedSearch } = useSearchResult();
-    const { setSelectedUser } = useSelectedUser();
+    const { setSelectedUser } = useSelected();
     const { friendsList, setFriendsList } = useFriendsList();
     const anyResult = searchResults.length > 0;
     const { authFetch } = useAuth();
+    const [selectedUser, setSelectedUserState] = useState(null);
+    const navigate = useNavigate();
+    const {setAvatar, setName, setIsOnline, setLastOnlineTime} = useConversationProperties();
 
     useEffect(() => {
         const getFriendsList = async () => {
@@ -65,7 +69,21 @@ const Chats = () => {
             }
         };
         getFriendsList();
+        const intervalId = setInterval(getFriendsList, 60000);
+        return () => clearInterval(intervalId);
     }, [authFetch, setFriendsList]);
+
+    const handleUserClick = (user) => {
+        setSelectedUser(user.accountId);
+        setSelectedUserState(user);
+        setAvatar(user.avatar);
+        setName(user.username);
+        setIsOnline(user.isOnline);
+        setLastOnlineTime(user.lastOnlineTime);
+        if (isMobile) {
+            navigate(`/me/conversation/${user.accountId}`);
+        }
+    };
 
     const haveAnyFriend = friendsList.length > 0;
 
@@ -77,7 +95,8 @@ const Chats = () => {
             maxWidth: isMobile ? '100%' : 400,
             backgroundColor: theme.palette.mode === 'light' ? "#F8FAFF" : theme.palette.background.paper,
             boxShadow: '0px 0px 2px rgba(0,0,0,0.25)',
-            transition: "left 0.5s ease-in-out, width 0.5s ease-in-out"
+            transition: "left 0.5s ease-in-out, width 0.5s ease-in-out",
+            zIndex: 1
         }}>
             <Stack p={3} spacing={2} sx={{ height: "100vh" }}>
                 <Stack direction="row" alignItems='center' justifyContent='space-between'>
@@ -92,7 +111,6 @@ const Chats = () => {
                 <Box sx={{ width: "100%", height: 50 }}>
                     <Search
                         placeholder="Find your friends..."
-                        onSearch={(value) => console.log("Searching for:", value)}
                     />
                 </Box>
 
@@ -115,12 +133,13 @@ const Chats = () => {
                                     sx={{
                                         borderRadius: 2,
                                         mb: 1,
+                                        width: '100%',
                                         '&:hover': {
                                             backgroundColor: alpha(theme.palette.primary.light, 0.1),
                                         }
                                     }}
                                     button
-                                    onClick={() => setSelectedUser(result)}
+                                    onClick={() => handleUserClick(result)}
                                 >
                                     <ListItemAvatar>
                                         <StyledBadge isOnline={result.isOnline}>
@@ -161,6 +180,17 @@ const Chats = () => {
                     <Typography variant="h6" align="center">
                         Let's make friends and start a new conversation now!
                     </Typography>
+                </Box>
+            )}
+
+            {!isMobile && selectedUser && (
+                <Box sx={{
+                    position: 'absolute',
+                    right: 0,
+                    width: 'calc(100% - 400px)',
+                    height: '100%',
+                    transition: 'width 0.5s ease-in-out',
+                }}>
                 </Box>
             )}
         </Box>

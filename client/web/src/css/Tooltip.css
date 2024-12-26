@@ -1,0 +1,18 @@
+@keyframes moveUp {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.tooltip-text {
+    display: inline-block;
+    position: relative;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.tooltip-text.move-up {
+    animation: moveUp 1s forwards;
+}

@@ -62,7 +62,7 @@ const SideBar = () => {
                 backgroundColor: theme.palette.background.paper,
                 boxShadow: "0px 0px 2px rgba(0,0,0,0.25)",
                 transition: "width 0.5s ease-in-out",
-                 width: 100,
+                width: 100,
                 height: "100vh",
                 display: "flex",
                 position: "absolute"

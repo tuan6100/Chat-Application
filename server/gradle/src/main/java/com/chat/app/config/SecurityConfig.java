@@ -44,7 +44,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.addFilterBefore(jwtTokenValidator, UsernamePasswordAuthenticationFilter.class);
         http.authorizeHttpRequests( (req) -> req
-                .requestMatchers("/api/auth/**","/error", "/auth/**", "/me/**", "/installHook.js.map").permitAll()
+                .requestMatchers("/api/auth/**","/error", "/auth/**", "/me/**", "/installHook.js.map", "/ws/**").permitAll()
                 .anyRequest().authenticated()
         );
         http.logout((logout) -> logout.logoutSuccessUrl("/api/auth/logout"));

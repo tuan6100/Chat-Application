@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 // import useSettings from "../../../hook/useSettings";
 // import {defaultSettings } from "../../../config";
-import Scrollbar from "../../Scrollbar";
+import ScrollBar from "../../ScrollBar";
 import SettingFullscreen from "./SettingFullscreen";
 import SettingColorPresets from "./SettingColorPresets";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -65,7 +65,7 @@ export default function CustomDrawer({ open, onClose }) {
                 </Stack>
 
                 <Divider sx={{ my: 2 }} />
-                <Scrollbar style={{ flex: 1, padding: "16px" }}>
+                <ScrollBar style={{ flex: 1, padding: "16px" }}>
                   <Divider sx={{ borderStyle: "dashed" }} />
                     <Stack spacing={1} sx={{ p: 1 }}>
                       <Stack spacing={3} justifyContent="center" alignItems="center">
@@ -74,7 +74,7 @@ export default function CustomDrawer({ open, onClose }) {
                       </Stack>
                       <SettingFullscreen />
                     </Stack>
-                </Scrollbar>
+                </ScrollBar>
               </Box>
             </motion.div>
         )}

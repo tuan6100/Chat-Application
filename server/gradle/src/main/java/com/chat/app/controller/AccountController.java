@@ -9,6 +9,7 @@ import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Relationship;
 import com.chat.app.model.redis.AccountOnlineStatus;
 import com.chat.app.payload.response.AccountResponse;
+import com.chat.app.payload.response.RelationshipResponse;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.RelationshipService;
 import com.chat.app.service.elasticsearch.AccountSearchService;
@@ -117,6 +118,13 @@ public class AccountController {
     }
 
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/relationship")
+    public ResponseEntity<RelationshipResponse> getRelationship(@RequestParam Long accountId) throws ChatException {
+        Account user = getAuthenticatedAccount();
+        return ResponseEntity.ok(relationshipService.getRelationshipStatus(user.getAccountId(), accountId));
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/invite")
     public ResponseEntity<Relationship> inviteFriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
@@ -135,12 +143,12 @@ public class AccountController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/me/refuse")
+    @PostMapping("/me/reject")
     public ResponseEntity<String> refuseFriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
         Account friend = accountService.getAccount(friendId);
         relationshipService.refuseFriend(user.getAccountId(), friendId);
-        return ResponseEntity.ok("Refused a friend request from " + friend.getUsername());
+        return ResponseEntity.ok("Reject a friend request from " + friend.getUsername());
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -188,7 +196,7 @@ public class AccountController {
         Account user = getAuthenticatedAccount();
         accountService.markUserOnline(user.getAccountId());
         broadcastOnlineStatus(user.getAccountId(), true);
-        return ResponseEntity.ok(Map.of("message", "User is now online"));
+        return ResponseEntity.ok(Map.of("message", "online"));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -197,7 +205,7 @@ public class AccountController {
         Account user = getAuthenticatedAccount();
         accountService.markUserOffline(user.getAccountId());
         broadcastOnlineStatus(user.getAccountId(), false);
-        return ResponseEntity.ok(Map.of("message", "User is now offline"));
+        return ResponseEntity.ok(Map.of("message", "offline"));
     }
 
     @GetMapping("/me/status")

@@ -24,7 +24,7 @@ const CustomSearch = styled(TextField)(({ theme }) => ({
     }
 }));
 
-const Search = ({placeholder = "" }) => {
+const SearchBar = ({placeholder = "" }) => {
     const [query, setQuery] = useState("");
     const {authFetch} = useAuth();
     const {setSearchResults, setStartedSearch} = useSearchResult();
@@ -63,4 +63,4 @@ const Search = ({placeholder = "" }) => {
     );
 };
 
-export default Search;
+export default SearchBar;

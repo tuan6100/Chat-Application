@@ -1,36 +1,16 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { Avatar, Box, Divider, IconButton, Menu, MenuItem, Stack, Tooltip } from '@mui/material';
 import { useTheme } from "@mui/material/styles";
-import { ChatCircleDots, Gear, Phone, SignOut, User, Users, UserCircleGear } from "phosphor-react";
+import { ChatCircleDots, Gear, Phone, SignOut, User, Users, UserCircleGear, Bell, BellSlash } from "phosphor-react";
 import useSettings from '../../hook/useSettings';
 import CustomSwitch from '../../component/CustomSwitch';
 import { useNavigate } from 'react-router';
 import useAuth from "../../hook/useAuth";
-import AuthContext from "../../context/AuthContext";
 import '../../css/SideBar.css';
 import CustomDrawer from "../../component/Custom/drawer";
 import useSidebar  from "../../hook/useSideBar";
+import useSelected from "../../hook/useSelected";
 
-const Profile_Menu = [
-    { title: "Profile", icon: <User /> },
-    { title: "Settings", icon: <Gear /> },
-    { title: "Logout", icon: <SignOut /> },
-];
-
-const Nav_Buttons = [
-    { index: 0, icon: <ChatCircleDots />, tooltip: "Chat" },
-    { index: 1, icon: <Users />, tooltip: "Group" },
-    { index: 2, icon: <Phone />, tooltip: "Call" },
-];
-
-const getPath = (index) => {
-    switch (index) {
-        case 0: return '/me/chat';
-        case 1: return '/me/group';
-        case 2: return '/call';
-        default: break;
-    }
-};
 
 const SideBar = () => {
     const [anchorEl, setAnchorEl] = useState(null);
@@ -43,9 +23,38 @@ const SideBar = () => {
     const navigate = useNavigate();
     const [selected, setSelected] = useState(0);
     const { onToggleMode } = useSettings();
-    const { logout } = useAuth();
-    const { setIsAuthenticated } = useContext(AuthContext);
+    const { setIsAuthenticated, logout } = useAuth();
     const [openCustomBar, setOpenCustomBar] = useState(false);
+    const {enableNotification} = useSettings();
+    const {setChatOpen} = useSelected();
+
+    const Profile_Menu = [
+        { title: "Profile", icon: <User /> },
+        { title: "Settings", icon: <Gear /> },
+        { title: "Logout", icon: <SignOut /> },
+    ];
+
+    const Nav_Buttons = [
+        { index: 0, icon: <ChatCircleDots />, tooltip: "Chat" },
+        { index: 1, icon: <Users />, tooltip: "Group" },
+        { index: 2, icon: <Phone />, tooltip: "Call" },
+        { index: 3, icon: !enableNotification ? <Bell /> : <BellSlash />, tooltip: "Notification" },
+    ];
+
+    const getPath = (index) => {
+        switch (index) {
+            case 0: return '/me/chats';
+            case 1: return '/me/groups';
+            case 2:
+                setChatOpen(false);
+                return '/me/calls';
+            case 3:
+                setChatOpen(false);
+                return '/me/notifications';
+            default: break;
+        }
+    };
+
     useEffect(() => {
         if (openCustomBar) {
             document.body.style.overflow = "hidden";
@@ -117,7 +126,7 @@ const SideBar = () => {
                                 <Tooltip key={el.index} title={el.tooltip} placement="right">
                                     <IconButton
                                         onClick={() => { setSelected(el.index); navigate(getPath(el.index)); }}
-                                        className={`slide-in ${selected === el.index ? 'active' : ''}`} /* Apply slide-in class */
+                                        className={`slide-in ${selected === el.index ? 'active' : ''}`}
                                         sx={{
                                             width: "max-content",
                                             color: selected === el.index
@@ -128,13 +137,19 @@ const SideBar = () => {
                                             backgroundColor: selected === el.index ? theme.palette.primary.main : "transparent",
                                             borderRadius: 1.5,
                                             position: "relative",
+                                            transition: "background-color 0.5s ease, transform 0.5s ease",
+                                            transform: selected === el.index ? 'scale(1.05)' : 'scale(1)',
                                             '&:hover': {
-                                                backgroundColor: selected === el.index ? theme.palette.primary.main : "transparent",
+                                                transform: 'scale(1.1)',
+                                                backgroundColor: selected === el.index
+                                                    ? theme.palette.primary.main
+                                                    : "rgba(0, 0, 0, 0.1)",
                                             },
                                         }}
                                     >
                                         {el.icon}
                                     </IconButton>
+
                                 </Tooltip>
                             ))}
                             <Divider sx={{ width: "48px" }} />

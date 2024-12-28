@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import {createContext, useState} from "react";
 import { defaultSettings } from "../config";
 import useLocalStorage from "../hook/useLocalStorage";
 import getColorPresets, {
@@ -109,6 +109,9 @@ export const SettingProvider = ({ children }) => {
     });
   };
 
+  const [enabledNotification, setEnableNotification] = useState(true);
+
+
   return (
       <SettingContext.Provider
           value={{
@@ -127,6 +130,7 @@ export const SettingProvider = ({ children }) => {
               value: color.main,
             })),
             onResetSetting,
+            enabledNotification, setEnableNotification
           }}
       >
         {children}

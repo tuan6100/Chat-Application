@@ -3,7 +3,6 @@ import { useNavigate } from "react-router";
 import useSidebar from "../../hook/useSideBar";
 import {alpha, useTheme} from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import useFriendsList from "../../hook/useFriendsList";
 import useSearchResult from "../../hook/useSearchResult";
 import useSelected from "../../hook/useSelected";
 import useAuth from "../../hook/useAuth";
@@ -51,11 +50,12 @@ const Chats = () => {
     const isMobile = useMediaQuery("(max-width: 600px)");
     const { searchResults, startedSearch } = useSearchResult();
     const { setSelectedUser } = useSelected();
-    const { friendsList, setFriendsList } = useFriendsList();
+    const [friendsList, setFriendsList] = useState([]);
     const anyResult = searchResults.length > 0;
     const { authFetch } = useAuth();
     const [selectedUser, setSelectedUserState] = useState(null);
     const navigate = useNavigate();
+    const {setChatOpen} = useSelected();
     const {setAvatar, setName, setIsOnline, setLastOnlineTime} = useConversationProperties();
 
     useEffect(() => {
@@ -80,12 +80,13 @@ const Chats = () => {
         setName(user.username);
         setIsOnline(user.isOnline);
         setLastOnlineTime(user.lastOnlineTime);
+        setChatOpen(true);
         if (isMobile) {
             navigate(`/me/conversation/${user.accountId}`);
         }
     };
 
-    const haveAnyFriend = friendsList.length > 0;
+    const anyFriend = friendsList.length > 0;
 
     return (
         <Box className="chat-box" sx={{
@@ -168,7 +169,7 @@ const Chats = () => {
                 </Box>
             </Stack>
 
-            {(!haveAnyFriend && !anyResult) && (
+            {(!anyFriend && !anyResult) && (
                 <Box sx={{
                     position: 'absolute',
                     top: '50%',

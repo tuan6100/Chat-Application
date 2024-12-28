@@ -26,6 +26,7 @@ const SetupProfile = Loadable(lazy(() => import('../page/auth/SetupProfile')));
 const Chat = Loadable(lazy(() => import('../page/dashboard/Chats')));
 const Groups = Loadable(lazy(() => import('../page/dashboard/Groups')));
 const Conversation = Loadable(lazy(() => import('../component/Conversation')));
+const Notification = Loadable(lazy(() => import('../page/dashboard/Notifications')));
 
 export default function Router() {
   const { isAuthenticated } = useContext(AuthContext);
@@ -53,12 +54,13 @@ export default function Router() {
       ),
       children: [
         { element: <Navigate to={DEFAULT_PATH} replace />, index: true },
-        { path: 'chat', element: <Chat />},
+        { path: 'chats', element: <Chat />},
         { path: 'groups', element: <Groups />},
-        { path: 'conversation/:accountId', element: <Conversation /> }
+        { path: 'conversation/:accountId', element: <Conversation /> },
+        { path: 'notifications', element: <Notification /> }
       ],
     },
-    { path: '*', element: <Navigate to='/me/chat' replace /> },
+    { path: '*', element: <Navigate to='/me/chats' replace /> },
   ]);
 
 }

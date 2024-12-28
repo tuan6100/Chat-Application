@@ -6,29 +6,33 @@ import SockJS from "sockjs-client";
 const ConversationPropertiesContext = createContext(undefined);
 
 export const ConversationPropertiesProvider = ({ children }) => {
-
     const [avatar, setAvatar] = useState(null);
     const [name, setName] = useState(null);
     const [isOnline, setIsOnline] = useState(false);
     const [lastOnlineTime, setLastOnlineTime] = useState(null);
-    const { authFetch } = useAuth();
+    const { authFetch, isAuthenticated, logout } = useAuth();
     const clientRef = useRef(null);
     const pollingRef = useRef(null);
+    const onlineTimeoutRef = useRef(null);
+    const isOnlineCheckStarted = useRef(false);
 
     const markUserOnline = useCallback(async () => {
+        if (!isAuthenticated) return;
         try {
             const response = await authFetch(`/api/account/me/online`, {
                 method: "POST",
             });
             if (response.ok) {
                 setIsOnline(true);
+                isOnlineCheckStarted.current = true;
             }
         } catch (error) {
             console.error("Error marking user online:", error);
         }
-    }, [authFetch]);
+    }, [authFetch, isAuthenticated]);
 
     const markUserOffline = useCallback(async () => {
+        if (!isAuthenticated || !isOnlineCheckStarted.current) return;
         try {
             const response = await authFetch(`/api/account/me/offline`, {
                 method: "POST",
@@ -39,10 +43,10 @@ export const ConversationPropertiesProvider = ({ children }) => {
         } catch (error) {
             console.error("Error marking user offline:", error);
         }
-    }, [authFetch]);
-
+    }, [authFetch, isAuthenticated]);
 
     const connectWebSocket = useCallback(() => {
+        if (!isAuthenticated) return;
         if (clientRef.current) {
             clientRef.current.deactivate();
         }
@@ -68,18 +72,38 @@ export const ConversationPropertiesProvider = ({ children }) => {
         });
         stompClient.activate();
         clientRef.current = stompClient;
-    }, []);
+    }, [isAuthenticated]);
 
+    const startPolling = () => {
+        if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+        }
+        pollingRef.current = setInterval(() => {
+            markUserOnline();
+        }, 60000);
+    };
+
+    const clearPolling = () => {
+        if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+        }
+    };
 
     useEffect(() => {
-        const startPolling = () => {
-            if (pollingRef.current) {
-                clearInterval(pollingRef.current);
-            }
-            pollingRef.current = setInterval(() => {
-                markUserOnline();
-            }, 60000);
+        if (!isAuthenticated) return;
+
+        const startOnlineCheck = () => {
+            markUserOnline();
+            connectWebSocket();
+            startPolling();
         };
+
+        onlineTimeoutRef.current = setTimeout(() => {
+            startOnlineCheck();
+            isOnlineCheckStarted.current = true;
+        }, 60000);
+
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible') {
                 markUserOnline();
@@ -87,28 +111,35 @@ export const ConversationPropertiesProvider = ({ children }) => {
                 markUserOffline();
             }
         };
+
         const handleBeforeUnload = () => {
             markUserOffline();
         };
-        markUserOnline();
-        connectWebSocket();
-        startPolling();
+
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('beforeunload', handleBeforeUnload);
 
         return () => {
-            markUserOffline();
+            if (isOnlineCheckStarted.current) {
+                markUserOffline();
+            }
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('beforeunload', handleBeforeUnload);
-            if (pollingRef.current) {
-                clearInterval(pollingRef.current);
-            }
+            clearPolling();
             if (clientRef.current) {
                 clientRef.current.deactivate();
             }
+            if (onlineTimeoutRef.current) {
+                clearTimeout(onlineTimeoutRef.current);
+            }
         };
-    }, [markUserOnline, markUserOffline, connectWebSocket]);
+    }, [markUserOnline, markUserOffline, connectWebSocket, isAuthenticated]);
 
+    useEffect(() => {
+        if (!isAuthenticated && clientRef.current) {
+            clientRef.current.deactivate();
+        }
+    }, [isAuthenticated]);
 
     return (
         <ConversationPropertiesContext.Provider

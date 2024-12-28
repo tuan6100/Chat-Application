@@ -81,8 +81,6 @@ export const AuthProvider = ({ children }) => {
             'Authorization': `Bearer ${accessToken}`,
         };
         const apiUrl = API_BASE_URL + url;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
         const sendRequest = async (retry = false) => {
             try {
                 const response = await fetch(apiUrl, {
@@ -90,9 +88,7 @@ export const AuthProvider = ({ children }) => {
                     headers,
                     body: options.body || null,
                     credentials: "include",
-                    signal: controller.signal,
                 });
-                clearTimeout(timeoutId);
                 if (response.ok) {
                     return response;
                 }
@@ -100,7 +96,7 @@ export const AuthProvider = ({ children }) => {
                     const newToken = await refreshToken(`${API_BASE_URL}/api/auth/refresh-token`);
                     if (!newToken) {
                         console.error("Unable to refresh token, logging out...");
-                        await logout();
+                        logout();
                         return Promise.reject("Failed to refresh token or re-authenticate.");
                     }
                     headers.Authorization = `Bearer ${newToken}`;
@@ -110,10 +106,9 @@ export const AuthProvider = ({ children }) => {
                 return Promise.reject(response);
 
             } catch (error) {
-                clearTimeout(timeoutId);
                 if (error.name === 'AbortError') {
                     toast.warn("Request timed out", {
-                        position: toast.POSITION.TOP_CENTER,
+                        position: "top-center",
                         autoClose: 5000,
                         hideProgressBar: false,
                         closeOnClick: true,
@@ -124,7 +119,7 @@ export const AuthProvider = ({ children }) => {
                 }
                 if (!retry) {
                     toast.warn("Your session has expired.<br />Please login again to continue", {
-                        position: toast.POSITION.TOP_CENTER,
+                        position: "top-center",
                         autoClose: 5000,
                         hideProgressBar: false,
                         closeOnClick: true,
@@ -132,7 +127,7 @@ export const AuthProvider = ({ children }) => {
                         draggable: true,
                         progress: undefined,
                     });
-                    await logout();
+                    logout();
                 }
                 return Promise.reject(error);
             }

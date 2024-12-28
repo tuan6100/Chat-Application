@@ -6,12 +6,13 @@ import {
     Paper, Tooltip, InputAdornment,
 } from "@mui/material";
 import {
-    AttachFile, Mood,
+    AttachFile,
     SettingsVoice
 } from "@mui/icons-material";
 import {
     Image,
     Sticker,
+    SmileyBlank
 } from "phosphor-react";
 import {useTheme} from "@mui/material/styles";
 import SendButton from "../SendButton";
@@ -44,7 +45,7 @@ const ConversationFooter = () => {
                 display: "flex",
                 alignItems: "center",
                 p: 1,
-                backgroundColor: "white",
+                backgroundColor: "transparent",
                 borderTop: "1px solid #E0E0E0",
                 boxShadow: "0px -1px 5px rgba(0, 0, 0, 0.1)",
                 width: '100%',
@@ -115,13 +116,8 @@ const ConversationFooter = () => {
                 endAdornment={
                     <InputAdornment position="end">
                         <Tooltip title="Emoji">
-                            <IconButton>
-                                <Mood
-                                    sx={{
-                                        color: theme.palette.primary.main,
-                                        fontSize: 28
-                                    }}
-                                />
+                            <IconButton color="primary">
+                                <SmileyBlank size={28} />
                             </IconButton>
                         </Tooltip>
                     </InputAdornment>

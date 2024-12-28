@@ -10,8 +10,8 @@ import {SearchProvider} from "./context/SearchResultContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {SelectedProvider} from "./context/SelectedContext";
-import {FriendsProvider} from "./context/FriendsListContext";
 import {ConversationPropertiesProvider} from "./context/ConversationPropertiesContext";
+import Notification from "./component/Notification";
 
 function App() {
     useApplyTheme();
@@ -23,12 +23,11 @@ function App() {
                         <SidebarProvider>
                             <SearchProvider>
                                 <SelectedProvider>
-                                    <FriendsProvider>
-                                        <ConversationPropertiesProvider>
-                                            <Router />
-                                            <ToastContainer />
-                                        </ConversationPropertiesProvider>
-                                    </FriendsProvider>
+                                    <ConversationPropertiesProvider>
+                                        <Router />
+                                        <ToastContainer />
+                                        <Notification />
+                                    </ConversationPropertiesProvider>
                                 </SelectedProvider>
                             </SearchProvider>
                         </SidebarProvider>

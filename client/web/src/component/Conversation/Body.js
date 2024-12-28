@@ -36,11 +36,10 @@ const ConversationBody = () => {
 
     const handleSendFriendRequest = async () => {
         try {
-            const response = await authFetch(`/api/account/me/send-friend-request?friendId=${selectedUser}`, {
+            const response = await authFetch(`/api/account/me/invite?friendId=${selectedUser}`, {
                 method: "POST",
             });
             if (response.ok) {
-                alert("Friend request sent!");
                 fetchRelationship();
             }
         } catch (error) {
@@ -54,7 +53,6 @@ const ConversationBody = () => {
                 method: "POST",
             });
             if (response.ok) {
-                alert("User blocked!");
                 fetchRelationship();
             }
         } catch (error) {
@@ -68,7 +66,6 @@ const ConversationBody = () => {
                 method: "POST",
             });
             if (response.ok) {
-                alert("Friend request accepted!");
                 fetchRelationship();
             }
         } catch (error) {
@@ -78,11 +75,10 @@ const ConversationBody = () => {
 
     const handleRejectRequest = async () => {
         try {
-            const response = await authFetch(`/api/account/me/reject?accountId=${selectedUser}`, {
+            const response = await authFetch(`/api/account/me/reject?friendId=${selectedUser}`, {
                 method: "POST",
             });
             if (response.ok) {
-                alert("Friend request rejected!");
                 fetchRelationship();
             }
         } catch (error) {
@@ -96,7 +92,6 @@ const ConversationBody = () => {
                 method: "POST",
             });
             if (response.ok) {
-                alert("User unblocked!");
                 fetchRelationship();
             }
         } catch (error) {
@@ -165,7 +160,7 @@ const ConversationBody = () => {
                 </Box>
             );
 
-        case "WAITING TO ACCEPT":
+        case "WAITING RESPONSE":
             return (
                 <Box display="flex" flexDirection="column" height="100vh">
                     <Box flex={1} display="flex" justifyContent="center" alignItems="center">
@@ -174,13 +169,13 @@ const ConversationBody = () => {
                 </Box>
             );
 
-        case "WAITING RESPONSE":
+        case "WAITING FOR ACCEPTANCE":
             return (
                 <Box display="flex" flexDirection="column" height="100vh">
                     <Box flex={1} display="flex" flexDirection="column" alignItems="center" justifyContent="center">
                         <Typography variant="h6">Sent you a friend request</Typography>
                         <Stack direction="row" spacing={2} mt={2}>
-                            <Button variant="contained" color="success" onClick={handleAcceptRequest}>
+                            <Button variant="outlined" color="success" onClick={handleAcceptRequest}>
                                 Accept
                             </Button>
                             <Button variant="outlined" color="error" onClick={handleRejectRequest}>

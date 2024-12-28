@@ -35,7 +35,7 @@ const ConversationHeader = () => {
               display: "flex",
               alignItems: "center",
               p: 1,
-              backgroundColor: "white",
+              backgroundColor: "transparent",
               borderTop: "1px solid #E0E0E0",
               boxShadow: "0px -1px 5px rgba(0, 0, 0, 0.1)",
               width: '100%',

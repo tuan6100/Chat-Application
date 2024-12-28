@@ -1,7 +1,8 @@
-package com.chat.app.model.elasticsearch;
+package com.chat.app.utility;
 
+import com.chat.app.model.elasticsearch.AccountDeleteEvent;
+import com.chat.app.model.elasticsearch.AccountSyncEvent;
 import com.chat.app.model.entity.Account;
-import com.chat.app.service.elasticsearch.AccountSyncService;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;

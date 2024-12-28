@@ -10,7 +10,7 @@ public interface MessageService {
 
      Message getMessage(Long messageId) throws ChatException;
 
-     Message storeMessage(MessageRequest request) throws ChatException;
+     Message sendMessage(Long chatId, MessageRequest request) throws ChatException;
 
      Message viewMessage(Long messageId, long viewedId) throws ChatException;
 

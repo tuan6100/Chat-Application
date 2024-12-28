@@ -16,12 +16,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -47,8 +43,8 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Message storeMessage(MessageRequest messageRequest) throws ChatException {
-        Chat chat = chatService.getChat(messageRequest.getChatId());
+    public Message sendMessage(Long chatId, MessageRequest messageRequest) throws ChatException {
+        Chat chat = chatService.getChat(chatId);
         Account sender = accountService.getAccount(messageRequest.getSenderId());
         String content = messageRequest.getContent();
         MessageType type = MessageType.valueOf(String.valueOf(messageRequest.getType()));
@@ -69,7 +65,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest messageRequest) throws ChatException {
-        Chat chat = chatService.getChat(messageRequest.getChatId());
+        Chat chat = chatService.getChat(chatId);
         Account sender = accountService.getAccount(messageRequest.getSenderId());
         String content = messageRequest.getContent();
         MessageType type = MessageType.valueOf(String.valueOf(messageRequest.getType()));

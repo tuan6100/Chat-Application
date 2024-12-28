@@ -1,10 +1,9 @@
 package com.chat.app.model.entity;
 
 import com.chat.app.enumeration.UserStatus;
-import com.chat.app.model.elasticsearch.AccountEntityListener;
+import com.chat.app.utility.AccountEntityListener;
 import com.chat.app.model.entity.extend.chat.GroupChat;
 import com.chat.app.model.entity.extend.notification.FriendNotification;
-import com.chat.app.model.entity.extend.notification.GroupNotification;
 import com.chat.app.security.RefreshTokenEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;

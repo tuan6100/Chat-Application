@@ -1,5 +1,7 @@
-package com.chat.app.model.elasticsearch;
+package com.chat.app.utility;
 
+import com.chat.app.model.elasticsearch.AccountDeleteEvent;
+import com.chat.app.model.elasticsearch.AccountSyncEvent;
 import com.chat.app.service.elasticsearch.AccountSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

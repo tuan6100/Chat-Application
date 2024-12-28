@@ -70,6 +70,11 @@ spring:
     virtual:
       enabled: true
 
+  kafka:
+    bootstrap-servers: http://160.191.50.248:9092
+    consumer:
+      group-id: chat-group
+
 
 logging:
 #  file:

@@ -197,7 +197,7 @@ public class AccountController {
         return ResponseEntity.ok("Account deleted successfully");
     }
 
-    @PreAuthorize("isAuthenticated()")
+
     @PostMapping("/me/online")
     public ResponseEntity<?> markOnline() throws ChatException {
         Account user = getAuthenticatedAccount();
@@ -206,7 +206,7 @@ public class AccountController {
         return ResponseEntity.ok(Map.of("message", "online"));
     }
 
-    @PreAuthorize("isAuthenticated()")
+
     @PostMapping("/me/offline")
     public ResponseEntity<?> markOffline() throws ChatException {
         Account user = getAuthenticatedAccount();

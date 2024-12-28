@@ -62,27 +62,27 @@ public class RelationshipServiceImpl implements RelationshipService {
             if (relationship.getStatus() == RelationshipStatus.ACCEPTED) {
                 Long chatId = privateChatService.getByRelationshipId(relationship.getRelationshipId());
                 return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                        "FRIEND", privateChatService.getMessages(chatId, PageRequest.of(0, 50)));
+                        "FRIEND", true, privateChatService.getMessages(chatId, PageRequest.of(0, 50)));
             }
             if (relationship.getStatus() == RelationshipStatus.WAITING_TO_ACCEPT) {
                 if (relationshipId != null) {
                     return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                            "WAITING RESPONSE", null);
+                            "WAITING RESPONSE", false,null);
                 }
                 return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                        "WAITING FOR ACCEPTANCE", null);
+                        "WAITING FOR ACCEPTANCE", false, null);
             }
             if (relationship.getStatus() == RelationshipStatus.BLOCKED) {
                 if (relationshipId != null) {
                     return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                            "BLOCKED", null);
+                            "BLOCKED", false, null);
                 }
                 return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                        "BLOCKED BY USER", null);
+                        "BLOCKED BY USER", false, null);
             }
         }
         return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                    "NO_RELATIONSHIP", null);
+                    "NO_RELATIONSHIP", false,null);
     }
 
     @Override
@@ -141,7 +141,8 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Override
     public void unfriend(Long userId, Long friendId) throws ChatException {
         Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(userId, friendId);
-        Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : null;
+        Long reverseRelationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(friendId, userId);
+        Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : (reverseRelationshipId != null ? getRelationship(reverseRelationshipId) : null);
         if (relationship == null || relationship.getStatus() != RelationshipStatus.ACCEPTED) {
             throw new ChatException("You are not friends.");
         }
@@ -149,9 +150,10 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
-    public void blockFriend(Long userId, Long friendId) throws ChatException {
+    public void blockUser(Long userId, Long friendId) throws ChatException {
         Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(userId, friendId);
-        Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : null;
+        Long reverseRelationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(friendId, userId);
+        Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : (reverseRelationshipId != null ? getRelationship(reverseRelationshipId) : null);
         if (relationship == null) {
             Account user = accountService.getAccount(userId);
             Account friend = accountService.getAccount(friendId);
@@ -163,7 +165,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
-    public void unblockFriend(Long userId, Long friendId) throws ChatException {
+    public void unblockUser(Long userId, Long friendId) throws ChatException {
         Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(userId, friendId);
         Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : null;
         if (relationship == null || relationship.getStatus() != RelationshipStatus.BLOCKED) {

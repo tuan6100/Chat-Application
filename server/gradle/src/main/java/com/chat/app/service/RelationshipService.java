@@ -30,7 +30,7 @@ import java.util.List;
 
      void unfriend(Long userId, Long friendId) throws ChatException;
     
-     void blockFriend(Long userId, Long friendId) throws ChatException;
+     void blockUser(Long userId, Long friendId) throws ChatException;
     
-     void unblockFriend(Long userId, Long friendId) throws ChatException;
+     void unblockUser(Long userId, Long friendId) throws ChatException;
 }

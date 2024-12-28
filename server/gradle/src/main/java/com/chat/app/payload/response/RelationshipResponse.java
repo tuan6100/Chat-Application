@@ -16,6 +16,7 @@ public class RelationshipResponse {
     private String email;
     private String avatar;
     private String status;
+    private Boolean isFriend;
     private Page<Message> messages;
 
 }

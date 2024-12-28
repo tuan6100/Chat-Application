@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -16,6 +17,7 @@ public class AccountResponse {
     private String email;
     private String avatar;
     private Boolean isOnline;
+    private Date lastOnlineTime;
 
 
     public AccountResponse(Long accountId, String username, String avatar) {
@@ -31,11 +33,12 @@ public class AccountResponse {
         this.avatar = avatar;
     }
 
-    public AccountResponse(Long accountId, String username, String avatar, Boolean isOnline) {
+    public AccountResponse(Long accountId, String username, String avatar, Boolean isOnline, Date lastOnlineTime) {
         this.accountId = accountId;
         this.username = username;
         this.avatar = avatar;
         this.isOnline = isOnline;
+        this.lastOnlineTime = lastOnlineTime;
     }
 
 }

@@ -5,7 +5,6 @@ import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.dto.FriendStatusDTO;
 import com.chat.app.model.elasticsearch.AccountIndex;
 import com.chat.app.model.entity.Account;
-import com.chat.app.model.entity.Notification;
 import com.chat.app.model.redis.AccountOnlineStatus;
 import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.payload.response.NotificationResponse;
@@ -84,6 +83,7 @@ public class AccountController {
         List<AccountResponse> responses = new ArrayList<>();
         results.forEach(result -> responses.add(new AccountResponse(result.getAccountId(), result.getUsername(), result.getAvatar())));
         responses.forEach(account -> account.setIsOnline(accountService.isUserOnline(account.getAccountId())));
+        responses.forEach(account -> account.setLastOnlineTime(accountService.getLastOnlineTime(account.getAccountId())));
         return ResponseEntity.ok(responses);
     }
 
@@ -145,7 +145,7 @@ public class AccountController {
         Account user = getAuthenticatedAccount();
         Account friend = accountService.getAccount(friendId);
         relationshipService.acceptFriend(user.getAccountId(), friendId);
-        notificationService.notifyFriendRequestAccepted(friendId, user.getAccountId());
+        notificationService.notifyFriendRequestAccepted(user.getAccountId(), friendId);
         return ResponseEntity.ok(relationshipService.getRelationshipStatus(user.getAccountId(), friendId));
     }
 
@@ -178,7 +178,7 @@ public class AccountController {
     @PostMapping("/me/block")
     public ResponseEntity<Void> block(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        relationshipService.blockFriend(user.getAccountId(), friendId);
+        relationshipService.blockUser(user.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }
 
@@ -186,7 +186,7 @@ public class AccountController {
     @PostMapping("/me/unblock")
     public ResponseEntity<Void> unblock(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
-        relationshipService.unblockFriend(user.getAccountId(), friendId);
+        relationshipService.unblockUser(user.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }
 

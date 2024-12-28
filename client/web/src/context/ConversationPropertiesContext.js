@@ -10,16 +10,17 @@ export const ConversationPropertiesProvider = ({ children }) => {
     const [name, setName] = useState(null);
     const [isOnline, setIsOnline] = useState(false);
     const [lastOnlineTime, setLastOnlineTime] = useState(null);
-    const { authFetch, isAuthenticated, logout } = useAuth();
+    const { authFetch, isAuthenticated } = useAuth();
     const clientRef = useRef(null);
     const pollingRef = useRef(null);
     const onlineTimeoutRef = useRef(null);
     const isOnlineCheckStarted = useRef(false);
+    const accountId = localStorage.getItem('accountId');
 
     const markUserOnline = useCallback(async () => {
         if (!isAuthenticated) return;
         try {
-            const response = await authFetch(`/api/account/me/online`, {
+            const response = await authFetch(`/api/account/me/online?accountId=${accountId}`, {
                 method: "POST",
             });
             if (response.ok) {
@@ -29,12 +30,12 @@ export const ConversationPropertiesProvider = ({ children }) => {
         } catch (error) {
             console.error("Error marking user online:", error);
         }
-    }, [authFetch, isAuthenticated]);
+    }, [authFetch, isAuthenticated, accountId]);
 
     const markUserOffline = useCallback(async () => {
         if (!isAuthenticated || !isOnlineCheckStarted.current) return;
         try {
-            const response = await authFetch(`/api/account/me/offline`, {
+            const response = await authFetch(`/api/account/me/offline?accountId=${accountId}`, {
                 method: "POST",
             });
             if (response.ok) {
@@ -43,7 +44,7 @@ export const ConversationPropertiesProvider = ({ children }) => {
         } catch (error) {
             console.error("Error marking user offline:", error);
         }
-    }, [authFetch, isAuthenticated]);
+    }, [authFetch, isAuthenticated, accountId]);
 
     const connectWebSocket = useCallback(() => {
         if (!isAuthenticated) return;

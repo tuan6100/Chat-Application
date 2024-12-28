@@ -11,8 +11,12 @@ import {
     Divider,
     Badge,
     Paper,
+    IconButton,
+    Button,
+    Collapse,
 } from "@mui/material";
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const Notifications = () => {
     const { authFetch } = useAuth();
@@ -29,7 +33,17 @@ const Notifications = () => {
             }
         };
         getNotifications();
-    }, [authFetch, setNotifications]);
+    }, [authFetch]);
+
+    const handleRemoveNotification = (id) => {
+        setNotifications((prevNotifications) =>
+            prevNotifications.filter((notification) => notification.id !== id)
+        );
+    };
+
+    const handleClearAllNotifications = () => {
+        setNotifications([]);
+    };
 
     const anyNotification = notifications.length > 0;
 
@@ -42,7 +56,7 @@ const Notifications = () => {
             <Paper elevation={3} sx={{ borderRadius: 2 }}>
                 <List>
                     {anyNotification ? notifications.map((notification) => (
-                        <div key={notification.id}>
+                        <Collapse key={notification.id} in={true} timeout="auto">
                             <ListItem alignItems="flex-start" sx={{ paddingY: 2 }}>
                                 <ListItemAvatar>
                                     <Badge
@@ -73,9 +87,12 @@ const Notifications = () => {
                                         </Box>
                                     }
                                 />
+                                <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveNotification(notification.id)}>
+                                    <DeleteIcon />
+                                </IconButton>
                             </ListItem>
                             <Divider component="li" />
-                        </div>
+                        </Collapse>
                     )) : (
                         <Box sx={{ textAlign: "center", paddingY: 4 }}>
                             <NotificationsNoneIcon sx={{ fontSize: 64, color: "gray" }} />
@@ -85,6 +102,13 @@ const Notifications = () => {
                         </Box>
                     )}
                 </List>
+                {anyNotification && (
+                    <Box sx={{ textAlign: "center", paddingY: 2 }}>
+                        <Button variant="contained" color="secondary" onClick={handleClearAllNotifications}>
+                            Clear All Notifications
+                        </Button>
+                    </Box>
+                )}
             </Paper>
         </Box>
     );

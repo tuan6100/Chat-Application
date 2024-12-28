@@ -66,6 +66,10 @@ spring:
             max-size: 20
             queue-capacity: 100
 
+  threads:
+    virtual:
+      enabled: true
+
 
 logging:
 #  file:

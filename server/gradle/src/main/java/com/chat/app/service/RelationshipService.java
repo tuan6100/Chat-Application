@@ -26,7 +26,7 @@ import java.util.List;
 
      List<AccountResponse> getFriendsList(Long userId);
 
-     void refuseFriend(Long userId, Long friendId) throws ChatException;
+     void rejectFriend(Long userId, Long friendId) throws ChatException;
 
      void unfriend(Long userId, Long friendId) throws ChatException;
     

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-public class ChatWebSocketController {
+public class ChatSocketController {
 
     @Autowired
     private MessageService messageService;

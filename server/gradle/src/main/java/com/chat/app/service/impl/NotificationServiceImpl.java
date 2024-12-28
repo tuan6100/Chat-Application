@@ -1,41 +1,98 @@
 package com.chat.app.service.impl;
 
-import com.chat.app.model.dto.NotificationDTO;
+import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
-import com.chat.app.model.entity.Message;
-import com.chat.app.model.entity.extend.chat.GroupChat;
+import com.chat.app.model.entity.Notification;
+import com.chat.app.model.entity.extend.notification.FriendNotification;
+import com.chat.app.model.entity.extend.notification.GroupNotification;
 import com.chat.app.payload.response.NotificationResponse;
+import com.chat.app.repository.jpa.NotificationRepository;
+import com.chat.app.service.AccountService;
 import com.chat.app.service.NotificationService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
-    @Override
-    public NotificationResponse notifyFriendRequestInvited(NotificationDTO notificationDTO) {
-        String message = String.format("You received a friend request from " + notificationDTO.getSenderAccount().getUsername());
-        String aboutTime = notificationDTO.getAboutTime();
-        return new NotificationResponse("New request", message, aboutTime);
-    }
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    @Lazy
+    private AccountService accountService;
+
 
     @Override
-    public NotificationResponse notifyFriendRequestAccepted(NotificationDTO notificationDTO) {
-        String message = String.format("Your friend  to %s has been accepted.", notificationDTO.getSenderAccount().getUsername());
-        String aboutTime = notificationDTO.getAboutTime();
-        return new NotificationResponse("New request", message, aboutTime);
-    }
-
-    @Override
-    public NotificationResponse notifyNewMessage(NotificationDTO notificationDTO, Message message) {
-        return null;
+    public Notification getNotification(Long NotificationId) {
+        return  notificationRepository.findById(NotificationId).orElse(null);
     }
 
     @Override
-    public NotificationResponse notifyGroupInvitation(NotificationDTO notificationDTO, GroupChat groupChat) {
-        return null;
+    public void notifyFriendRequestInvited(Long senderId, Long recipientId) throws ChatException {
+        Account sender = accountService.getAccount(senderId);
+        Account recipient = accountService.getAccount(recipientId);
+        Notification notification = new FriendNotification(sender.getUsername() + " sent you a friend request",
+                sender, recipient, new Date());
+        notificationRepository.save(notification);
+        messagingTemplate.convertAndSend("/client/notification/friend/" + recipientId, notification.getContent());
     }
 
-    public static void sendNotification(Account account, NotificationResponse response) {
-
+    @Override
+    public void notifyFriendRequestAccepted(Long senderId, Long recipientId) throws ChatException {
+        Account sender = accountService.getAccount(senderId);
+        Account recipient = accountService.getAccount(recipientId);
+        Notification notification = new FriendNotification(sender.getUsername() + " accepted your friend request",
+                sender, recipient, new Date());
+        notificationRepository.save(notification);
+        messagingTemplate.convertAndSend("/client/notification/friend/" + recipientId, notification.getContent());
     }
+
+    @Override
+    public void notifyFriendRequestRejected(Long senderId, Long recipientId) throws ChatException {
+        Account sender = accountService.getAccount(senderId);
+        Account recipient = accountService.getAccount(recipientId);
+        Notification notification = new FriendNotification(sender.getUsername() + "   rejected your friend request",
+                sender, recipient, new Date());
+        notificationRepository.save(notification);
+        messagingTemplate.convertAndSend("/client/notification/friend/" + recipientId, notification.getContent());
+    }
+
+    @Override
+    public void markNotificationAsViewed(Long notificationId) {
+        Notification notification = getNotification(notificationId);
+        notification.setViewedDate(new Date());
+        notificationRepository.save(notification);
+    }
+
+    @Override
+    public List<NotificationResponse> getUserNotifications(Long userId) {
+        List<Notification> notifications = notificationRepository.findByReceiverAccountId(userId);
+        List<NotificationResponse> notificationResponses = new ArrayList<>();
+        for (Notification notification : notifications) {
+            if (notification instanceof FriendNotification friendNotification) {
+                notificationResponses.add(NotificationResponse.fromEntity(friendNotification));
+            } else if (notification instanceof GroupNotification groupNotification) {
+                notificationResponses.add(NotificationResponse.fromEntity(groupNotification));
+            }
+        }
+        return notificationResponses;
+    }
+
+    @Override
+    public void deleteNotification(Long notificationId) {
+        notificationRepository.deleteById(notificationId);
+    }
+
+
 }

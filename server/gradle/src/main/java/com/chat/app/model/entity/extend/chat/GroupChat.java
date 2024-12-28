@@ -4,6 +4,7 @@ import com.chat.app.enumeration.GroupPermission;
 import com.chat.app.enumeration.Theme;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Chat;
+import com.chat.app.model.entity.extend.notification.GroupNotification;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,6 +13,7 @@ import lombok.Setter;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -35,7 +37,7 @@ public class GroupChat extends Chat {
             joinColumns = @JoinColumn(name = "chat_id"),
             inverseJoinColumns = @JoinColumn(name = "account_id")
     )
-    private HashSet<Account> admins;
+    private Set<Account> admins = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -43,7 +45,7 @@ public class GroupChat extends Chat {
             joinColumns = @JoinColumn(name = "chat_id"),
             inverseJoinColumns = @JoinColumn(name = "account_id")
     )
-    private HashSet<Account> members;
+    private Set<Account> members = new HashSet<>();
 
     @Column(name = "created_date")
     private Date createdDate;
@@ -51,6 +53,9 @@ public class GroupChat extends Chat {
     @Column(name = "permission")
     @Enumerated(EnumType.STRING)
     private GroupPermission permission;
+
+    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<GroupNotification> sentNotifications = new HashSet<>();
 
 
     public GroupChat() {

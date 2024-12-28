@@ -1,16 +1,17 @@
 package com.chat.app.controller;
 
-import com.chat.app.enumeration.RelationshipStatus;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.dto.FriendStatusDTO;
 import com.chat.app.model.elasticsearch.AccountIndex;
 import com.chat.app.model.entity.Account;
-import com.chat.app.model.entity.Relationship;
+import com.chat.app.model.entity.Notification;
 import com.chat.app.model.redis.AccountOnlineStatus;
 import com.chat.app.payload.response.AccountResponse;
+import com.chat.app.payload.response.NotificationResponse;
 import com.chat.app.payload.response.RelationshipResponse;
 import com.chat.app.service.AccountService;
+import com.chat.app.service.NotificationService;
 import com.chat.app.service.RelationshipService;
 import com.chat.app.service.elasticsearch.AccountSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,9 @@ public class AccountController {
 
     @Autowired
     private RelationshipService relationshipService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -126,28 +130,31 @@ public class AccountController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/invite")
-    public ResponseEntity<Relationship> inviteFriend(@RequestParam Long friendId) throws ChatException {
+    public ResponseEntity<RelationshipResponse> inviteFriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
         Account friend = accountService.getAccount(friendId);
         relationshipService.inviteFriend(user.getAccountId(), friendId);
-        return ResponseEntity.ok(new Relationship(user, friend, RelationshipStatus.WAITING_TO_ACCEPT, new Date()));
+        notificationService.notifyFriendRequestInvited(user.getAccountId(), friendId);
+        return ResponseEntity.ok(relationshipService.getRelationshipStatus(user.getAccountId(), friendId));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/accept")
-    public ResponseEntity<Relationship> acceptFriend(@RequestParam Long friendId) throws ChatException {
+    public ResponseEntity<RelationshipResponse> acceptFriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
         Account friend = accountService.getAccount(friendId);
         relationshipService.acceptFriend(user.getAccountId(), friendId);
-        return ResponseEntity.ok(new Relationship(friend, user, RelationshipStatus.ACCEPTED, new Date()));
+        notificationService.notifyFriendRequestAccepted(friendId, user.getAccountId());
+        return ResponseEntity.ok(relationshipService.getRelationshipStatus(user.getAccountId(), friendId));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/reject")
-    public ResponseEntity<String> refuseFriend(@RequestParam Long friendId) throws ChatException {
+    public ResponseEntity<String> rejectFriend(@RequestParam Long friendId) throws ChatException {
         Account user = getAuthenticatedAccount();
         Account friend = accountService.getAccount(friendId);
-        relationshipService.refuseFriend(user.getAccountId(), friendId);
+        relationshipService.rejectFriend(user.getAccountId(), friendId);
+        notificationService.notifyFriendRequestRejected(friendId, user.getAccountId());
         return ResponseEntity.ok("Reject a friend request from " + friend.getUsername());
     }
 
@@ -208,6 +215,7 @@ public class AccountController {
         return ResponseEntity.ok(Map.of("message", "offline"));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/status")
     public ResponseEntity<?> checkStatus() throws ChatException {
         Account user = getAuthenticatedAccount();
@@ -218,6 +226,13 @@ public class AccountController {
                 "lastOnlineTime", lastOnline
         );
         return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/notifications")
+    public ResponseEntity<List<NotificationResponse>> getNotifications() throws ChatException {
+        Account user = getAuthenticatedAccount();
+        return ResponseEntity.ok(notificationService.getUserNotifications(user.getAccountId()));
     }
 
 

@@ -61,26 +61,28 @@ public class RelationshipServiceImpl implements RelationshipService {
         if (relationship != null) {
             if (relationship.getStatus() == RelationshipStatus.ACCEPTED) {
                 Long chatId = privateChatService.getByRelationshipId(relationship.getRelationshipId());
-                return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "FRIEND", privateChatService.getMessages(chatId, PageRequest.of(0, 50)));
+                return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
+                        "FRIEND", privateChatService.getMessages(chatId, PageRequest.of(0, 50)));
             }
             if (relationship.getStatus() == RelationshipStatus.WAITING_TO_ACCEPT) {
                 if (relationshipId != null) {
-                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "WAITING RESPONSE", null);
+                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
+                            "WAITING RESPONSE", null);
                 }
-                if (reverseRelationshipId != null) {
-                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "WAITING TO ACCEPT", null);
-                }
+                return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
+                        "WAITING FOR ACCEPTANCE", null);
             }
             if (relationship.getStatus() == RelationshipStatus.BLOCKED) {
                 if (relationshipId != null) {
-                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "BLOCKED", null);
+                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
+                            "BLOCKED", null);
                 }
-                if (reverseRelationshipId != null) {
-                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "BLOCKED BY USER", null);
-                }
+                return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
+                        "BLOCKED BY USER", null);
             }
         }
-        return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(), "NO_RELATIONSHIP", null);
+        return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
+                    "NO_RELATIONSHIP", null);
     }
 
     @Override
@@ -127,8 +129,8 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
-    public void refuseFriend(Long userId, Long friendId) throws ChatException {
-        Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(userId, friendId);
+    public void rejectFriend(Long userId, Long friendId) throws ChatException {
+        Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(friendId, userId);
         Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : null;
         if (relationship == null || relationship.getStatus() != RelationshipStatus.WAITING_TO_ACCEPT) {
             throw new ChatException("No pending invitation found.");

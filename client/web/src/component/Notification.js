@@ -39,6 +39,7 @@ const Notification = ({ userId }) => {
                 stompClient.deactivate();
             }
         };
+        // eslint-disable-next-line
     }, [userId]);
 
     return <ToastContainer limit={5} />;

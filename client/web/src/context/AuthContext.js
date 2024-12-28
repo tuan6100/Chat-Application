@@ -54,10 +54,13 @@ export const AuthProvider = ({ children }) => {
 
     const navigate = useNavigate();
 
-    const logout = async () => {
+    const [closeWebSocket, setCloseWebSocket] = useState(true);
+
+    const markOffline = async (accountId) => {
         try {
-            const response = await authFetch(`/api/account/me/offline`, {
+            const response = await fetch(`${API_BASE_URL}/api/account/me/offline?accountId=${accountId}`, {
                 method: "POST",
+                credentials: "include",
             });
             if (response.ok) {
                 console.log("User marked offline successfully");
@@ -65,12 +68,17 @@ export const AuthProvider = ({ children }) => {
                 console.error("Failed to mark user offline");
             }
         } catch (error) {
-            console.error("Error during logout:", error);
-        } finally {
-            setIsAuthenticated(false);
-            localStorage.clear();
-            navigate("/auth/login", { replace: true });
+            console.error("Error during marking offline:", error);
         }
+    };
+
+    const logout = async () => {
+        const accountId = localStorage.getItem('accountId');
+        setIsAuthenticated(false);
+        setCloseWebSocket(true);
+        localStorage.clear();
+        navigate("/auth/login", { replace: true });
+        await markOffline(accountId);
     };
 
 
@@ -92,11 +100,11 @@ export const AuthProvider = ({ children }) => {
                 if (response.ok) {
                     return response;
                 }
-                if (response.status === 401 && !retry) {
+                if (response.status !== 200  && !retry) {
                     const newToken = await refreshToken(`${API_BASE_URL}/api/auth/refresh-token`);
                     if (!newToken) {
                         console.error("Unable to refresh token, logging out...");
-                        logout();
+                        await logout();
                         return Promise.reject("Failed to refresh token or re-authenticate.");
                     }
                     headers.Authorization = `Bearer ${newToken}`;
@@ -127,7 +135,7 @@ export const AuthProvider = ({ children }) => {
                         draggable: true,
                         progress: undefined,
                     });
-                    logout();
+                    await logout();
                 }
                 return Promise.reject(error);
             }
@@ -142,6 +150,8 @@ export const AuthProvider = ({ children }) => {
         <AuthContext.Provider value={{
             isAuthenticated,
             setIsAuthenticated,
+            closeWebSocket,
+            setCloseWebSocket,
             authFetch,
             logout,
             refreshToken

@@ -17,6 +17,7 @@ import com.chat.app.service.elasticsearch.AccountSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -234,7 +235,8 @@ public class AccountController {
     }
 
 
-    private void broadcastOnlineStatus(Long accountId, boolean isOnline) {
+    @MessageMapping("/status")
+    public void broadcastOnlineStatus(Long accountId, boolean isOnline) {
         AccountOnlineStatus status = new AccountOnlineStatus();
         status.setAccountId(accountId.toString());
         status.setIsOnline(isOnline);

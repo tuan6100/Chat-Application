@@ -91,6 +91,14 @@ const LoginForm = () => {
             } else {
                 setErrorMessage('Failed to retrieve tokens.');
             }
+            const accountId = localStorage.getItem('accountId');
+            const responseOnline = await fetch(`${API_BASE_URL}/api/account/me/online?accountId=${accountId}`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+            if (!responseOnline.ok) {
+                console.error('Failed to mark user online');
+            }
         } catch (error) {
             console.error('Error during login:', error);
             setErrorMessage(error.message || 'Login failed');

@@ -1,17 +1,17 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import React, {useContext, useState} from 'react';
+import React, { useState} from 'react';
 import { useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 import FormProvider from '../../component/hook-form/FormProvider';
 import {TextField, Alert, Button, IconButton, InputAdornment, Stack, Tooltip} from '@mui/material';
 import { RiEyeCloseLine, RiEye2Fill } from 'react-icons/ri';
-import AuthContext from "../../context/AuthContext";
+import useAuth from "../../hook/useAuth";
 
 const RegisterForm = () => {
 
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-    const { setIsAuthenticated } = useContext(AuthContext);
+    const { setIsAuthenticated, setCloseWebSocket } = useAuth();
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -68,7 +68,9 @@ const RegisterForm = () => {
                 const refreshToken = refreshTokenHeader.split(' ')[1];
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
+                setCloseWebSocket(false);
                 setIsAuthenticated(true);
+
                 const newResponse = await fetch(`${API_BASE_URL}/api/account/me`, {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,

@@ -199,19 +199,17 @@ public class AccountController {
 
 
     @PostMapping("/me/online")
-    public ResponseEntity<?> markOnline() throws ChatException {
-        Account user = getAuthenticatedAccount();
-        accountService.markUserOnline(user.getAccountId());
-        broadcastOnlineStatus(user.getAccountId(), true);
+    public ResponseEntity<?> markOnline(@RequestBody Map<String, Long> request) throws ChatException {
+        Long accountId = request.get("accountId");
+        broadcastOnlineStatus(accountId, true);
         return ResponseEntity.ok(Map.of("message", "online"));
     }
 
 
     @PostMapping("/me/offline")
-    public ResponseEntity<?> markOffline() throws ChatException {
-        Account user = getAuthenticatedAccount();
-        accountService.markUserOffline(user.getAccountId());
-        broadcastOnlineStatus(user.getAccountId(), false);
+    public ResponseEntity<?> markOffline(@RequestBody Map<String, Long> request) throws ChatException {
+        Long accountId = request.get("accountId");
+        broadcastOnlineStatus(accountId, false);
         return ResponseEntity.ok(Map.of("message", "offline"));
     }
 

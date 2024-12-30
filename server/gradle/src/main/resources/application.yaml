@@ -71,9 +71,16 @@ spring:
       enabled: true
 
   kafka:
-    bootstrap-servers: http://160.191.50.248:9092
+    bootstrap-servers: 160.191.50.248:9092
     consumer:
       group-id: chat-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 
 logging:

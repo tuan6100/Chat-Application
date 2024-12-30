@@ -12,6 +12,7 @@ import com.chat.app.service.ChatService;
 import com.chat.app.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,9 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class MessageServiceImpl implements MessageService {
+
+    @Autowired
+    private KafkaTemplate<String, MessageRequest> kafkaTemplate;
 
     @Autowired
     private MessageRepository messageRepository;
@@ -43,19 +47,13 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Message sendMessage(Long chatId, MessageRequest messageRequest) throws ChatException {
-        Chat chat = chatService.getChat(chatId);
-        Account sender = accountService.getAccount(messageRequest.getSenderId());
-        String content = messageRequest.getContent();
-        MessageType type = MessageType.valueOf(String.valueOf(messageRequest.getType()));
-        Date date = new Date();
-        Message message = new Message(sender, content, type, date, chat);
-        chatService.addMessage(chat.getChatId(), message);
-        return messageRepository.save(message);
+    public Message sendMessage(Long chatId, MessageRequest messageRequest)  {
+        kafkaTemplate.send("chat-message", String.valueOf(chatId), messageRequest);
+        return new Message();
     }
 
     @Override
-    public Message viewMessage(Long messageId, long viewerId) throws ChatException {
+    public Message markViewedMessage(Long messageId, long viewerId) throws ChatException {
         Message message = getMessage(messageId);
         Account viewer = accountService.getAccount(viewerId);
         message.getViewers().add(viewer);
@@ -64,43 +62,26 @@ public class MessageServiceImpl implements MessageService {
 
 
     @Override
-    public Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest messageRequest) throws ChatException {
-        Chat chat = chatService.getChat(chatId);
-        Account sender = accountService.getAccount(messageRequest.getSenderId());
-        String content = messageRequest.getContent();
-        MessageType type = MessageType.valueOf(String.valueOf(messageRequest.getType()));
-        Date date = new Date();
-        Message newMessage = new Message(sender, content, type, date, chat);
-        Message repliedMessage = getMessage(repliedMessageId);
-        newMessage.getRepliedMessages().add(repliedMessage);
-        chatService.addMessage(chat.getChatId(), newMessage);
-        return messageRepository.save(newMessage);
+    public Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest messageRequest)  {
+        messageRequest.setRepliedMessageId(repliedMessageId);
+        kafkaTemplate.send("reply-message", String.valueOf(chatId), messageRequest);
+        return new Message();
     }
 
     @Override
-    public Message editMessage(Long messageId, MessageRequest messageRequest) throws ChatException {
-        Message message = getMessage(messageId);
-        chatService.removeMessage(messageId);
-        message.setContent(messageRequest.getContent());
-        message.setType(MessageType.valueOf(String.valueOf(messageRequest.getType())));
-        message.setSendingTime(new Date());
-        chatService.addMessage(message.getChat().getChatId(), message);
-        return messageRepository.save(message);
+    public Message editMessage(Long messageId, MessageRequest messageRequest)  {
+        kafkaTemplate.send("edit-message", String.valueOf(messageId), messageRequest);
+        return new Message();
     }
 
     @Override
-    public void unsendMessage(Long messageId) throws ChatException {
-        Message message = getMessage(messageId);
-        message.setUnsend(true);
-        chatService.removeMessage(messageId);
-        messageRepository.save(message);
+    public void unsendMessage(Long messageId)  {
+        kafkaTemplate.send("unsend-message", String.valueOf(messageId), null);
     }
 
     @Override
     public void restoreMessage(Long messageId) throws ChatException {
-        Message message = getMessage(messageId);
-        message.setUnsend(false);
-        messageRepository.save(message);
+        kafkaTemplate.send("restore-message", String.valueOf(messageId), null);
     }
 
     @Override

@@ -10,5 +10,6 @@ public class MessageRequest {
     private Long senderId;
     private String content;
     private MessageType type;
+    private Long repliedMessageId;
 
 }

@@ -47,7 +47,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**",
                         "/error",
                         "/auth/**",
-                        "/me/**",
                         "/installHook.js.map",
                         "/ws/**",
                         "/api/account/me/offline",

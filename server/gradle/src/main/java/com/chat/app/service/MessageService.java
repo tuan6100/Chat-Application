@@ -10,15 +10,15 @@ public interface MessageService {
 
      Message getMessage(Long messageId) throws ChatException;
 
-     Message sendMessage(Long chatId, MessageRequest request) throws ChatException;
+     Message sendMessage(Long chatId, MessageRequest request) ;
 
-     Message viewMessage(Long messageId, long viewedId) throws ChatException;
+     Message markViewedMessage(Long messageId, long viewedId) throws ChatException;
 
-     Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest request) throws ChatException;
+     Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest request) ;
 
-     Message editMessage( Long messageId, MessageRequest request) throws ChatException;
+     Message editMessage( Long messageId, MessageRequest request) ;
     
-     void unsendMessage(Long messageId) throws ChatException;
+     void unsendMessage(Long messageId) ;
 
      void restoreMessage(Long messageId) throws ChatException;
 

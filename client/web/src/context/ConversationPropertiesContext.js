@@ -63,6 +63,9 @@ export const ConversationPropertiesProvider = ({ children }) => {
                         setLastOnlineTime(data.lastOnlineTime);
                     }
                 });
+                setInterval(() => {
+                    stompClient.publish({ destination: '/client/ping' });
+                }, 30000);
             },
             onDisconnect: () => {
                 console.log("Disconnected from WebSocket");
@@ -117,8 +120,19 @@ export const ConversationPropertiesProvider = ({ children }) => {
             markUserOffline();
         };
 
+        const handlePageHide = () => {
+            markUserOffline();
+        };
+        
+        const handlePageShow = () => {
+            markUserOnline();
+        };
+        
+
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('beforeunload', handleBeforeUnload);
+        window.addEventListener('pagehide', handlePageHide);
+        window.addEventListener('pageshow', handlePageShow);
 
         return () => {
             if (isOnlineCheckStarted.current) {
@@ -126,6 +140,8 @@ export const ConversationPropertiesProvider = ({ children }) => {
             }
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('beforeunload', handleBeforeUnload);
+            window.addEventListener('pagehide', handlePageHide);
+            window.addEventListener('pageshow', handlePageShow);
             clearPolling();
             if (clientRef.current) {
                 clientRef.current.deactivate();
@@ -134,6 +150,7 @@ export const ConversationPropertiesProvider = ({ children }) => {
                 clearTimeout(onlineTimeoutRef.current);
             }
         };
+        // eslint-disable-next-line
     }, [markUserOnline, markUserOffline, connectWebSocket, isAuthenticated]);
 
     useEffect(() => {

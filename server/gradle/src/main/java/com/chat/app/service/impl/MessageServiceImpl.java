@@ -1,9 +1,7 @@
 package com.chat.app.service.impl;
 
-import com.chat.app.enumeration.MessageType;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
-import com.chat.app.model.entity.Chat;
 import com.chat.app.model.entity.Message;
 import com.chat.app.payload.request.MessageRequest;
 import com.chat.app.repository.jpa.MessageRepository;
@@ -36,7 +34,6 @@ public class MessageServiceImpl implements MessageService {
 
     @Autowired
     private AccountService accountService;
-
 
 
 

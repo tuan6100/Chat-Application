@@ -9,6 +9,7 @@ import com.chat.app.payload.request.MessageRequest;
 import com.chat.app.repository.jpa.MessageRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.ChatService;
+import com.chat.app.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -21,6 +22,9 @@ public class MessageConsumerService {
 
     @Autowired
     private MessageRepository messageRepository;
+
+    @Autowired
+    private MessageService messageService;
 
     @Autowired
     @Lazy
@@ -37,7 +41,6 @@ public class MessageConsumerService {
         Account sender = accountService.getAccount(messageRequest.getSenderId());
         MessageType type = MessageType.valueOf(String.valueOf(messageRequest.getType()));
         Date date = new Date();
-
         Message message = new Message(sender, messageRequest.getContent(), type, date, chat);
         chatService.addMessage(chat.getChatId(), message);
         messageRepository.save(message);
@@ -49,10 +52,7 @@ public class MessageConsumerService {
         Account sender = accountService.getAccount(messageRequest.getSenderId());
         MessageType type = MessageType.valueOf(String.valueOf(messageRequest.getType()));
         Date date = new Date();
-
-        Message repliedMessage = messageRepository.findById(messageRequest.getRepliedMessageId())
-                .orElseThrow(() -> new ChatException("Replied message not found"));
-
+        Message repliedMessage = messageService.getMessage(messageRequest.getRepliedMessageId());
         Message newMessage = new Message(sender, messageRequest.getContent(), type, date, chat);
         newMessage.getRepliedMessages().add(repliedMessage);
         chatService.addMessage(chat.getChatId(), newMessage);
@@ -73,8 +73,7 @@ public class MessageConsumerService {
 
     @KafkaListener(topics = "unsend-message", groupId = "chat-group")
     public void consumeUnsendMessage(String messageId) throws ChatException {
-        Message message = messageRepository.findById(Long.valueOf(messageId))
-                .orElseThrow(() -> new ChatException("Message not found"));
+        Message message = messageService.getMessage(Long.valueOf(messageId));
         message.setUnsend(true);
         chatService.removeMessage(Long.valueOf(messageId));
         messageRepository.save(message);
@@ -82,8 +81,7 @@ public class MessageConsumerService {
 
     @KafkaListener(topics = "restore-message", groupId = "chat-group")
     public void consumeRestoreMessage(String messageId) throws ChatException {
-        Message message = messageRepository.findById(Long.valueOf(messageId))
-                .orElseThrow(() -> new ChatException("Message not found"));
+        Message message = messageService.getMessage(Long.valueOf(messageId));
         message.setUnsend(false);
         chatService.addMessage(message.getChat().getChatId(), message);
         messageRepository.save(message);

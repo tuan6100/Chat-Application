@@ -1,6 +1,7 @@
 package com.chat.app.controller;
 
 import com.chat.app.exception.ChatException;
+import com.chat.app.exception.UnauthorizedException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.request.AuthRequestWithEmail;
 import com.chat.app.payload.request.ResetPasswordRequest;
@@ -32,7 +33,7 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> loginWithEmail(@RequestBody AuthRequestWithEmail authRequest) throws ChatException {
+    public ResponseEntity<AuthResponse> loginWithEmail(@RequestBody AuthRequestWithEmail authRequest) throws UnauthorizedException {
         AuthResponse authResponse = authService.login(authRequest);
         return ResponseEntity.ok()
                 .headers(authResponse.getHeaders())
@@ -40,7 +41,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody Account account) throws ChatException {
+    public ResponseEntity<AuthResponse> register(@RequestBody Account account) throws UnauthorizedException {
         AuthResponse authResponse = authService.register(account);
         return ResponseEntity.ok()
                 .headers(authResponse.getHeaders())
@@ -48,16 +49,16 @@ public class AuthController {
     }
 
     @GetMapping("forgot-password/validate-account")
-    public ResponseEntity<AccountValidationResponse> validateAccount(@RequestParam String email) throws ChatException {
+    public ResponseEntity<AccountValidationResponse> validateAccount(@RequestParam String email) throws UnauthorizedException {
         Account account = accountService.getAccount(email);
         if (account == null) {
-            throw new ChatException("Account not found");
+            throw new UnauthorizedException("Account not found");
         }
         return ResponseEntity.ok(new AccountValidationResponse(account.getUsername(), account.getAvatar()));
     }
 
     @PutMapping("/forgot-password/renew-password")
-    public ResponseEntity<AuthResponse> resetPassword(@RequestBody Map<String, String> request) throws ChatException {
+    public ResponseEntity<AuthResponse> resetPassword(@RequestBody Map<String, String> request) throws UnauthorizedException {
         String email = request.get("email");
         String newPassword = request.get("newPassword");
         AuthResponse authResponse = authService.updatePassword(new AuthRequestWithEmail(email, newPassword));
@@ -67,7 +68,7 @@ public class AuthController {
     }
 
     @PutMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) throws ChatException {
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) throws UnauthorizedException {
         Account account = authService.resetPassword(resetPasswordRequest);
         return ResponseEntity.ok(Map.of("message", "Reset password successfully"));
     }

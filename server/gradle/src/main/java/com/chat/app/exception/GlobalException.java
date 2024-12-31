@@ -18,6 +18,12 @@ public class GlobalException {
         return new ResponseEntity<>(err, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException e) {
+        ErrorResponse err = new ErrorResponse(e.getMessage());
+        return new ResponseEntity<>(err, HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetail> otherExceptionHandler(Exception e) {
         ErrorDetail err = new ErrorDetail("Internal Server Error", e.getMessage(), LocalDateTime.now());

@@ -1,6 +1,6 @@
 package com.chat.app.service.impl;
 
-import com.chat.app.exception.ChatException;
+import com.chat.app.exception.UnauthorizedException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.request.AuthRequestWithEmail;
 import com.chat.app.payload.request.ResetPasswordRequest;
@@ -55,13 +55,13 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    public AuthResponse login(AuthRequestWithEmail authRequest) throws ChatException {
+    public AuthResponse login(AuthRequestWithEmail authRequest) throws UnauthorizedException {
         Account account = accountService.getAccount(authRequest.getEmail());
         if (account == null) {
-            throw new ChatException("Invalid email");
+            throw new UnauthorizedException("Invalid email");
         }
         if (!passwordEncoder.matches(authRequest.getPassword(), account.getPassword())) {
-            throw new ChatException("Password does not match");
+            throw new UnauthorizedException("Password does not match");
         }
         Authentication auth = new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword());
         HttpHeaders responseHeader = getResponseHeader(auth, account);
@@ -69,11 +69,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse register(Account account) throws ChatException {
+    public AuthResponse register(Account account) throws UnauthorizedException {
         String email = account.getEmail();
         String password = account.getPassword();
         if (accountService.getAccount(email) != null) {
-            throw new ChatException("This email is used with another account");
+            throw new UnauthorizedException("This email is used with another account");
         }
         account.setPassword(passwordEncoder.encode(password));
         Account savedAccount = accountService.createAccount(account);
@@ -85,23 +85,23 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    public Account resetPassword(ResetPasswordRequest resetPasswordRequest) throws ChatException {
+    public Account resetPassword(ResetPasswordRequest resetPasswordRequest) throws UnauthorizedException {
         String email = resetPasswordRequest.getEmail();
         String oldPassword = resetPasswordRequest.getOldPassword();
         String newPassword = resetPasswordRequest.getNewPassword();
         Account account = accountService.getAccount(email);
         if (account == null) {
-            throw new ChatException("Invalid email");
+            throw new UnauthorizedException("Invalid email");
         }
         if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
-            throw new ChatException("Old password does not match");
+            throw new UnauthorizedException("Old password does not match");
         }
         account.setPassword(passwordEncoder.encode(newPassword));
         return accountRepository.save(account);
     }
 
     @Override
-    public AuthResponse updatePassword(AuthRequestWithEmail authRequest) throws ChatException {
+    public AuthResponse updatePassword(AuthRequestWithEmail authRequest) throws UnauthorizedException {
         Account account = accountService.getAccount(authRequest.getEmail());
         String newPassword = authRequest.getPassword();
         account.setPassword(passwordEncoder.encode(newPassword));

@@ -17,14 +17,17 @@ import java.util.concurrent.TimeUnit;
 public class NotificationResponse {
 
     private Long id;
+    private String type;
     private String name;
     private String avatar;
     private String content;
     private String aboutTime;
 
+
     public static NotificationResponse fromEntity(FriendNotification notification) {
         NotificationResponse response = new NotificationResponse();
         response.setId(notification.getSenderAccount().getAccountId());
+        response.setType("friend_request");
         response.setName(notification.getSenderAccount().getUsername());
         response.setAvatar(notification.getSenderAccount().getAvatar());
         response.setContent(notification.getContent());
@@ -35,6 +38,7 @@ public class NotificationResponse {
     public static NotificationResponse fromEntity(GroupNotification notification) {
         NotificationResponse response = new NotificationResponse();
         response.setId(notification.getGroup().getChatId());
+        response.setType("group_invite");
         response.setName(notification.getGroup().getGroupName());
         response.setAvatar(notification.getGroup().getGroupAvatar());
         response.setContent(notification.getContent());

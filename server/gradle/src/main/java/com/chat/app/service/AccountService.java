@@ -3,6 +3,7 @@ package com.chat.app.service;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
+import com.chat.app.payload.response.AccountResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -15,6 +16,8 @@ public interface AccountService {
     Account getAccount(Long id) throws ChatException;
 
     Account getAccount(String email);
+
+    AccountResponse getAccountResponse(Long accountId) throws ChatException;
 
     void updateAccount(Long accountId, AccountDTO accountDto) throws ChatException;
 

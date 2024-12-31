@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 
+import java.util.Date;
 
 
 @Data
@@ -17,6 +18,8 @@ public class RelationshipResponse {
     private String avatar;
     private String status;
     private Boolean isFriend;
+//    private Boolean isOnline;
+//    private Date lastOnlineTime;
     private Page<Message> messages;
 
 }

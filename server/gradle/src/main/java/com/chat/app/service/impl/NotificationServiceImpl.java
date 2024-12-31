@@ -45,7 +45,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = new FriendNotification(sender.getUsername() + " sent you a friend request",
                 sender, recipient, new Date());
         notificationRepository.save(notification);
-        messagingTemplate.convertAndSend("/client/notification/friend/" + recipientId, notification.getContent());
+        messagingTemplate.convertAndSend("/client/notification" + recipientId, notification.getContent());
     }
 
     @Override
@@ -55,7 +55,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = new FriendNotification(sender.getUsername() + " accepted your friend request",
                 sender, recipient, new Date());
         notificationRepository.save(notification);
-        messagingTemplate.convertAndSend("/client/notification/friend/" + recipientId, notification.getContent());
+        messagingTemplate.convertAndSend("/client/notification" + recipientId, notification.getContent());
     }
 
     @Override
@@ -65,7 +65,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = new FriendNotification(sender.getUsername() + "   rejected your friend request",
                 sender, recipient, new Date());
         notificationRepository.save(notification);
-        messagingTemplate.convertAndSend("/client/notification/friend/" + recipientId, notification.getContent());
+        messagingTemplate.convertAndSend("/client/notification" + recipientId, notification.getContent());
     }
 
     @Override

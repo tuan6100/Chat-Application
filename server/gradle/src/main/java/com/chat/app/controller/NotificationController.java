@@ -13,7 +13,7 @@ public class NotificationController {
     private NotificationService notificationService;
 
 
-    @PutMapping("/read/{notificationId}")
+    @PutMapping("/mark-as-read/{notificationId}")
     public void readNotification(@PathVariable Long notificationId) {
         notificationService.markNotificationAsViewed(notificationId);
     }

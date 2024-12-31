@@ -90,13 +90,8 @@ public class AccountController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{accountId}")
-    public ResponseEntity<Account> getAccountInfo(@PathVariable Long accountId) throws ChatException, UnauthorizedException {
-        Account currentAccount = getAuthenticatedAccount();
-        if (!currentAccount.getAccountId().equals(accountId)) {
-            throw new ChatException("You do not have permission to view this account");
-        }
-        Account account = accountService.getAccount(accountId);
-        return ResponseEntity.ok(account);
+    public ResponseEntity<AccountResponse> getAccountInfo(@PathVariable Long accountId) throws ChatException, UnauthorizedException {
+        return ResponseEntity.ok(accountService.getAccountResponse(accountId));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -112,6 +107,7 @@ public class AccountController {
         Account user = getAuthenticatedAccount();
         List<AccountResponse> friends = relationshipService.getFriendsList(user.getAccountId());
         friends.forEach(friend -> friend.setIsOnline(accountService.isUserOnline(friend.getAccountId())));
+        friends.forEach(friend -> friend.setLastOnlineTime(accountService.getLastOnlineTime(friend.getAccountId())));
         return ResponseEntity.ok(friends);
     }
 

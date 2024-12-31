@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Service
 public class TokenProvider {
     private final SecretKey key = Keys.hmacShaKeyFor(MySecretKey.JWT_SECRET.getBytes());
-    public static final long ACCESS_TOKEN_EXPIRATION_TIME = 3600 * 1000;
+    public static final long ACCESS_TOKEN_EXPIRATION_TIME = 3600L * 1000;
     public static final long REFRESH_TOKEN_EXPIRATION_TIME = 3600L * 24 * 30 * 1000;
 
     public String generateAccessToken(Authentication authentication) {

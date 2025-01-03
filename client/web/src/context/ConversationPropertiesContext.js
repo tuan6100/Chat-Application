@@ -20,11 +20,11 @@ export const ConversationPropertiesProvider = ({ children }) => {
     const markUserOnline = useCallback(async () => {
         if (!isAuthenticated) return;
         try {
-            const response = await authFetch(`/api/account/me/online?accountId=${accountId}`, {
+            const response = await fetch(`/api/account/me/online?accountId=${accountId}`, {
                 method: "POST",
+                credentials: "include",
             });
             if (response.ok) {
-                setIsOnline(true);
                 isOnlineCheckStarted.current = true;
             }
         } catch (error) {
@@ -35,8 +35,9 @@ export const ConversationPropertiesProvider = ({ children }) => {
     const markUserOffline = useCallback(async () => {
         if (!isAuthenticated || !isOnlineCheckStarted.current) return;
         try {
-            const response = await authFetch(`/api/account/me/offline?accountId=${accountId}`, {
+            const response = await fetch(`/api/account/me/offline?accountId=${accountId}`, {
                 method: "POST",
+                credentials: "include",
             });
             if (response.ok) {
                 setIsOnline(false);
@@ -48,23 +49,38 @@ export const ConversationPropertiesProvider = ({ children }) => {
 
     const connectWebSocket = useCallback(() => {
         if (!isAuthenticated) return;
+
         if (clientRef.current) {
-            clientRef.current.deactivate();
+            clientRef.current.deactivate(() => {
+                console.log("Deactivated existing WebSocket client.");
+                activateWebSocket();
+            });
+        } else {
+            activateWebSocket();
         }
+    }, [isAuthenticated]);
+
+    const activateWebSocket = () => {
         const socket = new SockJS(`${process.env.REACT_APP_API_BASE_URL}/ws`);
         const stompClient = new Client({
             webSocketFactory: () => socket,
+            reconnectDelay: 5000,
+            heartbeatIncoming: 10000,
+            heartbeatOutgoing: 10000,
             onConnect: () => {
                 console.log("Connected to WebSocket");
                 stompClient.subscribe('/client/online-status', (message) => {
                     const data = JSON.parse(message.body);
-                    if (data.accountId === localStorage.getItem('accountId')) {
+                    if (data.accountId === accountId) {
                         setIsOnline(data.isOnline);
                         setLastOnlineTime(data.lastOnlineTime);
                     }
                 });
+
                 setInterval(() => {
-                    stompClient.publish({ destination: '/client/ping' });
+                    if (stompClient.connected) {
+                        stompClient.publish({ destination: '/client/ping' });
+                    }
                 }, 30000);
             },
             onDisconnect: () => {
@@ -74,17 +90,26 @@ export const ConversationPropertiesProvider = ({ children }) => {
                 console.error("STOMP Error:", error);
             }
         });
+
         stompClient.activate();
         clientRef.current = stompClient;
-    }, [isAuthenticated]);
+    };
+
+    const reconnectWebSocket = () => {
+        if (clientRef.current && !clientRef.current.connected) {
+            console.log("Reconnecting WebSocket...");
+            clientRef.current.activate();
+        }
+    };
+
 
     const startPolling = () => {
         if (pollingRef.current) {
             clearInterval(pollingRef.current);
         }
         pollingRef.current = setInterval(() => {
-            markUserOnline();
-        }, 60000);
+            reconnectWebSocket();
+        }, 10000);
     };
 
     const clearPolling = () => {
@@ -106,11 +131,12 @@ export const ConversationPropertiesProvider = ({ children }) => {
         onlineTimeoutRef.current = setTimeout(() => {
             startOnlineCheck();
             isOnlineCheckStarted.current = true;
-        }, 60000);
+        }, 5000);
 
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible') {
                 markUserOnline();
+                reconnectWebSocket();
             } else {
                 markUserOffline();
             }
@@ -123,11 +149,11 @@ export const ConversationPropertiesProvider = ({ children }) => {
         const handlePageHide = () => {
             markUserOffline();
         };
-        
+
         const handlePageShow = () => {
             markUserOnline();
+            reconnectWebSocket();
         };
-        
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('beforeunload', handleBeforeUnload);
@@ -140,9 +166,11 @@ export const ConversationPropertiesProvider = ({ children }) => {
             }
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('beforeunload', handleBeforeUnload);
-            window.addEventListener('pagehide', handlePageHide);
-            window.addEventListener('pageshow', handlePageShow);
+            window.removeEventListener('pagehide', handlePageHide);
+            window.removeEventListener('pageshow', handlePageShow);
+
             clearPolling();
+
             if (clientRef.current) {
                 clientRef.current.deactivate();
             }
@@ -150,14 +178,7 @@ export const ConversationPropertiesProvider = ({ children }) => {
                 clearTimeout(onlineTimeoutRef.current);
             }
         };
-        // eslint-disable-next-line
     }, [markUserOnline, markUserOffline, connectWebSocket, isAuthenticated]);
-
-    useEffect(() => {
-        if (!isAuthenticated && clientRef.current) {
-            clientRef.current.deactivate();
-        }
-    }, [isAuthenticated]);
 
     return (
         <ConversationPropertiesContext.Provider

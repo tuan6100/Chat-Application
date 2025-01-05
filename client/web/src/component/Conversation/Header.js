@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import {
     Avatar,
     Badge,
@@ -14,19 +14,59 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { CameraEnhance, Call, Search, MoreVert } from "@mui/icons-material";
-import useConversationProperties from "../../hook/useConversationProperties";
 
-const ConversationHeader = () => {
+const ConversationHeader = ({ name, avatar, isOnline, lastOnlineTime }) => {
+
+
   const theme = useTheme();
-  const { avatar, name, isOnline } = useConversationProperties();
   const [menuAnchor, setMenuAnchor] = useState(null);
   const openMenu = Boolean(menuAnchor);
+
+    const OnlineBadge = () => (
+        <Box
+            sx={{
+                width: 12,
+                height: 12,
+                backgroundColor: "#44b700",
+                borderRadius: "50%",
+                border: "2px solid white",
+            }}
+        />
+    );
+
   const handleMenuOpen = (event) => {
     setMenuAnchor(event.currentTarget);
   };
   const handleMenuClose = () => {
     setMenuAnchor(null);
   };
+
+    const aboutOnlineTime = (sentDate) => {
+        const currentDate = new Date();
+        const timeDiff = currentDate.getTime() - new Date(sentDate).getTime();
+        const seconds = Math.floor(timeDiff / 1000);
+        const minutes = Math.floor(timeDiff / (1000 * 60));
+        const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+        if (days === 0) {
+            if (minutes < 1) {
+                return seconds === 1 ? "one second ago" : `${seconds} seconds ago`;
+            } else if (minutes < 60) {
+                return minutes === 1 ? "one minute ago" : `${minutes} minutes ago`;
+            } else if (hours < 24) {
+                return hours === 1 ? "one hour ago" : `${hours} hours ago`;
+            }
+        }
+        if (days === 1) {
+            return `yesterday at ${new Date(sentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        }
+        const dayOfWeek = new Date(sentDate).toLocaleDateString('en-US', { weekday: 'long' });
+        if (days <= 7) {
+            return `${dayOfWeek} at ${new Date(sentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        }
+        return new Date(sentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
 
   return (
       <Paper
@@ -43,6 +83,7 @@ const ConversationHeader = () => {
       >
       <Stack
         direction="row"
+        position="absolute"
         spacing={2}
         alignItems="center"
         sx={{
@@ -65,7 +106,7 @@ const ConversationHeader = () => {
             {name}
           </Typography>
           <Typography variant="caption" color="textSecondary">
-            {isOnline ? "Online" : "Offline"}
+            {isOnline ? "Online now" : `Last seen ${aboutOnlineTime(lastOnlineTime)}`}
           </Typography>
         </Stack>
       </Stack>
@@ -111,39 +152,12 @@ const ConversationHeader = () => {
           </IconButton>
         </Tooltip>
 
-        <Menu
-          anchorEl={menuAnchor}
-          open={openMenu}
-          onClose={handleMenuClose}
-          TransitionComponent={Fade}
-          anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "right",
-          }}
-          transformOrigin={{
-            vertical: "top",
-            horizontal: "right",
-          }}
-        >
-          <MenuItem onClick={handleMenuClose}>Option 1</MenuItem>
-          <MenuItem onClick={handleMenuClose}>Option 2</MenuItem>
-          <MenuItem onClick={handleMenuClose}>Option 3</MenuItem>
-        </Menu>
+
       </Stack>
       </Paper>
   );
 };
 
-const OnlineBadge = () => (
-  <Box
-    sx={{
-      width: 12,
-      height: 12,
-      backgroundColor: "#44b700",
-      borderRadius: "50%",
-      border: "2px solid white",
-    }}
-  />
-);
+
 
 export default ConversationHeader;

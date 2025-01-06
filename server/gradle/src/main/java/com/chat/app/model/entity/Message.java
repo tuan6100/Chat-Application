@@ -10,6 +10,9 @@ import java.util.List;
 
 @Data
 @Entity
+@Table(name = "message",
+        indexes = {@Index(name = "idx_chat_id", columnList = "chat_id, sent_time")}
+)
 public class Message {
 
     @Id
@@ -30,7 +33,7 @@ public class Message {
     private MessageType type;
     
     @Column(nullable = false, columnDefinition = "TIMESTAMP")
-    private Date sendingTime = new Date();
+    private Date sentTime = new Date();
 
     @Column(name = "unsend", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean unsend;
@@ -61,7 +64,7 @@ public class Message {
 
     public Message(Account sender, String content, MessageType type, Date date, Chat chat) {
         this.sender = sender;
-        this.sendingTime = date;
+        this.sentTime = date;
         this.chat = chat;
         this.content = content;
         this.type = type;

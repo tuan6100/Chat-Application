@@ -3,6 +3,7 @@ package com.chat.app.service.impl;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Message;
+import com.chat.app.payload.request.ChatMessageRequest;
 import com.chat.app.payload.request.MessageRequest;
 import com.chat.app.repository.jpa.MessageRepository;
 import com.chat.app.service.AccountService;
@@ -11,6 +12,8 @@ import com.chat.app.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +26,6 @@ import java.util.concurrent.TimeUnit;
 public class MessageServiceImpl implements MessageService {
 
     @Autowired
-    private KafkaTemplate<String, MessageRequest> kafkaTemplate;
-
-    @Autowired
     private MessageRepository messageRepository;
 
     @Autowired
@@ -35,6 +35,11 @@ public class MessageServiceImpl implements MessageService {
     @Autowired
     private AccountService accountService;
 
+    @Autowired
+    private KafkaTemplate<String, ChatMessageRequest> kafkaTemplate;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
 
     @Override
@@ -44,40 +49,44 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Message sendMessage(Long chatId, MessageRequest messageRequest)  {
-        kafkaTemplate.send("chat-message", String.valueOf(chatId), messageRequest);
-        return new Message();
+    @Async
+    public void sendMessage(Long chatId, MessageRequest messageRequest)  {
+        kafkaTemplate.send("send-message", new ChatMessageRequest(chatId, messageRequest));
     }
 
     @Override
-    public Message markViewedMessage(Long messageId, long viewerId) throws ChatException {
+//    @Async
+    public void markViewedMessage(Long messageId, long viewerId) throws ChatException {
         Message message = getMessage(messageId);
         Account viewer = accountService.getAccount(viewerId);
         message.getViewers().add(viewer);
-        return messageRepository.save(message);
+        messageRepository.save(message);
     }
 
 
     @Override
-    public Message replyMessage(Long chatId, Long repliedMessageId, MessageRequest messageRequest)  {
+    @Async
+    public void replyMessage(Long chatId, Long repliedMessageId, MessageRequest messageRequest)  {
         messageRequest.setRepliedMessageId(repliedMessageId);
-        kafkaTemplate.send("reply-message", String.valueOf(chatId), messageRequest);
-        return new Message();
+        kafkaTemplate.send("reply-message", new ChatMessageRequest(chatId, messageRequest));
     }
 
     @Override
-    public Message editMessage(Long messageId, MessageRequest messageRequest)  {
-        kafkaTemplate.send("edit-message", String.valueOf(messageId), messageRequest);
-        return new Message();
+    @Async
+    public void editMessage(Long messageId, MessageRequest messageRequest) throws ChatException {
+        Long chatId = getMessage(messageId).getChat().getChatId();
+        kafkaTemplate.send("edit-message", new ChatMessageRequest(chatId, messageRequest));
     }
 
     @Override
+    @Async
     public void unsendMessage(Long messageId)  {
         kafkaTemplate.send("unsend-message", String.valueOf(messageId), null);
     }
 
     @Override
-    public void restoreMessage(Long messageId) throws ChatException {
+    @Async
+    public void restoreMessage(Long messageId) {
         kafkaTemplate.send("restore-message", String.valueOf(messageId), null);
     }
 
@@ -92,7 +101,7 @@ public class MessageServiceImpl implements MessageService {
         Date now = new Date();
         List<Message> unsentMessages = messageRepository.findAllByUnsendTrue();
         for (Message message : unsentMessages) {
-            if (TimeUnit.MILLISECONDS.toHours(now.getTime() - message.getSendingTime().getTime()) >= 1) {
+            if (TimeUnit.MILLISECONDS.toHours(now.getTime() - message.getSentTime().getTime()) >= 1) {
                 removeMessage(message.getMessageId());
                 System.out.println("Removed unsent message: " + message.getMessageId());
             }

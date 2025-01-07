@@ -32,14 +32,19 @@ spring:
         use_sql_comments: true
         jdbc:
           time_zone: UTC+7
+        enable_lazy_load_no_trans: true
 
   data:
     elasticsearch:
       repositories:
         enabled: true
+
     redis:
       host: 160.191.50.248
-      port: 6379
+      port: 6400
+      username: default
+      password: 20226100
+
 
   elasticsearch:
     uris: http://160.191.50.248:9200
@@ -47,6 +52,11 @@ spring:
 #    username: elastic
 #    password: 20226100
     socket-timeout: 30s
+
+  redis:
+    cache:
+      messages-per-chat:
+        size: 30
 
   main:
     allow-bean-definition-overriding: true

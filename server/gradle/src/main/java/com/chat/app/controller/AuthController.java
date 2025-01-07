@@ -3,7 +3,7 @@ package com.chat.app.controller;
 import com.chat.app.exception.ChatException;
 import com.chat.app.exception.UnauthorizedException;
 import com.chat.app.model.entity.Account;
-import com.chat.app.payload.request.AuthRequestWithEmail;
+import com.chat.app.payload.request.AuthRequest;
 import com.chat.app.payload.request.ResetPasswordRequest;
 import com.chat.app.payload.response.AccountValidationResponse;
 import com.chat.app.payload.response.AuthResponse;
@@ -33,7 +33,7 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> loginWithEmail(@RequestBody AuthRequestWithEmail authRequest) throws UnauthorizedException {
+    public ResponseEntity<AuthResponse> loginWithEmail(@RequestBody AuthRequest authRequest) throws UnauthorizedException {
         AuthResponse authResponse = authService.login(authRequest);
         return ResponseEntity.ok()
                 .headers(authResponse.getHeaders())
@@ -61,7 +61,7 @@ public class AuthController {
     public ResponseEntity<AuthResponse> resetPassword(@RequestBody Map<String, String> request) throws UnauthorizedException {
         String email = request.get("email");
         String newPassword = request.get("newPassword");
-        AuthResponse authResponse = authService.updatePassword(new AuthRequestWithEmail(email, newPassword));
+        AuthResponse authResponse = authService.updatePassword(new AuthRequest(email, newPassword));
         return ResponseEntity.ok()
                 .headers(authResponse.getHeaders())
                 .body(authResponse);

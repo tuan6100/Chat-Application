@@ -6,12 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.regions.Region;
 
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.net.URLConnection;
@@ -27,6 +26,7 @@ public class S3Service {
     private final S3Client s3Client;
     private final String bucketName;
     private final Region region;
+
 
     public S3Service(@Value ("${spring.cloud.aws.bucket-name}") String bucketName) {
         AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(MySecretKey.AWS_ACCESS_KEY_ID, MySecretKey.AWS_SECRET_ACCESS_KEY);
@@ -60,6 +60,20 @@ public class S3Service {
 
         } finally {
             Files.deleteIfExists(tempFilePath);
+        }
+    }
+
+    public byte[] downloadFile(String fileKey) {
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileKey)
+                    .build();
+
+            ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
+            return objectBytes.asByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download file: " + e.getMessage(), e);
         }
     }
 

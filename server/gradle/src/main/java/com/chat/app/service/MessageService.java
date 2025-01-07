@@ -14,8 +14,6 @@ public interface MessageService {
 
      void markViewedMessage(Long messageId, long viewedId) throws ChatException;
 
-     void replyMessage(Long chatId, Long repliedMessageId, MessageRequest request) ;
-
      void editMessage( Long messageId, MessageRequest request) throws ChatException;
     
      void unsendMessage(Long messageId) ;
@@ -23,4 +21,5 @@ public interface MessageService {
      void restoreMessage(Long messageId) throws ChatException;
 
      void removeMessage(Long messageId);
+
 }

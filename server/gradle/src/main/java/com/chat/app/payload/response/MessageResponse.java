@@ -16,28 +16,32 @@ import java.util.List;
 public class MessageResponse {
 
     private Long messageId;
+    private String randomId;
     private Long senderId;
     private String senderUsername;
     private String senderAvatar;
     private String content;
     private String type;
     private String sentTime;
-    private List<Long> repliedMessagesId;
+    private Long replyToMessageId;
     private List<String> viewerAvatars;
+    private String status;
 
 
     public static MessageResponse fromEntity(Message message) {
         Account sender = message.getSender();
         return new MessageResponse(
                 message.getMessageId(),
+                message.getRandomId(),
                 sender.getAccountId(),
                 sender.getUsername(),
                 sender.getAvatar(),
                 message.getContent(),
                 message.getType().name(),
                 message.getSentTime().toString(),
-                message.getRepliedMessages().stream().map(Message::getMessageId).toList(),
-                message.getViewers().stream().map(Account::getAvatar).toList()
+                message.getReplyTo() != null ? message.getReplyTo().getMessageId() : null,
+                message.getViewers().stream().map(Account::getAvatar).toList(),
+                null
         );
     }
 
@@ -47,7 +51,7 @@ public class MessageResponse {
         response.setContent(request.getContent());
         response.setType(request.getType());
         response.setSentTime(request.getSentTime().toString());
-        response.setRepliedMessagesId(request.getRepliedMessageId() != null ? List.of(request.getRepliedMessageId()) : List.of());
+        response.setStatus(request.getStatus());
         return response;
     }
 }

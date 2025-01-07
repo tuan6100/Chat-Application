@@ -15,11 +15,13 @@ import com.chat.app.service.MessageService;
 import com.chat.app.service.redis.MessageCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class MessageProcessingService {
@@ -36,41 +38,37 @@ public class MessageProcessingService {
 
     @Autowired
     @Lazy
-    private AccountService accountService;
-
-    @Autowired
-    @Lazy
     private MessageCacheService messageCacheService;
 
     @Autowired
+    @Lazy
+    private AccountService accountService;
+
+    @Autowired
     private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private KafkaTemplate<String, ChatMessageRequest> kafkaTemplate;
+
 
     @Transactional
     public void processSendMessage(ChatMessageRequest chatMessage) throws ChatException {
         Long chatId = chatMessage.getChatId();
         MessageRequest messageRequest = chatMessage.getMessageRequest();
+        String randomId = messageRequest.getRandomId();
+        if (messageRepository.findByRandomId(randomId) != null) {
+            System.out.println("Delay processing message: " + messageRequest.getContent());
+            kafkaTemplate.send("send-message", chatMessage);
+            return;
+        }
         Chat chat = chatService.getChat(chatId);
         Account sender = accountService.getAccount(messageRequest.getSenderId());
         MessageType type = MessageType.valueOf(messageRequest.getType().toUpperCase());
         Date sentTime = chatMessage.getMessageRequest().getSentTime();
-        Message message = new Message(sender, messageRequest.getContent(), type, sentTime, chat);
+        Message message = new Message(messageRequest.getRandomId(), sender, messageRequest.getContent(), type, sentTime, chat);
         message = messageRepository.save(message);
-        messageCacheService.cacheNewMessage(chatId, sender.getAccountId(), message);
-        messagingTemplate.convertAndSend("/client/chat/" + chatId, MessageResponse.fromEntity(message));
-    }
-
-    @Transactional
-    public void processReplyMessage(Long chatId, MessageRequest messageRequest) throws ChatException {
-        Chat chat = chatService.getChat(chatId);
-        Account sender = accountService.getAccount(messageRequest.getSenderId());
-        MessageType type = MessageType.valueOf(String.valueOf(messageRequest.getType()));
-        Message repliedMessage = messageService.getMessage(messageRequest.getRepliedMessageId());
-        Date sentTime = messageRequest.getSentTime();
-        Message newMessage = new Message(sender, messageRequest.getContent(), type, sentTime, chat);
-        newMessage.getRepliedMessages().add(repliedMessage);
-        newMessage = messageRepository.save(newMessage);
-        messageCacheService.cacheNewMessage(chatId, sender.getAccountId(), newMessage);
-        messagingTemplate.convertAndSend("/client/chat/" + chatId, MessageResponse.fromEntity(newMessage));
+        MessageResponse messageResponse = MessageResponse.fromEntity(message);
+        messagingTemplate.convertAndSend("/client/chat/" + chatId, messageResponse);
     }
 
     @Transactional
@@ -82,8 +80,11 @@ public class MessageProcessingService {
         message.setType(MessageType.valueOf(String.valueOf(messageRequest.getType())));
         message.setSentTime(messageRequest.getSentTime());
         message = messageRepository.save(message);
-        messageCacheService.cacheNewMessage(message.getChat().getChatId(), message.getSender().getAccountId(), message);
-        messagingTemplate.convertAndSend("/client/chat/" + message.getChat().getChatId(), MessageResponse.fromEntity(message));
+        Long chatId = message.getChat().getChatId();
+        List<Long> membersInChat = chatService.getAllMembersInChat(chatId);
+        MessageResponse messageResponse = MessageResponse.fromEntity(message);
+        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
+        messagingTemplate.convertAndSend("/client/chat/" + chatId, messageResponse);
     }
 
     @Transactional
@@ -102,7 +103,10 @@ public class MessageProcessingService {
         message.setUnsend(false);
         chatService.addMessage(message.getChat().getChatId(), message);
         messageRepository.save(message);
-        messageCacheService.cacheNewMessage(message.getChat().getChatId(), message.getSender().getAccountId(), message);
-        messagingTemplate.convertAndSend("/client/chat/" + message.getChat().getChatId(), MessageResponse.fromEntity(message));
+        Long chatId = message.getChat().getChatId();
+        List<Long> membersInChat = chatService.getAllMembersInChat(chatId);
+        MessageResponse messageResponse = MessageResponse.fromEntity(message);
+        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
+        messagingTemplate.convertAndSend("/client/chat/" + chatId, messageResponse);
     }
 }

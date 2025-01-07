@@ -6,6 +6,7 @@ import com.chat.app.model.entity.Account;
 import com.chat.app.model.redis.AccountOnlineStatus;
 import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.repository.jpa.AccountRepository;
+import com.chat.app.repository.jpa.PrivateChatRepository;
 import com.chat.app.repository.redis.AccountOnlineStatusRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.aws.S3Service;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -29,6 +31,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Autowired
     private S3Service s3Service;
+
+    @Autowired
+    private PrivateChatRepository privateChatRepository;
 
 
     @Override
@@ -126,6 +131,11 @@ public class AccountServiceImpl implements AccountService {
     public Date getLastOnlineTime(Long accountId) {
         AccountOnlineStatus accountStatus = accountOnlineStatusRepository.findByAccountId(accountId.toString());
         return (accountStatus != null) ? accountStatus.getLastOnlineTime() : null;
+    }
+
+    @Override
+    public List<Long> getAllChatIds(Long accountId) {
+        return privateChatRepository.findChatsByAccountId(accountId);
     }
 
 

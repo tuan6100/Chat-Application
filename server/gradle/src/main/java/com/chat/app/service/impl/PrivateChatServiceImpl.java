@@ -26,6 +26,7 @@ public class PrivateChatServiceImpl extends ChatServiceImpl implements PrivateCh
     private RelationshipService relationshipService;
 
 
+
     @Override
     public PrivateChat create(Theme theme, Long RelationshipId) throws ChatException {
         Relationship relationship = relationshipService.getRelationship(RelationshipId);

@@ -1,6 +1,6 @@
 package com.chat.app.service.redis;
 
-import com.chat.app.model.entity.Chat;
+
 import com.chat.app.model.entity.Message;
 import com.chat.app.model.redis.MessageCache;
 import com.chat.app.payload.response.MessageResponse;
@@ -12,13 +12,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class MessageCacheService {
@@ -57,16 +59,28 @@ public class MessageCacheService {
         messageCacheRepository.save(cache);
     }
 
-    @Async
-    public void cacheNewMessage(Long chatId, Long accountId, Message message) {
-        MessageResponse response = MessageResponse.fromEntity(message);
+    public void cacheNewMessage(Long chatId, Long accountId, MessageResponse response) {
         MessageCache cache = getCache(accountId, chatId);
         if (cache == null) {
             cache = new MessageCache(new CompositeKey(accountId, chatId), new ArrayList<>(Collections.singletonList(response)));
         } else {
-            cache.getMessageResponses().addLast(response);
+            List<MessageResponse> messageResponses = new ArrayList<>(cache.getMessageResponses());
+            messageResponses.add(response);
+            cache.setMessageResponses(messageResponses);
+            System.out.println("Cached message: " + response.getContent() + " into account: " + accountId);
         }
         messageCacheRepository.save(cache);
+    }
+
+    @Async
+    public void cacheNewMessage(Long chatId, List<Long> accountIds, MessageResponse response) {
+        ExecutorService executor = Executors.newFixedThreadPool(accountIds.size());
+        List<CompletableFuture<Void>> futures = accountIds.stream()
+                .map(accountId -> CompletableFuture.runAsync(() ->
+                        cacheNewMessage(chatId, accountId, response), executor))
+                .toList();
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        executor.shutdown();
     }
 
     @Async
@@ -82,6 +96,7 @@ public class MessageCacheService {
     public void cacheNextMessages(Long chatId, Long accountId, int page, int size) {
         Pageable nextPage = PageRequest.of(page + 1, size);
         Page<Message> nextMessages = chatRepository.findLatestMessagesByChatId(chatId, nextPage);
+        Collections.reverse(nextMessages.getContent());
         if (!nextMessages.isEmpty()) {
             List<MessageResponse> responses = getCache(accountId, chatId).getMessageResponses();
             nextMessages.forEach(message -> responses.addFirst(MessageResponse.fromEntity(message)));
@@ -91,19 +106,17 @@ public class MessageCacheService {
 
     @Async
     public void restoreDefaultCache(Long accountId) {
-        List<Long> chatIds = privateChatRepository.findChatsByAccountId(accountId);
-        for (Long chatId : chatIds) {
-            MessageCache cache = getCache(accountId, chatId);
-            if (cache != null) {
-                cache.getMessageResponses().clear();
-                messageCacheRepository.save(cache);
+    List<Long> chatIds = privateChatRepository.findChatsByAccountId(accountId);
+    for (Long chatId : chatIds) {
+        MessageCache cache = getCache(accountId, chatId);
+        if (cache != null) {
+            List<MessageResponse> responses = cache.getMessageResponses();
+            if (responses.size() > 50) {
+                responses = responses.subList(responses.size() - 50, responses.size());
             }
-            Pageable firstPage = PageRequest.of(0, 30);
-            Page<Message> messages = chatRepository.findLatestMessagesByChatId(chatId, firstPage);
-            List<MessageResponse> responses = new ArrayList<>();
-            messages.forEach(message -> responses.add(MessageResponse.fromEntity(message)));
-            setCache(chatId, accountId, responses);
+            cache.setMessageResponses(responses);
+            messageCacheRepository.save(cache);
         }
-
     }
+}
 }

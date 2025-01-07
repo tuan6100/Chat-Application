@@ -9,6 +9,7 @@ import com.chat.app.repository.jpa.MessageRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.ChatService;
 import com.chat.app.service.MessageService;
+import com.chat.app.service.redis.MessageCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -33,7 +34,12 @@ public class MessageServiceImpl implements MessageService {
     private ChatService chatService;
 
     @Autowired
+    @Lazy
     private AccountService accountService;
+
+    @Autowired
+    @Lazy
+    private MessageCacheService messageCacheService;
 
     @Autowired
     private KafkaTemplate<String, ChatMessageRequest> kafkaTemplate;
@@ -61,14 +67,6 @@ public class MessageServiceImpl implements MessageService {
         Account viewer = accountService.getAccount(viewerId);
         message.getViewers().add(viewer);
         messageRepository.save(message);
-    }
-
-
-    @Override
-    @Async
-    public void replyMessage(Long chatId, Long repliedMessageId, MessageRequest messageRequest)  {
-        messageRequest.setRepliedMessageId(repliedMessageId);
-        kafkaTemplate.send("reply-message", new ChatMessageRequest(chatId, messageRequest));
     }
 
     @Override

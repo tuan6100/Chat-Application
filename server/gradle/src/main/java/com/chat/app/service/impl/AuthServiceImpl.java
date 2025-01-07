@@ -2,7 +2,7 @@ package com.chat.app.service.impl;
 
 import com.chat.app.exception.UnauthorizedException;
 import com.chat.app.model.entity.Account;
-import com.chat.app.payload.request.AuthRequestWithEmail;
+import com.chat.app.payload.request.AuthRequest;
 import com.chat.app.payload.request.ResetPasswordRequest;
 import com.chat.app.payload.response.AuthResponse;
 import com.chat.app.repository.jpa.AccountRepository;
@@ -55,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    public AuthResponse login(AuthRequestWithEmail authRequest) throws UnauthorizedException {
+    public AuthResponse login(AuthRequest authRequest) throws UnauthorizedException {
         Account account = accountService.getAccount(authRequest.getEmail());
         if (account == null) {
             throw new UnauthorizedException("Invalid email");
@@ -101,13 +101,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse updatePassword(AuthRequestWithEmail authRequest) throws UnauthorizedException {
+    public AuthResponse updatePassword(AuthRequest authRequest) throws UnauthorizedException {
         Account account = accountService.getAccount(authRequest.getEmail());
         String newPassword = authRequest.getPassword();
         account.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(account);
         account.getRefreshTokens().forEach(refreshToken -> refreshTokenService.deleteRefreshToken(refreshToken.getToken()));
-        return login(new AuthRequestWithEmail(authRequest.getEmail(), newPassword));
+        return login(new AuthRequest(authRequest.getEmail(), newPassword));
     }
 
 

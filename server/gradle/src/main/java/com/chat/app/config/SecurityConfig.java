@@ -30,10 +30,10 @@ public class SecurityConfig {
 
     private final JwtTokenValidator jwtTokenValidator;
 
-
     public SecurityConfig(JwtTokenValidator jwtTokenValidator) {
         this.jwtTokenValidator = jwtTokenValidator;
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

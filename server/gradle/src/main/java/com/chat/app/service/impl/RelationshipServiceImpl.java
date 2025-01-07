@@ -57,32 +57,25 @@ public class RelationshipServiceImpl implements RelationshipService {
         Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(firstAccountId, secondAccountId);
         Long reverseRelationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(secondAccountId, firstAccountId);
         Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : (reverseRelationshipId != null ? getRelationship(reverseRelationshipId) : null);
-        Account account = accountService.getAccount(secondAccountId);
         if (relationship != null) {
             if (relationship.getStatus() == RelationshipStatus.ACCEPTED) {
                 Long chatId = privateChatService.getByRelationshipId(relationship.getRelationshipId());
-                return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                        "FRIEND", true, privateChatService.getMessages(chatId, PageRequest.of(0, 50)));
+                return new RelationshipResponse(firstAccountId, secondAccountId, "FRIEND", chatId);
             }
             if (relationship.getStatus() == RelationshipStatus.WAITING_TO_ACCEPT) {
                 if (relationshipId != null) {
-                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                            "WAITING RESPONSE", false,null);
+                    return new RelationshipResponse(firstAccountId, secondAccountId, "WAITING FOR ACCEPTANCE", null);
                 }
-                return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                        "WAITING FOR ACCEPTANCE", false, null);
+                return new RelationshipResponse(firstAccountId, secondAccountId, "NEW FRIEND REQUEST", null);
             }
             if (relationship.getStatus() == RelationshipStatus.BLOCKED) {
                 if (relationshipId != null) {
-                    return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                            "BLOCKED", false, null);
+                    return new RelationshipResponse(firstAccountId, secondAccountId, "BLOCKED", null);
                 }
-                return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                        "BLOCKED BY USER", false, null);
+                return new RelationshipResponse(firstAccountId, secondAccountId, "BLOCKED BY USER", null);
             }
         }
-        return new RelationshipResponse(account.getAccountId(), account.getUsername(), account.getEmail(), account.getAvatar(),
-                    "NO_RELATIONSHIP", false,null);
+        return new RelationshipResponse(firstAccountId, secondAccountId, "NO RELATIONSHIP", null);
     }
 
     @Override
@@ -143,8 +136,8 @@ public class RelationshipServiceImpl implements RelationshipService {
         Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(userId, friendId);
         Long reverseRelationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(friendId, userId);
         Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : (reverseRelationshipId != null ? getRelationship(reverseRelationshipId) : null);
-        if (relationship == null || relationship.getStatus() != RelationshipStatus.ACCEPTED) {
-            throw new ChatException("You are not friends.");
+        if (relationship == null) {
+            throw new ChatException("You can't do this.");
         }
         relationshipRepository.delete(relationship);
     }

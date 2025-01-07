@@ -14,4 +14,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     @Query("SELECT m FROM Message m WHERE m.unsend = true")
     List<Message> findAllByUnsendTrue();
+
+    Message findByRandomId(String randomId);
 }

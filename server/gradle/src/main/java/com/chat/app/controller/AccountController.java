@@ -1,19 +1,24 @@
 package com.chat.app.controller;
 
+
 import com.chat.app.exception.ChatException;
 import com.chat.app.exception.UnauthorizedException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.dto.FriendStatusDTO;
 import com.chat.app.model.elasticsearch.AccountIndex;
 import com.chat.app.model.entity.Account;
+import com.chat.app.model.entity.extend.chat.SpamChat;
 import com.chat.app.model.redis.AccountOnlineStatus;
 import com.chat.app.payload.response.AccountResponse;
+import com.chat.app.payload.response.MessageResponse;
 import com.chat.app.payload.response.NotificationResponse;
 import com.chat.app.payload.response.RelationshipResponse;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.NotificationService;
 import com.chat.app.service.RelationshipService;
+import com.chat.app.service.SpamChatService;
 import com.chat.app.service.elasticsearch.AccountSearchService;
+import com.chat.app.service.redis.MessageCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +51,13 @@ public class AccountController {
     private NotificationService notificationService;
 
     @Autowired
+    private SpamChatService spamChatService;
+
+    @Autowired
     private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private MessageCacheService messageCacheService;
 
 
     private Account getAuthenticatedAccount() throws UnauthorizedException {
@@ -58,11 +69,28 @@ public class AccountController {
         return accountService.getAccount(email);
     }
 
-    @GetMapping("/info")
-    public Authentication getInfo() {
-        return SecurityContextHolder.getContext().getAuthentication();
+
+    @GetMapping("/{accountId}/info")
+    public ResponseEntity<AccountResponse> getAccountInfo(@PathVariable Long accountId) throws ChatException, UnauthorizedException {
+        return ResponseEntity.ok(accountService.getAccountResponse(accountId));
     }
 
+    @GetMapping("/{accountId}/profile")
+    public ResponseEntity<Account> getAccountProfile(@PathVariable Long accountId) throws ChatException {
+        return ResponseEntity.ok(accountService.getAccount(accountId));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<AccountResponse>> searchAccounts(@RequestParam String username) {
+        List<AccountIndex> results = accountSearchService.searchAccount(username);
+        List<AccountResponse> responses = new ArrayList<>();
+        results.forEach(result -> responses.add(new AccountResponse(result.getAccountId(), result.getUsername(), result.getAvatar())));
+        responses.forEach(account -> account.setIsOnline(accountService.isUserOnline(account.getAccountId())));
+        responses.forEach(account -> account.setLastOnlineTime(accountService.getLastOnlineTime(account.getAccountId())));
+        return ResponseEntity.ok(responses);
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public ResponseEntity<AccountResponse> getCurrentAccountInfo() throws UnauthorizedException {
         Account account = getAuthenticatedAccount();
@@ -78,22 +106,6 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<List<AccountResponse>> searchAccounts(@RequestParam String username) {
-        List<AccountIndex> results = accountSearchService.searchAccount(username);
-        List<AccountResponse> responses = new ArrayList<>();
-        results.forEach(result -> responses.add(new AccountResponse(result.getAccountId(), result.getUsername(), result.getAvatar())));
-        responses.forEach(account -> account.setIsOnline(accountService.isUserOnline(account.getAccountId())));
-        responses.forEach(account -> account.setLastOnlineTime(accountService.getLastOnlineTime(account.getAccountId())));
-        return ResponseEntity.ok(responses);
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/{accountId}")
-    public ResponseEntity<AccountResponse> getAccountInfo(@PathVariable Long accountId) throws ChatException, UnauthorizedException {
-        return ResponseEntity.ok(accountService.getAccountResponse(accountId));
-    }
-
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/avatar")
     public ResponseEntity<String> getCurrentAccountAvatar() throws UnauthorizedException {
@@ -104,8 +116,8 @@ public class AccountController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/friends")
     public ResponseEntity<List<AccountResponse>> getFriendsList() throws UnauthorizedException {
-        Account user = getAuthenticatedAccount();
-        List<AccountResponse> friends = relationshipService.getFriendsList(user.getAccountId());
+        Account myAccount = getAuthenticatedAccount();
+        List<AccountResponse> friends = relationshipService.getFriendsList(myAccount.getAccountId());
         friends.forEach(friend -> friend.setIsOnline(accountService.isUserOnline(friend.getAccountId())));
         friends.forEach(friend -> friend.setLastOnlineTime(accountService.getLastOnlineTime(friend.getAccountId())));
         return ResponseEntity.ok(friends);
@@ -122,77 +134,76 @@ public class AccountController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/relationship")
     public ResponseEntity<RelationshipResponse> getRelationship(@RequestParam Long accountId) throws ChatException, UnauthorizedException {
-        Account user = getAuthenticatedAccount();
-        return ResponseEntity.ok(relationshipService.getRelationshipStatus(user.getAccountId(), accountId));
+        Account myAccount = getAuthenticatedAccount();
+        return ResponseEntity.ok(relationshipService.getRelationshipStatus(myAccount.getAccountId(), accountId));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/invite")
     public ResponseEntity<RelationshipResponse> inviteFriend(@RequestParam Long friendId) throws ChatException, UnauthorizedException {
-        Account user = getAuthenticatedAccount();
+        Account myAccount = getAuthenticatedAccount();
         Account friend = accountService.getAccount(friendId);
-        relationshipService.inviteFriend(user.getAccountId(), friendId);
-        notificationService.notifyFriendRequestInvited(user.getAccountId(), friendId);
-        return ResponseEntity.ok(relationshipService.getRelationshipStatus(user.getAccountId(), friendId));
+        relationshipService.inviteFriend(myAccount.getAccountId(), friendId);
+        notificationService.notifyFriendRequestInvited(myAccount.getAccountId(), friendId);
+        return ResponseEntity.ok(relationshipService.getRelationshipStatus(myAccount.getAccountId(), friendId));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/accept")
     public ResponseEntity<RelationshipResponse> acceptFriend(@RequestParam Long friendId) throws ChatException, UnauthorizedException {
-        Account user = getAuthenticatedAccount();
+        Account myAccount = getAuthenticatedAccount();
         Account friend = accountService.getAccount(friendId);
-        relationshipService.acceptFriend(user.getAccountId(), friendId);
-        notificationService.notifyFriendRequestAccepted(user.getAccountId(), friendId);
-        return ResponseEntity.ok(relationshipService.getRelationshipStatus(user.getAccountId(), friendId));
+        relationshipService.acceptFriend(myAccount.getAccountId(), friendId);
+        notificationService.notifyFriendRequestAccepted(myAccount.getAccountId(), friendId);
+        return ResponseEntity.ok(relationshipService.getRelationshipStatus(myAccount.getAccountId(), friendId));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/reject")
     public ResponseEntity<String> rejectFriend(@RequestParam Long friendId) throws ChatException, UnauthorizedException {
-        Account user = getAuthenticatedAccount();
+        Account myAccount = getAuthenticatedAccount();
         Account friend = accountService.getAccount(friendId);
-        relationshipService.rejectFriend(user.getAccountId(), friendId);
-        notificationService.notifyFriendRequestRejected(friendId, user.getAccountId());
+        relationshipService.rejectFriend(myAccount.getAccountId(), friendId);
+        notificationService.notifyFriendRequestRejected(friendId, myAccount.getAccountId());
         return ResponseEntity.ok("Reject a friend request from " + friend.getUsername());
     }
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/invitations")
     public ResponseEntity<List<FriendStatusDTO>> getInvitationsList() throws UnauthorizedException {
-        Account user = getAuthenticatedAccount();
-        return ResponseEntity.ok(relationshipService.getInvitationsList(user.getAccountId()));
+        Account myAccount = getAuthenticatedAccount();
+        return ResponseEntity.ok(relationshipService.getInvitationsList(myAccount.getAccountId()));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/unfriend")
     public ResponseEntity<Void> unfriend(@RequestParam Long friendId) throws ChatException, UnauthorizedException {
-        Account user = getAuthenticatedAccount();
-        relationshipService.unfriend(user.getAccountId(), friendId);
+        Account myAccount = getAuthenticatedAccount();
+        relationshipService.unfriend(myAccount.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/block")
     public ResponseEntity<Void> block(@RequestParam Long friendId) throws ChatException, UnauthorizedException {
-        Account user = getAuthenticatedAccount();
-        relationshipService.blockUser(user.getAccountId(), friendId);
+        Account myAccount = getAuthenticatedAccount();
+        relationshipService.blockUser(myAccount.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/unblock")
     public ResponseEntity<Void> unblock(@RequestParam Long friendId) throws ChatException, UnauthorizedException {
-        Account user = getAuthenticatedAccount();
-        relationshipService.unblockUser(user.getAccountId(), friendId);
+        Account myAccount = getAuthenticatedAccount();
+        relationshipService.unblockUser(myAccount.getAccountId(), friendId);
         return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("isAuthenticated()")
-    @DeleteMapping("/delete")
-    public ResponseEntity<String> delete() throws UnauthorizedException {
-        Account user = getAuthenticatedAccount();
-        accountService.deleteAccount(user.getAccountId());
-        return ResponseEntity.ok("Account deleted successfully");
+    @GetMapping("/me/chats")
+    public ResponseEntity<List<Long>> getChatList() throws UnauthorizedException {
+        Account myAccount = getAuthenticatedAccount();
+        return ResponseEntity.ok(accountService.getAllChatIds(myAccount.getAccountId()));
     }
 
 
@@ -208,15 +219,16 @@ public class AccountController {
     public ResponseEntity<?> markOffline(@RequestParam Long accountId) throws UnauthorizedException {
         accountService.markUserOffline(accountId);
         broadcastOnlineStatus(accountId, false);
+        messageCacheService.restoreDefaultCache(accountId);
         return ResponseEntity.ok(Map.of("message", "offline"));
     }
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/status")
     public ResponseEntity<?> checkStatus() throws UnauthorizedException {
-        Account user = getAuthenticatedAccount();
-        boolean isOnline = accountService.isUserOnline(user.getAccountId());
-        Date lastOnline = accountService.getLastOnlineTime(user.getAccountId());
+        Account myAccount = getAuthenticatedAccount();
+        boolean isOnline = accountService.isUserOnline(myAccount.getAccountId());
+        Date lastOnline = accountService.getLastOnlineTime(myAccount.getAccountId());
         Map<String, Object> response = Map.of(
                 "isOnline", isOnline,
                 "lastOnlineTime", lastOnline
@@ -227,8 +239,26 @@ public class AccountController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/notifications")
     public ResponseEntity<List<NotificationResponse>> getNotifications() throws UnauthorizedException {
-        Account user = getAuthenticatedAccount();
-        return ResponseEntity.ok(notificationService.getUserNotifications(user.getAccountId()));
+        Account myAccount = getAuthenticatedAccount();
+        return ResponseEntity.ok(notificationService.getUserNotifications(myAccount.getAccountId()));
+    }
+    
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/spam-chat")
+    public ResponseEntity<List<MessageResponse>> getSpamChat(@RequestParam Long userId) throws UnauthorizedException {
+        Account myAccount = getAuthenticatedAccount();
+        SpamChat spamChat = spamChatService.getSpamChat(myAccount.getAccountId(), userId);
+        List<MessageResponse> messages = new ArrayList<>();
+        spamChat.getMessages().forEach(message -> messages.add(MessageResponse.fromEntity(message)));
+        return ResponseEntity.ok(messages);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> delete() throws UnauthorizedException {
+        Account myAccount = getAuthenticatedAccount();
+        accountService.deleteAccount(myAccount.getAccountId());
+        return ResponseEntity.ok("Account deleted successfully");
     }
 
     @MessageMapping("/status")

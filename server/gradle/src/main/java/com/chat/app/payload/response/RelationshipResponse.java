@@ -12,14 +12,9 @@ import java.util.Date;
 @AllArgsConstructor
 public class RelationshipResponse {
 
-    private Long accountId;
-    private String username;
-    private String email;
-    private String avatar;
+    private Long userId;
+    private Long friendId;
     private String status;
-    private Boolean isFriend;
-//    private Boolean isOnline;
-//    private Date lastOnlineTime;
-    private Page<Message> messages;
+    private Long chatId;
 
 }

@@ -55,18 +55,22 @@ public class Account {
     private Set<Relationship> firstRelationships = new HashSet<>();
 
     @OneToMany(mappedBy = "secondAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference("second-account-relationships")
+    @JsonIgnore
     private Set<Relationship> secondRelationships = new HashSet<>();
 
     @ManyToMany(mappedBy = "admins", fetch = FetchType.LAZY, targetEntity = GroupChat.class)
+    @ToString.Exclude
+    @JsonIgnore
     private Set<GroupChat> adminOfGroup = new HashSet<>();
 
     @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY, targetEntity = GroupChat.class)
     @ToString.Exclude
+    @JsonIgnore
     private Set<GroupChat> memberOfGroup = new HashSet<>();
 
     @ManyToMany(mappedBy = "viewers", fetch = FetchType.LAZY)
     @ToString.Exclude
+    @JsonIgnore
     private Set<Message> messages = new HashSet<>();
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

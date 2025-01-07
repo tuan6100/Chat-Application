@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class MessageConsumerService {
+public class
+MessageConsumerService {
 
     @Autowired
     private MessageProcessingService messageProcessingService;
@@ -21,11 +22,6 @@ public class MessageConsumerService {
     public void consumeSendMessage(ChatMessageRequest chatMessage) throws ChatException {
         System.out.println("Kafka message received: " + chatMessage);
         messageProcessingService.processSendMessage(chatMessage);
-    }
-
-    @KafkaListener(topics = "reply-message", groupId = "chat-group")
-    public void consumeReplyMessage(Long chatId, MessageRequest messageRequest) throws ChatException {
-        messageProcessingService.processReplyMessage(chatId, messageRequest);
     }
 
     @KafkaListener(topics = "edit-message", groupId = "chat-group")

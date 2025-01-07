@@ -8,9 +8,8 @@ import com.chat.app.model.entity.extend.notification.GroupNotification;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 
+import java.lang.reflect.Array;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,7 +32,7 @@ public class GroupChat extends Chat {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "admins_in_group",
+            name = "admins_of_group",
             joinColumns = @JoinColumn(name = "chat_id"),
             inverseJoinColumns = @JoinColumn(name = "account_id")
     )
@@ -67,9 +66,9 @@ public class GroupChat extends Chat {
         this.creator = creator;
         this.createdDate = createdAt;
         this.permission = permission;
-        this.admins = new HashSet<>();
-        this.members = new HashSet<>();
-
+        this.admins.add(creator);
+        this.members.add(creator);
+        members.add(creator);
     }
 
 }

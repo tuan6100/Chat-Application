@@ -7,6 +7,7 @@ import com.chat.app.payload.response.AccountResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public interface AccountService {
@@ -30,4 +31,6 @@ public interface AccountService {
     boolean isUserOnline(Long accountId);
 
     Date getLastOnlineTime(Long accountId);
+
+    List<Long> getAllChatIds(Long accountId);
 }

@@ -1,7 +1,8 @@
 package com.chat.app.config;
 
 
-import com.chat.app.payload.request.MessageRequest;
+import com.chat.app.payload.request.ChatMessageRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -19,19 +20,24 @@ import java.util.Map;
 @EnableKafka
 public class KafkaConfig {
 
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers;
+
 
     @Bean
-    public KafkaTemplate<String, MessageRequest> kafkaTemplate(
-            ProducerFactory<String, MessageRequest> producerFactory) {
+    public KafkaTemplate<String, ChatMessageRequest> kafkaTemplate(
+            ProducerFactory<String, ChatMessageRequest> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 
     @Bean
-    public ProducerFactory<String, MessageRequest> producerFactory() {
+    public ProducerFactory<String, ChatMessageRequest> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "http://160.191.50.248:9092");
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+        configProps.put(ProducerConfig.ACKS_CONFIG, "all");
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 }

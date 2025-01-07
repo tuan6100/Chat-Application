@@ -14,7 +14,7 @@ import java.util.List;
 
      Relationship getRelationship(Long relationshipId) throws ChatException;
 
-     Long getRelationshipId(Long firstAccountId, Long secondAccountId) throws ChatException;
+     Long getRelationshipId(Long firstAccountId, Long secondAccountId);
 
      RelationshipResponse getRelationshipStatus(Long firstAccountId, Long secondAccountId) throws ChatException ;
 

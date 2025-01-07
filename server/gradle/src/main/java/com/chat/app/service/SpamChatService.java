@@ -8,9 +8,10 @@ import org.springframework.stereotype.Service;
 @Service
 public interface SpamChatService  extends ChatService {
 
-    Long getSpamChatId(Long senderId, Long receiverId);
+    SpamChat getSpamChat(Long senderId, Long receiverId);
 
     SpamChat create(Theme theme, Long SenderId, Long ReceiverId) throws ChatException;
 
-    void remove(Long chatId);
+    void removeSpamChats();
+
 }

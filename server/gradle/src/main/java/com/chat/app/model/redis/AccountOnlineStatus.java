@@ -6,15 +6,14 @@ import org.springframework.data.redis.core.RedisHash;
 
 import java.util.Date;
 
-@RedisHash("AccountOnlineStatus")
 @Data
+@RedisHash("AccountOnlineStatus")
 public class AccountOnlineStatus {
 
     @Id
     private String accountId;
 
     private Boolean isOnline;
-
     private Date lastOnlineTime;
 
 

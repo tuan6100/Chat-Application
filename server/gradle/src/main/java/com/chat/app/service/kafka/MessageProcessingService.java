@@ -69,7 +69,6 @@ public class MessageProcessingService {
         message = messageRepository.save(message);
         MessageResponse messageResponse = MessageResponse.fromEntity(message);
         messagingTemplate.convertAndSend("/client/chat/" + chatId, messageResponse);
-        System.out.println("Sending message: " + messageRequest.getContent() + " to chat: " + chatId);
     }
 
     @Transactional
@@ -84,7 +83,7 @@ public class MessageProcessingService {
         Long chatId = message.getChat().getChatId();
         List<Long> membersInChat = chatService.getAllMembersInChat(chatId);
         MessageResponse messageResponse = MessageResponse.fromEntity(message);
-        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
+//        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
         messagingTemplate.convertAndSend("/client/chat/" + chatId, messageResponse);
     }
 
@@ -107,7 +106,7 @@ public class MessageProcessingService {
         Long chatId = message.getChat().getChatId();
         List<Long> membersInChat = chatService.getAllMembersInChat(chatId);
         MessageResponse messageResponse = MessageResponse.fromEntity(message);
-        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
+//        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
         messagingTemplate.convertAndSend("/client/chat/" + chatId, messageResponse);
     }
 }

@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class MessageCacheService {
@@ -56,7 +59,6 @@ public class MessageCacheService {
         messageCacheRepository.save(cache);
     }
 
-    @Async
     public void cacheNewMessage(Long chatId, Long accountId, MessageResponse response) {
         MessageCache cache = getCache(accountId, chatId);
         if (cache == null) {
@@ -70,16 +72,20 @@ public class MessageCacheService {
         messageCacheRepository.save(cache);
     }
 
-//    @Async
-//    public void cacheNewMessage(Long chatId, List<Long> accountIds, MessageResponse response) {
-//        ExecutorService executor = Executors.newFixedThreadPool(accountIds.size());
-//        List<CompletableFuture<Void>> futures = accountIds.stream()
-//                .map(accountId -> CompletableFuture.runAsync(() ->
-//                        cacheNewMessage(chatId, accountId, response), executor))
-//                .toList();
-//        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-//        executor.shutdown();
-//    }
+    @Async
+    public void cacheNewMessage(Long chatId, List<Long> accountIds, MessageResponse response) {
+        ExecutorService executor = Executors.newFixedThreadPool(accountIds.size());
+        List<CompletableFuture<Void>> futures = accountIds.stream()
+                .map(accountId -> CompletableFuture.runAsync(() -> {
+                    MessageCache cache = getCache(accountId, chatId);
+                    if (cache == null || cache.getMessageResponses().stream().noneMatch(msg -> msg.getMessageId().equals(response.getMessageId()))) {
+                        cacheNewMessage(chatId, accountId, response);
+                    }
+                }, executor))
+                .toList();
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        executor.shutdown();
+    }
 
     @Async
     public void removeMessageFromCache(Long chatId, Long accountId, Long messageId) {

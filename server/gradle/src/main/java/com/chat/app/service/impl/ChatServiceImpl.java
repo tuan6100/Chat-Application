@@ -81,15 +81,17 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void verifyMessage(Long chatId, MessageVerifierRequest request) throws ChatException {
+    public void verifyMessage(Long chatId, Long accountId, MessageVerifierRequest request) throws ChatException {
         Message message = messageRepository.findByRandomId(request.getRandomId());
+        if (message == null) {
+            throw new ChatException("Message not found");
+        }
         System.out.println("Verifying message: " + message.getContent());
         if (request.getStatus().equals("sent")) {
             message.setRandomId(null);
             message = messageRepository.save(message);
             MessageResponse messageResponse = MessageResponse.fromEntity(message);
-            List<Long> membersInChat = getAllMembersInChat(chatId);
-            messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
+            messageCacheService.cacheNewMessage(chatId, accountId, messageResponse);
         } else if (request.getStatus().equals("failed")) {
             messageRepository.delete(message);
             throw new ChatException("Failed to send message");

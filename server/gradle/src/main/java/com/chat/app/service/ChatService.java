@@ -17,7 +17,7 @@ public interface ChatService {
 
      List<MessageResponse> getMessages(Long chatId, Long accountId, int page, int size);
 
-     void verifyMessage(Long chatId, MessageVerifierRequest request) throws ChatException;
+     void verifyMessage(Long chatId, Long accountId, MessageVerifierRequest request) throws ChatException;
 
      Chat addMessage(Long chatId, Message message) throws ChatException;
 

@@ -86,7 +86,7 @@ public class ChatController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/message/verify")
     public ResponseEntity<?> verifyMessage(@PathVariable Long chatId, @RequestBody MessageVerifierRequest request) throws ChatException {
-        chatService.verifyMessage(chatId, request);
+        chatService.verifyMessage(chatId, getAuthenticatedAccountId(), request);
         return ResponseEntity.ok().build();
     }
 

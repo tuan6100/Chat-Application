@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Link } from 'react-router';
 import useAuth from "../../hook/useAuth";
-import FormProvider from '../../component/hook-form/FormProvider';
+import FormProvider from '../../component/FormProvider';
 import { TextField, Alert, Button, IconButton, InputAdornment, Stack, Tooltip } from '@mui/material';
 import { RiEyeCloseLine, RiEye2Fill } from 'react-icons/ri';
 
@@ -33,8 +33,6 @@ const LoginForm = () => {
     const { register, setError, handleSubmit, formState: { errors, isSubmitting } } = methods;
 
     const onSubmit = async (data) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
         try {
             const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
@@ -43,9 +41,7 @@ const LoginForm = () => {
                 },
                 body: JSON.stringify(data),
                 credentials: 'include',
-                signal: controller.signal,
             });
-            clearTimeout(timeoutId);
             if (!response.ok) {
                 const errorData = await response.json();
                 setErrorMessage(errorData.message || 'Login failed');
@@ -73,9 +69,7 @@ const LoginForm = () => {
                         'Authorization': `Bearer ${accessToken}`,
                     },
                     credentials: 'include',
-                    signal: controller.signal,
                 });
-                clearTimeout(timeoutId);
                 if (!newResponse.ok) {
                     const newErrorData = await newResponse.json();
                     setErrorMessage(newErrorData);

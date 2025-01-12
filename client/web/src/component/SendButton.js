@@ -4,16 +4,16 @@ import { PaperPlaneTilt } from "phosphor-react";
 import '../css/Tooltip.css';
 
 const SendButton = ({ handleSendMessage }) => {
-    const [tooltipText, setTooltipText] = useState("Send");
+    const [tooltipText, setTooltipText] = useState("Click To Send");
     const [moveUp, setMoveUp] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => {
             setMoveUp(true);
             setTimeout(() => {
-                setTooltipText((prev) => (prev === "Send" ? "Or Press Ctrl+Enter" : "Send"));
+                setTooltipText((prev) => (prev === "Click to send" ? "Or press Ctrl+Enter" : "Click to send"));
                 setMoveUp(false);
-            }, 1000); // Duration of the move-up animation
+            }, 1000);
         }, 3000);
 
         return () => clearInterval(interval);

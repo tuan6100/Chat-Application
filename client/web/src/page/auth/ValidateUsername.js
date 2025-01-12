@@ -115,6 +115,7 @@ const ValidateUsername = () => {
                         >
                             <CheckIcon sx={{ mr: 1, color: "green" }} /> Yes, it's me
                         </Button> )}
+
                         <Button
                             onClick={handleReject}
                             sx={{

@@ -3,7 +3,7 @@ import { alpha, styled } from '@mui/material/styles';
 import { Tooltip } from '@mui/material';
 import cssStyles from '../../../utility/cssStyles';
 import Iconify from '../../Iconify';
-import { IconButtonAnimate } from '../../animate';
+import { IconButtonAnimate } from '../../Animate';
 
 
 const RootStyle = styled('span')(({ theme }) => ({

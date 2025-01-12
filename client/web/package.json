@@ -37,6 +37,7 @@
     "simplebar-react": "^3.2.6",
     "sockjs-client": "^1.6.1",
     "stylis": "^4.3.4",
+    "web": "file:",
     "web-vitals": "^2.1.4",
     "yup": "^1.4.0"
   },

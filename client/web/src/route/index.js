@@ -8,6 +8,7 @@ import DashboardLayout from "../layout/dashboard";
 import {DEFAULT_PATH} from "../config";
 
 
+
 const Loadable = (Component) => (props) => {
   return (
       <Suspense fallback={<ScreenLoading justifyContent="center" />}>
@@ -23,10 +24,10 @@ const ValidateUsername = Loadable(lazy(() => import('../page/auth/ValidateUserna
 const RenewPassword = Loadable(lazy(() => import('../page/auth/RenewPassword')));
 const SetupProfile = Loadable(lazy(() => import('../page/auth/SetupProfile')));
 
-const Chat = Loadable(lazy(() => import('../page/dashboard/Chats')));
+const Chats = Loadable(lazy(() => import('../page/dashboard/Chats')));
 const Groups = Loadable(lazy(() => import('../page/dashboard/Groups')));
-const Conversation = Loadable(lazy(() => import('../component/Conversation')));
 const Notification = Loadable(lazy(() => import('../page/dashboard/Notifications')));
+const PrivateChat = Loadable(lazy(() => import('../page/Chat/PrivateChat')));
 
 export default function Router() {
   const { isAuthenticated } = useContext(AuthContext);
@@ -54,10 +55,10 @@ export default function Router() {
       ),
       children: [
         { element: <Navigate to={DEFAULT_PATH} replace />, index: true },
-        { path: 'chats', element: <Chat />},
+        { path: 'chats', element: <Chats />},
         { path: 'groups', element: <Groups />},
-        { path: 'conversation/:accountId', element: <Conversation /> },
         { path: 'notifications', element: <Notification /> }
+
       ],
     },
     { path: '*', element: <Navigate to='/me/chats' replace /> },

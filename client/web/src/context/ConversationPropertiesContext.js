@@ -6,11 +6,13 @@ import SockJS from "sockjs-client";
 const ConversationPropertiesContext = createContext(undefined);
 
 export const ConversationPropertiesProvider = ({ children }) => {
+
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     const [avatar, setAvatar] = useState(null);
     const [name, setName] = useState(null);
     const [isOnline, setIsOnline] = useState(false);
     const [lastOnlineTime, setLastOnlineTime] = useState(null);
-    const { authFetch, isAuthenticated } = useAuth();
+    const {isAuthenticated } = useAuth();
     const clientRef = useRef(null);
     const pollingRef = useRef(null);
     const onlineTimeoutRef = useRef(null);
@@ -20,7 +22,7 @@ export const ConversationPropertiesProvider = ({ children }) => {
     const markUserOnline = useCallback(async () => {
         if (!isAuthenticated) return;
         try {
-            const response = await fetch(`/api/account/me/online?accountId=${accountId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/account/me/online?accountId=${accountId}`, {
                 method: "POST",
                 credentials: "include",
             });
@@ -30,12 +32,12 @@ export const ConversationPropertiesProvider = ({ children }) => {
         } catch (error) {
             console.error("Error marking user online:", error);
         }
-    }, [authFetch, isAuthenticated, accountId]);
+    }, [isAuthenticated, accountId]);
 
     const markUserOffline = useCallback(async () => {
         if (!isAuthenticated || !isOnlineCheckStarted.current) return;
         try {
-            const response = await fetch(`/api/account/me/offline?accountId=${accountId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/account/me/offline?accountId=${accountId}`, {
                 method: "POST",
                 credentials: "include",
             });
@@ -45,7 +47,7 @@ export const ConversationPropertiesProvider = ({ children }) => {
         } catch (error) {
             console.error("Error marking user offline:", error);
         }
-    }, [authFetch, isAuthenticated, accountId]);
+    }, [isAuthenticated, accountId]);
 
     const connectWebSocket = useCallback(() => {
         if (!isAuthenticated) return;
@@ -119,6 +121,13 @@ export const ConversationPropertiesProvider = ({ children }) => {
         }
     };
 
+    const markUserOfflineSync = () => {
+        if (isAuthenticated && isOnlineCheckStarted.current) {
+            const url = `${process.env.REACT_APP_API_BASE_URL}/api/account/me/offline?accountId=${accountId}`;
+            navigator.sendBeacon(url);
+        }
+    };
+
     useEffect(() => {
         if (!isAuthenticated) return;
 
@@ -143,7 +152,7 @@ export const ConversationPropertiesProvider = ({ children }) => {
         };
 
         const handleBeforeUnload = () => {
-            markUserOffline();
+            markUserOfflineSync();
         };
 
         const handlePageHide = () => {
@@ -168,9 +177,7 @@ export const ConversationPropertiesProvider = ({ children }) => {
             window.removeEventListener('beforeunload', handleBeforeUnload);
             window.removeEventListener('pagehide', handlePageHide);
             window.removeEventListener('pageshow', handlePageShow);
-
             clearPolling();
-
             if (clientRef.current) {
                 clientRef.current.deactivate();
             }

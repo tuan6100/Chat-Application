@@ -74,11 +74,12 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         const accountId = localStorage.getItem('accountId');
+        await markOffline(accountId);
         setIsAuthenticated(false);
         setCloseWebSocket(true);
         localStorage.clear();
+        sessionStorage.clear();
         navigate("/auth/login", { replace: true });
-        await markOffline(accountId);
     };
 
 
@@ -100,7 +101,7 @@ export const AuthProvider = ({ children }) => {
                 if (response.ok) {
                     return response;
                 }
-                if (response.status !== 200  && !retry) {
+                if (response.status === 401  && !retry) {
                     const newToken = await refreshToken(`${API_BASE_URL}/api/auth/refresh-token`);
                     if (!newToken) {
                         console.error("Unable to refresh token, logging out...");

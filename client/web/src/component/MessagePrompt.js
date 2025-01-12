@@ -16,7 +16,7 @@ const MessagePrompt = () => {
             color: theme.palette.text.secondary,
             position: 'fixed',
             left:200,
-            zIndex: 0,
+            zIndex: 2,
         }}>
             <Typography variant="h6" sx={{ px: 2 }}>
                 Select a chat to start messaging

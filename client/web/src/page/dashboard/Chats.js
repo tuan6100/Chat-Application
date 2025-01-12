@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
 import useSidebar from "../../hook/useSideBar";
 import { alpha, useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -22,6 +21,7 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 import PrivateChat from "../Chat/PrivateChat";
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
+import useMessage from "../../hook/useMessage";
 
 const StyledBadge = (props) => {
     return (
@@ -53,14 +53,11 @@ const Chats = () => {
     const { searchResults, startedSearch } = useSearchResult();
     const anyResult = searchResults.length > 0;
     const { authFetch } = useAuth();
-    const [friendId, setFriendId] = useState(0);
+    const [UserId, setUserId] = useState(0);
     const [page, setPage] = useState(null);
     const isFetching = useRef(false);
-    const navigate = useNavigate();
     const [chatId, setChatId] = useState(0);
-
-    const [oldMessagesMap, setOldMessagesMap] = useState(new Map());
-    const [newMessagesMap, setNewMessagesMap] = useState(new Map());
+    const { oldMessagesMap, setOldMessagesMap, addNewMessage, getMessagesFromSession, updateChatDataInSession } = useMessage();
 
     class ChatElement {
         constructor(chatId = 0, friendId = 0, friendUsername = "", friendAvatar = "", friendIsOnline = false, friendLastOnlineTime = new Date(),
@@ -132,7 +129,12 @@ const Chats = () => {
 
 
     const fetchMessages = async (chatId) => {
-        if (isFetching.current) return;
+        if (isFetching.current) {
+            return;
+        }
+        if (getMessagesFromSession(chatId).length > 0) {
+            return;
+        }
         isFetching.current = true;
         try {
             const response = await authFetch(`/api/chat/${chatId}/messages?page=0`);
@@ -141,10 +143,12 @@ const Chats = () => {
                 return;
             }
             const data = await response.json();
+            console.info("Fetched messages for chat " + chatId + ": ", data);
+            updateChatDataInSession(chatId, data);
+            console.info("Cached messages for chat " + chatId + ": ", getMessagesFromSession(chatId));
             setOldMessagesMap((prev) => {
                 const newMap = new Map(prev);
                 newMap.set(chatId, data);
-                console.info("Fetched messages for chat " + chatId + ": " + JSON.stringify(newMap.get(chatId)));
                 return newMap;
             });
         } catch (error) {
@@ -179,11 +183,7 @@ const Chats = () => {
                     if (!subscriptions.has(chatId)) {
                         const subscription = stompClient.subscribe(`/client/chat/${chatId}`, (message) => {
                             const data = JSON.parse(message.body);
-                            setNewMessagesMap((prev) => {
-                                const newMap = new Map(prev);
-                                newMap.set(chatId, data);
-                                return newMap;
-                            });
+                            addNewMessage(chatId, data);
                             setChatList((prevChatList) => {
                                 const updatedChatList = prevChatList.map((chat) => {
                                     if (chat.chatId === chatId) {
@@ -224,7 +224,7 @@ const Chats = () => {
                 return;
             }
             const data = await response.json();
-            setFriendId(accountId);
+            setUserId(accountId);
             if (data.status === "NO_RELATIONSHIP" || data.status === "BLOCKED") {
                 setPage('info');
             } else if (data.status === "WAITING FOR ACCEPTANCE" || data.status === "NEW FRIEND REQUEST") {
@@ -235,10 +235,6 @@ const Chats = () => {
         }
     };
 
-    const handleChatClick = (chatId) => {
-        localStorage.setItem('chatId', chatId);
-        setChatId(chatId);
-    }
 
 
     return (
@@ -324,7 +320,7 @@ const Chats = () => {
                                                 }
                                             }}
                                             button
-                                            onClick={() => handleChatClick(item.chatId)}
+                                            onClick={() => setChatId(item.chatId)}
                                         >
                                             <ListItemAvatar>
                                                 <StyledBadge isOnline={item.friendIsOnline}>
@@ -379,8 +375,7 @@ const Chats = () => {
                 {chatId !== 0 && (
                     <PrivateChat
                         friendId={chatList.find(chat => chat.chatId === chatId)?.friendId || 0}
-                        oldMessages={oldMessagesMap.get(chatId) || []}
-                        newMessage={newMessagesMap.get(chatId) || {}}
+                        chatId={chatId}
                     />
                 )}
             </Box>

@@ -15,7 +15,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { CameraEnhance, Call, Search, MoreVert } from "@mui/icons-material";
 
-const ConversationHeader = ({ name, avatar, isOnline, lastOnlineTime }) => {
+const Header = ({ name, avatar, isOnline, lastOnlineTime }) => {
 
 
   const theme = useTheme();
@@ -160,4 +160,4 @@ const ConversationHeader = ({ name, avatar, isOnline, lastOnlineTime }) => {
 
 
 
-export default ConversationHeader;
+export default Header;

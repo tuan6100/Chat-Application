@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useAuth from "../../hook/useAuth";
 import useConversationProperties from "../../hook/useConversationProperties";
 import Header from "../../component/Conversation/Header";
-import { Box, Stack } from "@mui/material";
+import {Avatar, Box, Stack, Typography} from "@mui/material";
 import Body from "../../component/Conversation/Body";
 import Footer from "../../component/Conversation/Footer";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -10,77 +10,55 @@ import ScrollBar from "../../component/ScrollBar";
 import useMessage from "../../hook/useMessage";
 import SockJS from "sockjs-client";
 import {Stomp} from "@stomp/stompjs";
-
-// const useSessionStorage = (key) => {
-//     const [storedValue, setStoredValue] = useState(() => {
-//         try {
-//             const item = sessionStorage.getItem(key);
-//             return item ? JSON.parse(item) : {};
-//         } catch (error) {
-//             console.error(error);
-//             return {};
-//         }
-//     });
-//
-//     useEffect(() => {
-//         const handleStorageChange = () => {
-//             try {
-//                 const item = sessionStorage.getItem(key);
-//                 setStoredValue(item ? JSON.parse(item) : {});
-//             } catch (error) {
-//                 console.error(error);
-//             }
-//         };
-//
-//         window.addEventListener("storage", handleStorageChange);
-//         return () => {
-//             window.removeEventListener("storage", handleStorageChange);
-//         };
-//     }, [key]);
-//
-//     return storedValue;
-// };
+import {useTheme} from "@mui/material/styles";
 
 
 const PrivateChat = ({ friendId, chatId }) => {
-
     const { authFetch } = useAuth();
-    const { avatar, name, isOnline, lastOnlineTime, setAvatar, setName, setIsOnline, setLastOnlineTime } = useConversationProperties();
+    const {
+        avatar, name, isOnline, lastOnlineTime,
+        setAvatar, setName, setIsOnline, setLastOnlineTime
+    } = useConversationProperties();
     const isMobile = useMediaQuery("(max-width: 600px)");
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const messagesEndRef = useRef(null);
     const scrollRef = useRef(null);
-    const scrollBarRef = useRef(null);
     const isFetching = useRef(false);
     const isAutoScrolling = useRef(false);
-    // const chatData = useSessionStorage("chatData");
-    const { getMessagesFromSession, updateChatDataInSession, rawMessagesMap, finalMessagesMap, setTypingUsers, typingUsers } = useMessage();
+    const {
+        getMessagesFromSession,
+        updateChatDataInSession,
+        rawMessagesMap,
+        finalMessagesMap,
+        setTypingUsers, typingUsers,
+        toggleNewMessage, setToggleNewMessage
+    } = useMessage();
     const [messageList, setMessageList] = useState([]);
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-    let currentPage = 0;
+    const theme = useTheme();
+    const accountId = parseInt(localStorage.getItem("accountId"));
+    const [isScrollAtBottom, setIsScrollAtBottom] = useState(true);
 
 
     useEffect(() => {
-        if (getMessagesFromSession(chatId).length === 0) {
-            fetchMessages(currentPage++)
+        const sessionMessages = getMessagesFromSession(chatId);
+        if (sessionMessages.length === 0) {
+            fetchMessages(1);
         } else {
-            setMessageList(getMessagesFromSession(chatId));
-            console.log("Message list:", getMessagesFromSession(chatId));
+            setMessageList(sessionMessages);
         }
     }, [chatId]);
 
 
     useEffect(() => {
-        if (friendId === 0) {
-            return ;
-        }
+        if (friendId === 0) return;
         const getFriendInfo = async () => {
             try {
                 const response = await authFetch(`/api/account/${friendId}/info`);
                 if (!response.ok) {
                     const error = await response.json();
-                    console.error("Error during get friend info:", error.message);
+                    console.error("Error fetching friend info:", error.message);
                     return;
                 }
                 const data = await response.json();
@@ -89,89 +67,80 @@ const PrivateChat = ({ friendId, chatId }) => {
                 setIsOnline(data.isOnline);
                 setLastOnlineTime(data.lastOnlineTime);
             } catch (error) {
-                console.error("Error fetching data:", error);
+                console.error("Error fetching friend info:", error);
             }
         };
+
         getFriendInfo();
         const intervalId = setInterval(getFriendInfo, 300000);
         return () => clearInterval(intervalId);
     }, [authFetch, friendId, setAvatar, setName, setIsOnline, setLastOnlineTime]);
 
 
+    const scrollToBottom = () => {
+        if (isAutoScrolling.current && messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    };
+
     useEffect(() => {
-        if (messagesEndRef.current) {
+        if (isScrollAtBottom && messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
     }, [messageList, typingUsers]);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const checkIfScrollAtBottom = () => {
+        if (!scrollRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+        setIsScrollAtBottom(scrollTop + clientHeight >= scrollHeight);
     };
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messageList, typingUsers]);
+        const scrollElement = scrollRef.current;
+        if (scrollElement) {
+            scrollElement.addEventListener("scroll", checkIfScrollAtBottom);
+            return () => {
+                scrollElement.removeEventListener("scroll", checkIfScrollAtBottom);
+            };
+        }
+    }, []);
+
+    useEffect(() => {
+        if (isScrollAtBottom) {
+            scrollToBottom();
+        }
+    }, [messageList, typingUsers, isScrollAtBottom]);
 
     const handleScrollUp = () => {
-        if (!scrollRef.current || !hasMore || isFetching.current) {
-            console.log('Cannot fetch: No ref, no more data, or already fetching');
-            return;
-        }
+        if (!scrollRef.current || !hasMore || isFetching.current) return;
 
-        const scrollElement = scrollRef.current; // Không cần xử lý phức tạp
-        console.log('Scroll position:', scrollElement.scrollTop);
-
+        const scrollElement = scrollRef.current;
         if (scrollElement.scrollTop === 0) {
-            console.log('Fetching more messages...');
             fetchMessages(page);
         }
     };
 
-
-
-    useEffect(() => {
-        const handleScroll = () => {
-            const scrollElement = scrollBarRef.current?.el;
-            console.log('Scroll event triggered');
-            if (scrollElement.scrollTop === 0 && hasMore && !isFetching.current) {
-                console.log('Conditions met for handleScrollUp');
-                handleScrollUp();
-            }
-        };
-        const scrollElement = scrollBarRef.current?.el;
-        if (scrollElement) {
-            console.log('Adding scroll event listener');
-            scrollElement.addEventListener('scroll', handleScroll);
-        }
-
-        return () => {
-            if (scrollElement) {
-                console.log('Removing scroll event listener');
-                scrollElement.removeEventListener('scroll', handleScroll);
-            }
-        };
-    }, [hasMore, isFetching, handleScrollUp]);
+    const handleNewMessageClick = () => {
+        scrollToBottom();
+        isAutoScrolling.current = true;
+        setToggleNewMessage(() => null);
+    };
 
 
     const fetchMessages = useCallback(async (page) => {
-        console.log('Fetching messages for page:', page);
         if (isFetching.current || !hasMore) return;
 
         isFetching.current = true;
         try {
             const response = await authFetch(`/api/chat/${chatId}/messages?page=${page}`);
-            console.log('Fetch response:', response);
-
             if (!response.ok) {
                 const error = await response.json();
-                console.error("Error during get messages:", error.message);
+                console.error("Error fetching messages:", error.message);
                 setHasMore(false);
                 return;
             }
 
             const data = await response.json();
-            console.log('Fetched messages:', data);
-
             if (data.length > 0) {
                 setMessageList((prev) => [...data, ...prev]);
                 updateChatDataInSession(chatId, [...data, ...messageList]);
@@ -187,16 +156,16 @@ const PrivateChat = ({ friendId, chatId }) => {
     }, [authFetch, chatId, hasMore, messageList, page]);
 
 
-
     useEffect(() => {
         const newMessages = finalMessagesMap.get(chatId) || [];
-        console.log("New messages:", JSON.stringify(newMessages));
         const rawMessages = rawMessagesMap.get(chatId) || [];
         if (newMessages.length > 0 || rawMessages.length > 0) {
             setMessageList((prevMessages) => {
                 const updatedMessages = [...prevMessages];
                 newMessages.forEach((newMessage) => {
-                    const index = updatedMessages.findIndex(msg => msg.randomId === newMessage.randomId);
+                    const index = updatedMessages.findIndex(
+                        (msg) => msg.randomId === newMessage.randomId
+                    );
                     if (index !== -1) {
                         updatedMessages[index] = newMessage;
                     } else {
@@ -204,7 +173,9 @@ const PrivateChat = ({ friendId, chatId }) => {
                     }
                 });
                 rawMessages.forEach((rawMessage) => {
-                    const index = updatedMessages.findIndex(msg => msg.randomId === rawMessage.randomId);
+                    const index = updatedMessages.findIndex(
+                        (msg) => msg.randomId === rawMessage.randomId
+                    );
                     if (index === -1) {
                         updatedMessages.push(rawMessage);
                     }
@@ -242,8 +213,7 @@ const PrivateChat = ({ friendId, chatId }) => {
         return () => {
             stompClient.disconnect();
         };
-    }, [chatId]);
-
+    }, [chatId, setTypingUsers, API_BASE_URL]);
 
 
 
@@ -256,21 +226,45 @@ const PrivateChat = ({ friendId, chatId }) => {
                 lastOnlineTime={lastOnlineTime}
             />
 
-            <ScrollBar onScroll={handleScrollUp} ref={scrollRef}>
+            <Box
+                ref={scrollRef}
+                onScroll={handleScrollUp}
+                width="100%"
+                sx={{ flexGrow: 1, height: "100%", overflowY: "auto" }}
+            >
+                <Body messages={messageList} />
+                <div ref={messagesEndRef} />
+            </Box>
+
+            {toggleNewMessage !== null && toggleNewMessage.senderId !== accountId && !isScrollAtBottom && (
                 <Box
-                    width="100%"
-                    sx={{ flexGrow: 1, height: "100%" }}
+                    sx={{
+                        position: "absolute",
+                        bottom: isMobile ? "70px" : "100px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        border: `1px solid ${theme.palette.primary.main}`,
+                        backgroundColor: "transparent",
+                        color: "#fff",
+                        borderRadius: "24px",
+                        padding: "8px 16px",
+                        boxShadow: "0px 4px 6px rgba(0,0,0,0.2)",
+                        animation: "float-in 0.5s ease-in-out",
+                        cursor: "pointer",
+                    }}
+                    onClick={handleNewMessageClick}
                 >
-                    <Body messages={messageList} />
-                    <div ref={messagesEndRef} />
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        <Avatar sx={{ width: 15, height: 15 }} src={toggleNewMessage.senderAvatar} />
+                        <Typography>{toggleNewMessage.content}</Typography>
+                    </Stack>
                 </Box>
-            </ScrollBar>
+            )}
 
             <Box sx={{ flexShrink: 0 }}>
                 <Footer chatId={chatId} />
             </Box>
         </Stack>
-
     );
 };
 

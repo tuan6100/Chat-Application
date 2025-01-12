@@ -64,7 +64,7 @@ const ProfileForm = () => {
                 navigate("/app");
             }, 1000);
         } catch (error) {
-            setServerError(error.message);
+            console.error('Error updating profile:', error);
         }
     };
 

@@ -11,7 +11,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {SelectedProvider} from "./context/SelectedContext";
 import {ConversationPropertiesProvider} from "./context/ConversationPropertiesContext";
-import Notification from "./component/Notification";
+import {MessageProvider} from "./context/MessageContext";
+
 
 function App() {
     useApplyTheme();
@@ -24,9 +25,10 @@ function App() {
                             <SearchProvider>
                                 <SelectedProvider>
                                     <ConversationPropertiesProvider>
-                                        <Router />
-                                        <ToastContainer />
-                                        <Notification />
+                                        <MessageProvider>
+                                            <Router />
+                                            <ToastContainer />
+                                        </MessageProvider>
                                     </ConversationPropertiesProvider>
                                 </SelectedProvider>
                             </SearchProvider>

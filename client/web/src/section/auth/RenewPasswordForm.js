@@ -1,7 +1,7 @@
 import React, {useContext, useEffect, useState} from 'react';
 import * as Yup from 'yup';
 import { useForm } from 'react-hook-form';
-import FormProvider from '../../component/hook-form/FormProvider'
+import FormProvider from '../../component/FormProvider'
 import { yupResolver } from '@hookform/resolvers/yup';
 import {TextField, Alert, Button, IconButton, InputAdornment, Stack, Tooltip} from '@mui/material';
 import {RiEye2Fill, RiEyeCloseLine} from "react-icons/ri";

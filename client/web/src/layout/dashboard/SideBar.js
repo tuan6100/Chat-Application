@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { Avatar, Box, Divider, IconButton, Menu, MenuItem, Stack, Tooltip } from '@mui/material';
+import { Avatar, Box, Divider, IconButton, Menu, MenuItem, Stack, Tooltip, Badge } from '@mui/material';
 import { useTheme } from "@mui/material/styles";
 import { ChatCircleDots, Gear, Phone, SignOut, User, Users, UserCircleGear, Bell, BellSlash } from "phosphor-react";
 import useSettings from '../../hook/useSettings';
@@ -10,9 +10,11 @@ import '../../css/SideBar.css';
 import CustomDrawer from "../../component/Custom/drawer";
 import useSidebar  from "../../hook/useSideBar";
 import useSelected from "../../hook/useSelected";
+import useMessage from "../../hook/useMessage";
 
 
 const SideBar = () => {
+    const [unreadCount, setUnreadCount] = useState(0);
     const [anchorEl, setAnchorEl] = useState(null);
     const { isSidebarOpen } = useSidebar();
     const open = Boolean(anchorEl);
@@ -27,6 +29,7 @@ const SideBar = () => {
     const [openCustomBar, setOpenCustomBar] = useState(false);
     const {enableNotification} = useSettings();
     const {setChatOpen} = useSelected();
+    const {unreadNotification} = useMessage();
 
     const Profile_Menu = [
         { title: "Profile", icon: <User /> },
@@ -38,7 +41,18 @@ const SideBar = () => {
         { index: 0, icon: <ChatCircleDots />, tooltip: "Chat" },
         { index: 1, icon: <Users />, tooltip: "Group" },
         { index: 2, icon: <Phone />, tooltip: "Call" },
-        { index: 3, icon: !enableNotification ? <Bell /> : <BellSlash />, tooltip: "Notification" },
+        { 
+            index: 3, 
+            icon: (
+                <Badge 
+                    badgeContent={unreadNotification > 9 ? '9+' : unreadNotification}
+                    color="error"
+                >
+                    {enableNotification ? <Bell /> : <BellSlash />}
+                </Badge>
+            ),
+            tooltip: "Notification"
+        },
     ];
 
     const getPath = (index) => {

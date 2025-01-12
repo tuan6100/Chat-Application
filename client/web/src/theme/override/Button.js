@@ -37,7 +37,6 @@ export default function Button(theme) {
         containedError: {
           boxShadow: theme.customShadows.error,
         },
-        // outlined
         outlinedInherit: {
           border: `1px solid ${theme.palette.grey[500_32]}`,
           '&:hover': {

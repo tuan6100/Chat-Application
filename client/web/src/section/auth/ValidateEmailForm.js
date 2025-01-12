@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import * as Yup from 'yup';
 import { useForm } from 'react-hook-form';
-import FormProvider from '../../component/hook-form/FormProvider';
+import FormProvider from '../../component/FormProvider';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { TextField, Alert, Button, Stack, Link } from '@mui/material';
 import {Link as RouterLink, useNavigate} from 'react-router';

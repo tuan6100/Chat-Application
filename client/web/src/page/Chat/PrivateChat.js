@@ -6,77 +6,69 @@ import { Box, Stack } from "@mui/material";
 import Body from "../../component/Conversation/Body";
 import Footer from "../../component/Conversation/Footer";
 import useMediaQuery from "@mui/material/useMediaQuery";
-// import SockJS from "sockjs-client";
-// import { Stomp } from "@stomp/stompjs";
 import ScrollBar from "../../component/ScrollBar";
+import useMessage from "../../hook/useMessage";
+import SockJS from "sockjs-client";
+import {Stomp} from "@stomp/stompjs";
 
-const PrivateChat = ({ friendId, oldMessages, newMessage }) => {
+// const useSessionStorage = (key) => {
+//     const [storedValue, setStoredValue] = useState(() => {
+//         try {
+//             const item = sessionStorage.getItem(key);
+//             return item ? JSON.parse(item) : {};
+//         } catch (error) {
+//             console.error(error);
+//             return {};
+//         }
+//     });
+//
+//     useEffect(() => {
+//         const handleStorageChange = () => {
+//             try {
+//                 const item = sessionStorage.getItem(key);
+//                 setStoredValue(item ? JSON.parse(item) : {});
+//             } catch (error) {
+//                 console.error(error);
+//             }
+//         };
+//
+//         window.addEventListener("storage", handleStorageChange);
+//         return () => {
+//             window.removeEventListener("storage", handleStorageChange);
+//         };
+//     }, [key]);
+//
+//     return storedValue;
+// };
+
+
+const PrivateChat = ({ friendId, chatId }) => {
 
     const { authFetch } = useAuth();
     const { avatar, name, isOnline, lastOnlineTime, setAvatar, setName, setIsOnline, setLastOnlineTime } = useConversationProperties();
     const isMobile = useMediaQuery("(max-width: 600px)");
-    const pendingTimeouts = useRef(new Map());
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const messagesEndRef = useRef(null);
     const scrollRef = useRef(null);
+    const scrollBarRef = useRef(null);
     const isFetching = useRef(false);
-    const chatId = parseInt(localStorage.getItem('chatId'));
-    const [newMessageSortedMap, setNewMessagesSortedMap] = useState(new Map());
-    const [oldMessageList, setOldMessageList] = useState([]);
+    const isAutoScrolling = useRef(false);
+    // const chatData = useSessionStorage("chatData");
+    const { getMessagesFromSession, updateChatDataInSession, rawMessagesMap, finalMessagesMap, setTypingUsers, typingUsers } = useMessage();
+    const [messageList, setMessageList] = useState([]);
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+    let currentPage = 0;
+
 
     useEffect(() => {
-        setOldMessageList(oldMessages)
-        console.log("oldMessages", oldMessageList)
-    }, [oldMessages]);
-
-    useEffect(() => {
-        if (newMessage && newMessage.randomId) {
-            setNewMessagesSortedMap(prevMap => {
-                const newMap = new Map(prevMap || []);
-                newMap.set(newMessage.randomId, newMessage);
-                return newMap;
-            });
-            console.log("newMessage", newMessage);
-            console.log("newMessageSortedMap", newMessageSortedMap);
+        if (getMessagesFromSession(chatId).length === 0) {
+            fetchMessages(currentPage++)
         } else {
-            console.error("newMessage does not have a valid randomId", newMessage);
+            setMessageList(getMessagesFromSession(chatId));
+            console.log("Message list:", getMessagesFromSession(chatId));
         }
-    }, [newMessage]);
-
-
-    const getChatDataFromSession = () => {
-        return JSON.parse(sessionStorage.getItem("chatData")) || {};
-    };
-
-    const updateChatDataInSession = (chatId, messages) => {
-        const chatData = getChatDataFromSession();
-        chatData[chatId] = {
-            messages,
-            lastAccessed: new Date().getTime(),
-            accessCount: (chatData[chatId]?.accessCount || 0) + 1
-        };
-        const chatIds = Object.keys(chatData);
-        if (chatIds.length > 5) {
-            chatIds.sort((a, b) => chatData[a].accessCount - chatData[b].accessCount);
-            delete chatData[chatIds[0]];
-        }
-        sessionStorage.setItem("chatData", JSON.stringify(chatData));
-    };
-
-    useEffect(() => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-        }
-    }, [oldMessageList]);
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [oldMessageList]);
+    }, [chatId]);
 
 
     useEffect(() => {
@@ -106,22 +98,84 @@ const PrivateChat = ({ friendId, oldMessages, newMessage }) => {
     }, [authFetch, friendId, setAvatar, setName, setIsOnline, setLastOnlineTime]);
 
 
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messageList, typingUsers]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messageList, typingUsers]);
+
+    const handleScrollUp = () => {
+        if (!scrollRef.current || !hasMore || isFetching.current) {
+            console.log('Cannot fetch: No ref, no more data, or already fetching');
+            return;
+        }
+
+        const scrollElement = scrollRef.current; // Không cần xử lý phức tạp
+        console.log('Scroll position:', scrollElement.scrollTop);
+
+        if (scrollElement.scrollTop === 0) {
+            console.log('Fetching more messages...');
+            fetchMessages(page);
+        }
+    };
+
+
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollElement = scrollBarRef.current?.el;
+            console.log('Scroll event triggered');
+            if (scrollElement.scrollTop === 0 && hasMore && !isFetching.current) {
+                console.log('Conditions met for handleScrollUp');
+                handleScrollUp();
+            }
+        };
+        const scrollElement = scrollBarRef.current?.el;
+        if (scrollElement) {
+            console.log('Adding scroll event listener');
+            scrollElement.addEventListener('scroll', handleScroll);
+        }
+
+        return () => {
+            if (scrollElement) {
+                console.log('Removing scroll event listener');
+                scrollElement.removeEventListener('scroll', handleScroll);
+            }
+        };
+    }, [hasMore, isFetching, handleScrollUp]);
+
+
     const fetchMessages = useCallback(async (page) => {
+        console.log('Fetching messages for page:', page);
         if (isFetching.current || !hasMore) return;
+
         isFetching.current = true;
         try {
             const response = await authFetch(`/api/chat/${chatId}/messages?page=${page}`);
+            console.log('Fetch response:', response);
+
             if (!response.ok) {
                 const error = await response.json();
                 console.error("Error during get messages:", error.message);
                 setHasMore(false);
                 return;
             }
+
             const data = await response.json();
+            console.log('Fetched messages:', data);
+
             if (data.length > 0) {
-                setOldMessageList(data);
+                setMessageList((prev) => [...data, ...prev]);
+                updateChatDataInSession(chatId, [...data, ...messageList]);
                 setPage(page + 1);
-                updateChatDataInSession(chatId, [...data, ...oldMessages]);
             } else {
                 setHasMore(false);
             }
@@ -130,133 +184,70 @@ const PrivateChat = ({ friendId, oldMessages, newMessage }) => {
         } finally {
             isFetching.current = false;
         }
-    }, [authFetch, chatId, hasMore, oldMessages]);
+    }, [authFetch, chatId, hasMore, messageList, page]);
 
-    const handleScroll = () => {
-        if (scrollRef.current) {
-            const { scrollTop } = scrollRef.current;
-            if (scrollTop === 0 && hasMore && !isFetching.current) {
-                fetchMessages(1);
-            }
-        }
-    };
-
-
-    const handleServerResponse = (newMessage) => {
-        if (newMessage === null) {
-            return;
-        }
-        let shouldSendMessage = false;
-        setNewMessagesSortedMap((prevMessages) => {
-            const updatedMessages = new Map(prevMessages);
-            if (updatedMessages.has(newMessage.randomId)) {
-                newMessage.status = 'sent';
-                updatedMessages.set(newMessage.randomId, newMessage);
-                clearTimeout(pendingTimeouts.current.get(newMessage.randomId));
-                pendingTimeouts.current.delete(newMessage.randomId);
-            } else {
-                updatedMessages.set(newMessage.randomId, newMessage);
-                shouldSendMessage = true;
-                const timeout = setTimeout(() => {
-                    handleFailedMessage(newMessage.randomId);
-                }, 5 * 60 * 1000);
-                pendingTimeouts.current.set(newMessage.randomId, timeout);
-            }
-            return new Map([...updatedMessages.entries()].sort((a, b) => a[1].timeSent - b[1].timeSent));
-        });
-        if (shouldSendMessage) {
-            handleSentMessage(newMessage.randomId);
-        }
-    };
 
 
     useEffect(() => {
-        handleServerResponse(newMessage);
-    }, [newMessage]);
+        const newMessages = finalMessagesMap.get(chatId) || [];
+        console.log("New messages:", JSON.stringify(newMessages));
+        const rawMessages = rawMessagesMap.get(chatId) || [];
+        if (newMessages.length > 0 || rawMessages.length > 0) {
+            setMessageList((prevMessages) => {
+                const updatedMessages = [...prevMessages];
+                newMessages.forEach((newMessage) => {
+                    const index = updatedMessages.findIndex(msg => msg.randomId === newMessage.randomId);
+                    if (index !== -1) {
+                        updatedMessages[index] = newMessage;
+                    } else {
+                        updatedMessages.push(newMessage);
+                    }
+                });
+                rawMessages.forEach((rawMessage) => {
+                    const index = updatedMessages.findIndex(msg => msg.randomId === rawMessage.randomId);
+                    if (index === -1) {
+                        updatedMessages.push(rawMessage);
+                    }
+                });
+                return updatedMessages;
+            });
+        }
+    }, [finalMessagesMap, rawMessagesMap, chatId]);
 
-    const mergeMessages = (oldMessages, newMessages) => {
-        if (oldMessages.length === 0) {
-            return newMessages;
-        }
-        if (newMessages.length === 0) {
-            return oldMessages;
-        }
-        const mergedMessages = [];
-        let i = 0, j = 0;
-        while (i < oldMessages.length && j < newMessages.length) {
-            if (new Date(oldMessages[i].sentTime) <= new Date(newMessages[j].sentTime)) {
-                mergedMessages.push(oldMessages[i]);
-                i++;
-            } else {
-                mergedMessages.push(newMessages[j]);
-                j++;
-            }
-        }
-        while (i < oldMessages.length) {
-            mergedMessages.push(oldMessages[i]);
-            i++;
-        }
-        while (j < newMessages.length) {
-            mergedMessages.push(newMessages[j]);
-            j++;
-        }
-        return mergedMessages;
-    };
 
     useEffect(() => {
-        const chatData = getChatDataFromSession();
-        chatData[chatId] = mergeMessages(oldMessageList, newMessageSortedMap);
-        console.log("Merged Messages", chatData[chatId])
-        sessionStorage.setItem("chatData", JSON.stringify(chatData));
-    }, [oldMessageList, newMessageSortedMap]);
-
-    const handleSentMessage = async (randomId) => {
-        const request = {
-            randomId,
-            status: "sent"
-        }
-        await authFetch(`/api/chat/${chatId}/message/verify`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(request),
-        });
-    }
-
-    const handleFailedMessage = async (randomId) => {
-        const status = "failed";
-        const accountId = localStorage.getItem('accountId');
-        setNewMessagesSortedMap((prevMessages) => {
-            const updatedMessages = new Map(prevMessages);
-            if (updatedMessages.has(randomId)) {
-                const message = updatedMessages.get(randomId);
-                if (message.senderId.toString() === accountId) {
-                    const failedMessage = {
-                        ...message,
-                        status
-                    };
-                    updatedMessages.set(randomId, failedMessage);
+        const socket = new SockJS(`${API_BASE_URL}/ws`);
+        const stompClient = Stomp.over(socket);
+        stompClient.connect({}, () => {
+            stompClient.subscribe(`/client/chat/${chatId}/typing`, (message) => {
+                const { senderId, senderAvatar, typing } = JSON.parse(message.body);
+                if (senderId !== localStorage.getItem("accountId")) {
+                    if (typing) {
+                        setTypingUsers((prev) => ({
+                            ...prev,
+                            [senderId]: { senderAvatar, typing },
+                        }));
+                    } else {
+                        setTypingUsers((prev) => {
+                            const updated = { ...prev };
+                            delete updated[senderId];
+                            return updated;
+                        });
+                    }
                 }
-            }
-            return updatedMessages;
+            });
+        }, (error) => {
+            console.error("STOMP connection error:", error);
         });
-        const request = {
-            randomId,
-            status,
-        }
-        await authFetch(`/api/chat/${chatId}/message/verify`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(request),
-        });
-    }
+        return () => {
+            stompClient.disconnect();
+        };
+    }, [chatId]);
+
+
 
 
     return (
-
         <Stack height="100%" maxHeight="100vh" width="auto">
             <Header
                 name={name}
@@ -264,19 +255,17 @@ const PrivateChat = ({ friendId, oldMessages, newMessage }) => {
                 isOnline={isOnline}
                 lastOnlineTime={lastOnlineTime}
             />
-            {!isMobile && (
-                <ScrollBar>
-                    <Box
-                        ref={scrollRef}
-                        onScroll={handleScroll}
-                        width="100%"
-                        sx={{ flexGrow: 1, height: "100%", overflowY: "auto" }}
-                    >
-                        <Body chatId={chatId} />
-                        <div ref={messagesEndRef} />
-                    </Box>
-                </ScrollBar>
-            )}
+
+            <ScrollBar onScroll={handleScrollUp} ref={scrollRef}>
+                <Box
+                    width="100%"
+                    sx={{ flexGrow: 1, height: "100%" }}
+                >
+                    <Body messages={messageList} />
+                    <div ref={messagesEndRef} />
+                </Box>
+            </ScrollBar>
+
             <Box sx={{ flexShrink: 0 }}>
                 <Footer chatId={chatId} />
             </Box>

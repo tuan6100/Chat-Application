@@ -45,8 +45,13 @@ public class MessageCacheService {
         return cache != null && !cache.getMessageResponses().isEmpty();
     }
 
-    public List<MessageResponse> getMessagesFromCache(Long accountId, Long chatId) {
-        return getCache(accountId, chatId).getMessageResponses();
+    public List<MessageResponse> getMessagesFromCache(Long accountId, Long chatId, int page, int size) {
+        List<MessageResponse> messageResponses = getCache(accountId, chatId).getMessageResponses();
+        if (messageResponses.size() > size) {
+            int end = messageResponses.size() - size * page;
+            return messageResponses.subList(end - size, end);
+        }
+        return messageResponses;
     }
 
     public void setCache(Long chatId, Long accountId, List<MessageResponse> messages) {
@@ -98,19 +103,23 @@ public class MessageCacheService {
 
     @Async
     public void cacheNextMessages(Long chatId, Long accountId, int page, int size) {
+        System.out.println("Caching next messages for page: " + (page + 1));
         Pageable nextPage = PageRequest.of(page + 1, size);
         Page<Message> nextMessages = chatRepository.findLatestMessagesByChatId(chatId, nextPage);
-        Collections.reverse(nextMessages.getContent());
-        if (!nextMessages.isEmpty()) {
-            List<MessageResponse> responses = getCache(accountId, chatId).getMessageResponses();
-            nextMessages.forEach(message -> responses.addFirst(MessageResponse.fromEntity(message)));
-            setCache(chatId, accountId, responses);
-        }
+        List<Message> nextMessagesList = nextMessages.getContent();
+        List<MessageResponse> messageResponses = new ArrayList<>();
+        nextMessagesList.forEach(message -> messageResponses.add(MessageResponse.fromEntity(message)));
+        Collections.reverse(messageResponses);
+        MessageCache cache = getCache(accountId, chatId);
+        List<MessageResponse> existingMessages = new ArrayList<>(cache.getMessageResponses());
+        messageResponses.addAll(existingMessages);
+        cache.setMessageResponses(messageResponses);
+        messageCacheRepository.save(cache);
     }
 
     @Async
     public void restoreDefaultCache(Long accountId) {
-    List<Long> chatIds = privateChatRepository.findChatsByAccountId(accountId);
+    List<Long> chatIds = privateChatRepository.findPrivateChatsByAccountId(accountId);
     for (Long chatId : chatIds) {
         MessageCache cache = getCache(accountId, chatId);
         if (cache != null) {

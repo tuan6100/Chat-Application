@@ -18,6 +18,8 @@ import com.chat.app.repository.redis.MessageCacheRepository;
 import com.chat.app.service.ChatService;
 import com.chat.app.service.MessageService;
 import com.chat.app.service.redis.MessageCacheService;
+import jakarta.persistence.OptimisticLockException;
+import org.hibernate.StaleObjectStateException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
@@ -56,17 +58,15 @@ public class ChatServiceImpl implements ChatService {
     private MessageCacheService messageCacheService;
 
     @Override
-    public Chat getChat(Long chatId) throws ChatException {
-        return chatRepository.findById(chatId)
-                .orElseThrow(() -> new ChatException("Chat not found"));
+    public Chat getChat(Long chatId) {
+        return chatRepository.findById(chatId).orElse(null);
     }
 
     @Override
     public List<MessageResponse> getMessages(Long chatId, Long accountId, int page, int size) {
         if (messageCacheService.existsInCache(accountId, chatId)) {
-            List<MessageResponse> messages = messageCacheService.getMessagesFromCache(accountId, chatId);
+            List<MessageResponse> messages = messageCacheService.getMessagesFromCache(accountId, chatId, page, size);
             messageCacheService.cacheNextMessages(chatId, accountId, page, size);
-            System.out.println("Cache hit");
             return messages;
         }
         Pageable pageable = PageRequest.of(page, 20);
@@ -81,21 +81,24 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void verifyMessage(Long chatId, MessageVerifierRequest request) throws ChatException {
-        Message message = messageRepository.findByRandomId(request.getRandomId());
-        if (message == null) {
-            throw new ChatException("Message not found");
-        }
-        System.out.println("Verifying message: " + message.getContent());
-        if (request.getStatus().equals("sent")) {
-            message.setRandomId(null);
-            message = messageRepository.save(message);
-            MessageResponse messageResponse = MessageResponse.fromEntity(message);
-            List<Long> membersInChat = getAllMembersInChat(chatId);
-            messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
-        } else if (request.getStatus().equals("failed")) {
-            messageRepository.delete(message);
-            throw new ChatException("Failed to send message");
+    public void verifyMessage(Long chatId, MessageVerifierRequest request) {
+        try {
+            Message message = messageRepository.findByRandomId(request.getRandomId());
+            if (message == null) {
+                return;
+            }
+            System.out.println("Verifying message: " + message.getContent());
+            if (request.getStatus().equals("sent")) {
+                message.setRandomId(null);
+                message = messageRepository.save(message);
+                MessageResponse messageResponse = MessageResponse.fromEntity(message);
+                List<Long> membersInChat = getAllMembersInChat(chatId);
+                messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
+            } else if (request.getStatus().equals("failed")) {
+                messageRepository.delete(message);
+            }
+        } catch (OptimisticLockException | StaleObjectStateException e) {
+            System.err.println("Optimistic lock exception");
         }
     }
 
@@ -145,6 +148,11 @@ public class ChatServiceImpl implements ChatService {
             return memberIds;
         }
         return null;
+    }
+
+    @Override
+    public Message getLastestMessage(Long chatId) {
+        return chatRepository.findLatestMessageByChatId(chatId);
     }
 
 

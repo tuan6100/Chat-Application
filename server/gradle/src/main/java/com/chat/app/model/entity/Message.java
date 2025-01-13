@@ -51,7 +51,7 @@ public class Message {
     @JoinColumn(name = "reply_to_id")
     private Message replyTo;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "viewers",
             joinColumns = @JoinColumn(name = "message_id"),

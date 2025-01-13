@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MessageCacheRepository extends CrudRepository<MessageCache, String> {
+
+
 }

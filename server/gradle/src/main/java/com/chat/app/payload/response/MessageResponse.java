@@ -24,6 +24,8 @@ public class MessageResponse {
     private String type;
     private String sentTime;
     private Long replyToMessageId;
+    private List<Long> viewerIds;
+    private List<String> viewerUsernames;
     private List<String> viewerAvatars;
     private String status;
 
@@ -40,6 +42,8 @@ public class MessageResponse {
                 message.getType().name(),
                 message.getSentTime().toString(),
                 message.getReplyTo() != null ? message.getReplyTo().getMessageId() : null,
+                message.getViewers().stream().map(Account::getAccountId).toList(),
+                message.getViewers().stream().map(Account::getUsername).toList(),
                 message.getViewers().stream().map(Account::getAvatar).toList(),
                 null
         );

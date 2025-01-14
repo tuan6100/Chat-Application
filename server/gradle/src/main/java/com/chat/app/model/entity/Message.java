@@ -11,8 +11,8 @@ import java.util.List;
 @Data
 @Entity
 @Table( name = "message",
-        indexes = { @Index(name = "idx_chat_id", columnList = "chat_id, sent_time"),
-                    @Index(name = "idx_random_id", columnList = "random_id")
+        indexes = { @Index(name = "idx_chat_id", columnList = "chat_id"),
+                    @Index(name = "idx_sent_time", columnList = "sent_time"),
         }
 )
 public class Message {

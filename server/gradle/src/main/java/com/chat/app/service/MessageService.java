@@ -3,6 +3,7 @@ package com.chat.app.service;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Message;
 import com.chat.app.payload.request.MessageRequest;
+import com.chat.app.payload.request.MessageSeenRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,7 +13,7 @@ public interface MessageService {
 
      void sendMessage(Long chatId, MessageRequest request) ;
 
-     void markViewedMessage(Long messageId, long viewedId) throws ChatException;
+     void markViewedMessage(Long chatId, MessageSeenRequest request) throws ChatException;
 
      void editMessage( Long messageId, MessageRequest request) throws ChatException;
     

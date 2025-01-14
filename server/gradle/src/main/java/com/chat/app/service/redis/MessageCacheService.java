@@ -7,6 +7,7 @@ import com.chat.app.payload.response.MessageResponse;
 import com.chat.app.repository.jpa.ChatRepository;
 import com.chat.app.repository.jpa.PrivateChatRepository;
 import com.chat.app.repository.redis.MessageCacheRepository;
+import com.chat.app.utility.CacheSyncManager;
 import com.chat.app.utility.CompositeKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -33,9 +34,8 @@ public class MessageCacheService {
     @Autowired
     private PrivateChatRepository privateChatRepository;
 
-    private final ConcurrentMap<CompositeKey, AtomicBoolean> cacheUpdateFlags = new ConcurrentHashMap<>();
-
-    private final ConcurrentMap<CompositeKey, CountDownLatch> cacheLatches = new ConcurrentHashMap<>();
+    @Autowired
+    private CacheSyncManager cacheSyncManager;
 
 
     public MessageCache getCache(Long accountId, Long chatId) {
@@ -110,8 +110,8 @@ public class MessageCacheService {
     @Async
     public void cacheNextMessages(Long chatId, Long accountId, int page, int size) {
         CompositeKey key = new CompositeKey(accountId, chatId);
-        AtomicBoolean isUpdating = cacheUpdateFlags.computeIfAbsent(key, k -> new AtomicBoolean(false));
-        CountDownLatch latch = cacheLatches.computeIfAbsent(key, k -> new CountDownLatch(1));
+        AtomicBoolean isUpdating = cacheSyncManager.getOrCreateUpdateFlag(key);
+        CountDownLatch latch = cacheSyncManager.getOrCreateLatch(key);
         if (isUpdating.get()) {
             return;
         }
@@ -137,20 +137,19 @@ public class MessageCacheService {
         }
     }
 
-
     @Async
     public void restoreDefaultCache(Long accountId) {
-    List<Long> chatIds = privateChatRepository.findPrivateChatsByAccountId(accountId);
-    for (Long chatId : chatIds) {
-        MessageCache cache = getCache(accountId, chatId);
-        if (cache != null) {
-            List<MessageResponse> responses = cache.getMessageResponses();
-            if (responses.size() > 50) {
-                responses = responses.subList(responses.size() - 50, responses.size());
+        List<Long> chatIds = privateChatRepository.findPrivateChatsByAccountId(accountId);
+        for (Long chatId : chatIds) {
+            MessageCache cache = getCache(accountId, chatId);
+            if (cache != null) {
+                List<MessageResponse> responses = cache.getMessageResponses();
+                if (responses.size() > 50) {
+                    responses = responses.subList(responses.size() - 50, responses.size());
+                }
+                cache.setMessageResponses(responses);
+                messageCacheRepository.save(cache);
             }
-            cache.setMessageResponses(responses);
-            messageCacheRepository.save(cache);
         }
     }
-}
 }

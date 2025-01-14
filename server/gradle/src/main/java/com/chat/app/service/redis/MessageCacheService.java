@@ -18,9 +18,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class MessageCacheService {
@@ -33,6 +32,10 @@ public class MessageCacheService {
 
     @Autowired
     private PrivateChatRepository privateChatRepository;
+
+    private final ConcurrentMap<CompositeKey, AtomicBoolean> cacheUpdateFlags = new ConcurrentHashMap<>();
+
+    private final ConcurrentMap<CompositeKey, CountDownLatch> cacheLatches = new ConcurrentHashMap<>();
 
 
     public MessageCache getCache(Long accountId, Long chatId) {
@@ -47,12 +50,15 @@ public class MessageCacheService {
 
     public List<MessageResponse> getMessagesFromCache(Long accountId, Long chatId, int page, int size) {
         List<MessageResponse> messageResponses = getCache(accountId, chatId).getMessageResponses();
-        if (messageResponses.size() > size) {
-            int end = messageResponses.size() - size * page;
-            return messageResponses.subList(end - size, end);
+        int totalMessages = messageResponses.size();
+        int end = totalMessages - size * page;
+        int start = Math.max(0, end - size);
+        if (end <= 0) {
+            return Collections.emptyList();
         }
-        return messageResponses;
+        return messageResponses.subList(start, end);
     }
+
 
     public void setCache(Long chatId, Long accountId, List<MessageResponse> messages) {
         MessageCache cache = getCache(accountId, chatId);
@@ -103,19 +109,34 @@ public class MessageCacheService {
 
     @Async
     public void cacheNextMessages(Long chatId, Long accountId, int page, int size) {
-        System.out.println("Caching next messages for page: " + (page + 1));
-        Pageable nextPage = PageRequest.of(page + 1, size);
-        Page<Message> nextMessages = chatRepository.findLatestMessagesByChatId(chatId, nextPage);
-        List<Message> nextMessagesList = nextMessages.getContent();
-        List<MessageResponse> messageResponses = new ArrayList<>();
-        nextMessagesList.forEach(message -> messageResponses.add(MessageResponse.fromEntity(message)));
-        Collections.reverse(messageResponses);
-        MessageCache cache = getCache(accountId, chatId);
-        List<MessageResponse> existingMessages = new ArrayList<>(cache.getMessageResponses());
-        messageResponses.addAll(existingMessages);
-        cache.setMessageResponses(messageResponses);
-        messageCacheRepository.save(cache);
+        CompositeKey key = new CompositeKey(accountId, chatId);
+        AtomicBoolean isUpdating = cacheUpdateFlags.computeIfAbsent(key, k -> new AtomicBoolean(false));
+        CountDownLatch latch = cacheLatches.computeIfAbsent(key, k -> new CountDownLatch(1));
+        if (isUpdating.get()) {
+            return;
+        }
+        isUpdating.set(true);
+        try {
+            Pageable nextPage = PageRequest.of(page + 1, size);
+            Page<Message> nextMessages = chatRepository.findLatestMessagesByChatId(chatId, nextPage);
+            if (!nextMessages.isEmpty()) {
+                List<MessageResponse> responses = new ArrayList<>();
+                for (Message message : nextMessages) {
+                    responses.add(MessageResponse.fromEntity(message));
+                }
+                Collections.reverse(responses);
+                MessageCache cache = getCache(accountId, chatId);
+                if (cache != null && cache.getMessageResponses() != null) {
+                    responses.addAll(cache.getMessageResponses());
+                }
+                setCache(chatId, accountId, responses);
+            }
+        } finally {
+            isUpdating.set(false);
+            latch.countDown();
+        }
     }
+
 
     @Async
     public void restoreDefaultCache(Long accountId) {

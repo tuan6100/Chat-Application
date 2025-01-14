@@ -5,6 +5,8 @@ import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Message;
 import com.chat.app.payload.request.ChatMessageRequest;
 import com.chat.app.payload.request.MessageRequest;
+import com.chat.app.payload.request.MessageSeenRequest;
+import com.chat.app.payload.response.MessageResponse;
 import com.chat.app.repository.jpa.MessageRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.ChatService;
@@ -61,12 +63,17 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-//    @Async
-    public void markViewedMessage(Long messageId, long viewerId) throws ChatException {
-        Message message = getMessage(messageId);
-        Account viewer = accountService.getAccount(viewerId);
+    @Transactional
+    public void markViewedMessage(Long chatId, MessageSeenRequest request) throws ChatException {
+        Message message = getMessage(request.getMessageId());
+        Account viewer = accountService.getAccount(request.getViewerId());
         message.getViewers().add(viewer);
         messageRepository.save(message);
+        MessageResponse messageResponse = MessageResponse.fromEntity(message);
+        System.out.println("Marked message as seen: " + messageResponse.getContent());
+        messagingTemplate.convertAndSend("/client/chat/" + chatId + "/message/mark-seen", messageResponse);
+        List<Long> membersInChat = chatService.getAllMembersInChat(chatId);
+        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
     }
 
     @Override

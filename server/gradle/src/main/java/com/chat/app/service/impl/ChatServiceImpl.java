@@ -17,7 +17,10 @@ import com.chat.app.repository.jpa.PrivateChatRepository;
 import com.chat.app.repository.redis.MessageCacheRepository;
 import com.chat.app.service.ChatService;
 import com.chat.app.service.MessageService;
+import com.chat.app.service.elasticsearch.MessageSearchService;
 import com.chat.app.service.redis.MessageCacheService;
+import com.chat.app.utility.CacheSyncManager;
+import com.chat.app.utility.CompositeKey;
 import jakarta.persistence.OptimisticLockException;
 import org.hibernate.StaleObjectStateException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @Primary
@@ -57,6 +63,13 @@ public class ChatServiceImpl implements ChatService {
     @Autowired
     private MessageCacheService messageCacheService;
 
+    @Autowired
+    private MessageSearchService messageSearchService;
+
+    @Autowired
+    private CacheSyncManager cacheSyncManager;
+
+
     @Override
     public Chat getChat(Long chatId) {
         return chatRepository.findById(chatId).orElse(null);
@@ -64,21 +77,56 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public List<MessageResponse> getMessages(Long chatId, Long accountId, int page, int size) {
+        CompositeKey key = new CompositeKey(accountId, chatId);
+        AtomicBoolean isUpdating = cacheSyncManager.getOrCreateUpdateFlag(key);
+        CountDownLatch latch = cacheSyncManager.getOrCreateLatch(key);
         if (messageCacheService.existsInCache(accountId, chatId)) {
             List<MessageResponse> messages = messageCacheService.getMessagesFromCache(accountId, chatId, page, size);
-            messageCacheService.cacheNextMessages(chatId, accountId, page, size);
+            if (messages.isEmpty()) {
+                System.out.println("Cache miss for chat: " + chatId + " page: " + page);
+                messageCacheService.cacheNextMessages(chatId, accountId, page, size);
+                try {
+                    if (isUpdating.get()) {
+                        latch.await(15, TimeUnit.SECONDS);
+                    }
+                    messages = messageCacheService.getMessagesFromCache(accountId, chatId, page, size);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return Collections.emptyList();
+                }
+            }
+            System.out.println("Cache hit for chat: " + chatId + " page: " + page);
             return messages;
         }
-        Pageable pageable = PageRequest.of(page, 20);
-        Page<Message> messages = chatRepository.findLatestMessagesByChatId(chatId, pageable);
-        List<MessageResponse> messageResponses = new ArrayList<>();
-        for (Message message : messages) {
-            messageResponses.add(MessageResponse.fromEntity(message));
+        synchronized (isUpdating) {
+            if (!isUpdating.get()) {
+                isUpdating.set(true);
+                cacheSyncManager.resetLatch(key);
+                try {
+                    Pageable pageable = PageRequest.of(page, size);
+                    Page<Message> messages = chatRepository.findLatestMessagesByChatId(chatId, pageable);
+                    List<MessageResponse> messageResponses = new ArrayList<>();
+                    for (Message message : messages) {
+                        messageResponses.add(MessageResponse.fromEntity(message));
+                    }
+                    Collections.reverse(messageResponses);
+                    messageCacheService.setCache(chatId, accountId, messageResponses);
+                } finally {
+                    isUpdating.set(false);
+                    latch.countDown();
+                }
+            }
         }
-        Collections.reverse(messageResponses);
-        messageCacheService.setCache(chatId, accountId, messageResponses);
-        return messageResponses;
+        try {
+            latch.await(15, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return Collections.emptyList();
+        }
+
+        return messageCacheService.getMessagesFromCache(accountId, chatId, page, size);
     }
+
 
     @Override
     public void verifyMessage(Long chatId, MessageVerifierRequest request) {
@@ -94,6 +142,7 @@ public class ChatServiceImpl implements ChatService {
                 MessageResponse messageResponse = MessageResponse.fromEntity(message);
                 List<Long> membersInChat = getAllMembersInChat(chatId);
                 messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
+                messageSearchService.addNewMessage(message);
             } else if (request.getStatus().equals("failed")) {
                 messageRepository.delete(message);
             }
@@ -126,7 +175,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public Chat changeTheme(Long chatId, Theme theme) throws ChatException {
+    public Chat changeTheme(Long chatId, Theme theme) {
         Chat chat = getChat(chatId);
         chat.setTheme(theme);
         return chatRepository.save(chat);
@@ -153,6 +202,11 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public Message getLastestMessage(Long chatId) {
         return chatRepository.findLatestMessageByChatId(chatId);
+    }
+
+    @Override
+    public int getMaxPage(Long chatId, int size) {
+        return (int) Math.ceil(chatRepository.countMessagesByChatId(chatId) / (double) size);
     }
 
 

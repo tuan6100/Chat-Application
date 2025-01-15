@@ -13,6 +13,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 
+    @Query("SELECT m FROM Message m WHERE m.chat.chatId = ?1 AND m.sentTime = " +
+            "(SELECT MAX(m1.sentTime) FROM Message m1 WHERE m1.chat.chatId = ?1)")
+    Message findLatestMessageByChatId(long chatId);
+
+
     @QueryHints({ @QueryHint(name = "jakarta.persistence.query.timeout", value = "1000") })
     @Query("SELECT m FROM Message m WHERE m.chat.chatId = ?1 ORDER BY m.sentTime DESC ")
     Page<Message> findLatestMessagesByChatId(long chatId, Pageable pageable);

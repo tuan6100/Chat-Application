@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 public interface ChatService {
 
-     Chat getChat(Long chatId) throws ChatException;
+     Chat getChat(Long chatId);
 
      List<MessageResponse> getMessages(Long chatId, Long accountId, int page, int size);
 
@@ -25,9 +25,11 @@ public interface ChatService {
 
      void removeMessage(Long MessageId) throws ChatException;
 
-     Chat changeTheme(Long chatId, Theme theme) throws ChatException;
+     Chat changeTheme(Long chatId, Theme theme);
 
      List<Long> getAllMembersInChat(Long chatId);
 
+     Message getLastestMessage(Long chatId);
 
+     int getMaxPage(Long chatId, int size);
 }

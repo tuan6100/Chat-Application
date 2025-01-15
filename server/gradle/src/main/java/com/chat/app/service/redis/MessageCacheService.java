@@ -117,7 +117,7 @@ public class MessageCacheService {
         }
         isUpdating.set(true);
         try {
-            Pageable nextPage = PageRequest.of(page + 1, size);
+            Pageable nextPage = PageRequest.of(page, size);
             Page<Message> nextMessages = chatRepository.findLatestMessagesByChatId(chatId, nextPage);
             if (!nextMessages.isEmpty()) {
                 List<MessageResponse> responses = new ArrayList<>();

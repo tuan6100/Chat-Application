@@ -7,43 +7,152 @@ import FileMessage from "../Message/FileMessage";
 import LinkMessage from "../Message/LinkMessage";
 import useMessage from "../../hook/useMessage";
 import TypingIndicator from "../Message/TypingIndicator";
+import {useCallback, useEffect, useRef} from "react";
+import SockJS from "sockjs-client";
+import {Stomp} from "@stomp/stompjs";
+import useWebSocket from "../../hook/useWebSocket";
 
-const Body = ({ messages }) => {
+const Body = ({ chatId, messages }) => {
 
     const {typingUsers} = useMessage();
+    const observerRef = useRef(null);
+    const seenMessages = useRef(new Set());
+    const {publish} = useWebSocket();
+
+
+    const markAsSeen = useCallback((message) => {
+        const currentUserId = parseInt(localStorage.getItem("accountId"), 10);
+        console.log(`message.senderId: ${message.senderId}, currentUserId: ${currentUserId}`);
+        if (message.viewerIds.includes(currentUserId) || message.senderId === currentUserId) {
+            return;
+        }
+        if (!seenMessages.current.has(message.messageId)) {
+            seenMessages.current.add(message.messageId);
+            console.log(`Message ${message.messageId} marked as seen by user ${currentUserId}`);
+        }
+    }, []);
+
+
+
+    useEffect(() => {
+        const observerCallback = (entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const messageId = entry.target.dataset.messageId;
+                    if (messageId) {
+                        const message = messages.find((msg) => msg.messageId === messageId);
+                        if (message) {
+                            markAsSeen(message);
+                        }
+                    }
+                }
+            });
+        };
+        observerRef.current = new IntersectionObserver(observerCallback, {
+            root: null,
+            threshold: 0.5,
+        });
+        const messageElements = document.querySelectorAll("[data-message-id]");
+        messageElements.forEach((el) => observerRef.current.observe(el));
+        return () => {
+            observerRef.current.disconnect();
+        };
+    }, [markAsSeen, messages]);
+
+
+    useEffect(() => {
+        messages.forEach((message) => {
+            if (!seenMessages.current.has(message.messageId)) {
+                if (message.senderId === parseInt(localStorage.getItem("accountId"), 10)) {
+                    return;
+                }
+                const body = JSON.stringify({
+                    messageId: message.messageId,
+                    viewerId: localStorage.getItem("accountId"),
+                });
+                publish(`/chat/${chatId}/message/mark-seen`, body);
+                seenMessages.current.add(message.messageId);
+            }
+        });
+    }, [chatId, messages]);
+
+
+
 
     return (
         <Box p={3}>
             <Stack spacing={3}>
-                {messages.map((message) => {
-                    switch (message.type) {
-                        case 'IMAGE':
-                            return <ImageMessage messageKey={message.messageId} message={message} />;
-                        case 'VIDEO':
-                            return <VideoMessage messageKey={message.messageId} message={message} />;
-                        case 'AUDIO':
-                            return <AudioMessage messageKey={message.messageId} message={message} />;
-                        case 'LINK':
-                            return <LinkMessage messageKey={message.messageId} message={message} />;
-                        case 'FILE':
-                            return <FileMessage messageKey={message.messageId} message={message} />;
-                        default:
-                            return <TextMessage messageKey={message.messageId} message={message} />;
-                    }
+                {messages.map((message, index) => {
+                    const MessageComponent = (() => {
+                        switch (message.type) {
+                            case "IMAGE":
+                                return ImageMessage;
+                            case "VIDEO":
+                                return VideoMessage;
+                            case "AUDIO":
+                                return AudioMessage;
+                            case "LINK":
+                                return LinkMessage;
+                            case "FILE":
+                                return FileMessage;
+                            default:
+                                return TextMessage;
+                        }
+                    })();
+                    return (
+                        <Box
+                            key={`${message.messageId}-${index}`}
+                            data-message-id={message.messageId}
+                        >
+                            <MessageComponent message={message} />
+                        </Box>
+                    );
                 })}
-                {Object.entries(typingUsers).map(([senderId, { senderAvatar, typing }]) =>
+                {/*{messages.length > 0 && (*/}
+                {/*    <Stack*/}
+                {/*        direction="row"*/}
+                {/*        spacing={3}*/}
+                {/*        sx={{*/}
+                {/*            mt: 2,*/}
+                {/*            alignItems: "center",*/}
+                {/*            justifyContent: "flex-end",*/}
+                {/*            position: "relative",*/}
+                {/*        }}*/}
+                {/*    >*/}
+                {/*        {messages[messages.length - 1].viewerAvatars?.map((avatar, index) => (*/}
+                {/*            <Avatar*/}
+                {/*                key={index}*/}
+                {/*                src={avatar}*/}
+                {/*                alt={`Viewer ${index + 1}`}*/}
+                {/*                sx={{*/}
+                {/*                    width: 20,*/}
+                {/*                    height: 20,*/}
+                {/*                    border: "2px solid dark",*/}
+                {/*                    zIndex: messages[messages.length - 1].viewerAvatars.length - index,*/}
+                {/*                    animation: `fall-animation 0.8s ease-in-out`,*/}
+                {/*                    animationDelay: `${index * 0.2}s`,*/}
+                {/*                    position: "absolute",*/}
+                {/*                    top: 0,*/}
+                {/*                    opacity: 1,*/}
+                {/*                }}*/}
+                {/*            />*/}
+                {/*        ))}*/}
+                {/*    </Stack>*/}
+                {/*)}*/}
+                {Object.entries(typingUsers[chatId] || {}).map(([senderId, { senderAvatar, typing }]) =>
                         typing && (
                             <Stack key={senderId} direction="row" spacing={1} alignItems="flex-end">
                                 <Avatar sx={{ width: 30, height: 30 }} src={senderAvatar} />
-                                <Box p={1}
+                                <Box
+                                    p={1}
                                     sx={{
-                                        display: 'flex',
-                                        justifyContent: 'start',
+                                        display: "flex",
+                                        justifyContent: "start",
                                         mt: 1,
-                                        border: '1px solid',
+                                        border: "1px solid",
                                         borderRadius: 20,
-                                        borderColor: 'grey.500',
-                                        backgroundColor: 'transparent',
+                                        borderColor: "grey.500",
+                                        backgroundColor: "transparent",
                                         p: 1,
                                     }}
                                 >
@@ -55,6 +164,8 @@ const Body = ({ messages }) => {
             </Stack>
         </Box>
     );
+
 };
+
 
 export default Body;

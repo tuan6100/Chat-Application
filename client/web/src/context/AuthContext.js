@@ -2,6 +2,7 @@ import React, { createContext, useState } from "react";
 import {useNavigate} from "react-router";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import useWebSocket from "../hook/useWebSocket";
 
 const AuthContext = createContext(undefined);
 
@@ -54,8 +55,6 @@ export const AuthProvider = ({ children }) => {
 
     const navigate = useNavigate();
 
-    const [closeWebSocket, setCloseWebSocket] = useState(true);
-
     const markOffline = async (accountId) => {
         try {
             const response = await fetch(`${API_BASE_URL}/api/account/me/offline?accountId=${accountId}`, {
@@ -76,7 +75,6 @@ export const AuthProvider = ({ children }) => {
         const accountId = localStorage.getItem('accountId');
         await markOffline(accountId);
         setIsAuthenticated(false);
-        setCloseWebSocket(true);
         localStorage.clear();
         sessionStorage.clear();
         navigate("/auth/login", { replace: true });
@@ -151,8 +149,6 @@ export const AuthProvider = ({ children }) => {
         <AuthContext.Provider value={{
             isAuthenticated,
             setIsAuthenticated,
-            closeWebSocket,
-            setCloseWebSocket,
             authFetch,
             logout,
             refreshToken

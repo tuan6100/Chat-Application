@@ -12,6 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 import {SelectedProvider} from "./context/SelectedContext";
 import {ConversationPropertiesProvider} from "./context/ConversationPropertiesContext";
 import {MessageProvider} from "./context/MessageContext";
+import {WebSocketProvider} from "./context/WebSocketContext";
 
 
 function App() {
@@ -26,8 +27,10 @@ function App() {
                                 <SelectedProvider>
                                     <ConversationPropertiesProvider>
                                         <MessageProvider>
-                                            <Router />
-                                            <ToastContainer />
+                                            <WebSocketProvider>
+                                                <Router />
+                                                <ToastContainer />
+                                            </WebSocketProvider>
                                         </MessageProvider>
                                     </ConversationPropertiesProvider>
                                 </SelectedProvider>

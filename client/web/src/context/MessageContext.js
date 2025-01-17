@@ -17,7 +17,7 @@ export const MessageProvider = ({ children }) => {
 
 
     const addNewMessage = useCallback((chatId, newMessage) => {
-        console.log("New message:", newMessage.content + ', ' + newMessage.randomId);
+        console.log("New message:", JSON.stringify(newMessage));
         setNewMessagesMap((prev) => {
             const updatedMap = new Map(prev);
             if (!updatedMap.has(chatId)) {
@@ -58,13 +58,13 @@ export const MessageProvider = ({ children }) => {
             } else {
                 updatedMessages.set(newMessage.randomId, newMessage);
                 const timeout = setTimeout(() => {
-                    handleFailedMessage(chatId, newMessage.randomId);
-                }, 5 * 60 * 1000);
+                    handleFailedMessage(chatId, newMessage.randomId, newMessage.senderId);
+                }, 60 * 1000);
                 pendingTimeouts.current.set(newMessage.randomId, timeout);
             }
             if (isOk) {
                 mergeMessages(chatId, newMessage);
-                handleSentMessage(chatId, newMessage.randomId);
+                handleSentMessage(chatId, newMessage.randomId, newMessage.senderId);
             }
             return new Map([...updatedMessages.entries()]);
         });
@@ -154,11 +154,19 @@ export const MessageProvider = ({ children }) => {
         sessionStorage.setItem("chatData", JSON.stringify(chatData));
     };
 
+    useEffect(() => {
+        const chatData = getChatDataFromSession();
+        Object.keys(chatData).forEach(chatId => {
+            chatData[chatId].messages.sort((a, b) => new Date(a.sentTime) - new Date(b.sentTime));
+        });
+    }, [finalMessagesMap, getChatDataFromSession]);
 
-    const handleSentMessage = async (chatId, randomId) => {
+
+    const handleSentMessage = async (chatId, randomId, senderId) => {
         console.log("Verifying to server...");
         const request = {
             randomId,
+            senderId,
             status: "sent"
         }
         await authFetch(`/api/chat/${chatId}/message/verify`, {
@@ -170,7 +178,7 @@ export const MessageProvider = ({ children }) => {
         });
     }
 
-    const handleFailedMessage = async (chatId, randomId) => {
+    const handleFailedMessage = async (chatId, randomId, senderId) => {
         console.log("Verifying to server........");
         const status = "failed";
         const accountId = localStorage.getItem('accountId');
@@ -191,6 +199,7 @@ export const MessageProvider = ({ children }) => {
         });
         const request = {
             randomId,
+            senderId,
             status,
         }
         const response = await authFetch(`/api/chat/${chatId}/message/verify`, {
@@ -201,6 +210,14 @@ export const MessageProvider = ({ children }) => {
             body: JSON.stringify(request),
         });
         if (response.ok) {
+            setFinalMessagesMap((prev) => {
+                const updatedFinal = new Map(prev);
+                if (updatedFinal.has(chatId)) {
+                    const messages = updatedFinal.get(chatId).filter(message => message.randomId !== randomId);
+                    updatedFinal.set(chatId, messages);
+                }
+                return updatedFinal;
+            });
             const chatData = JSON.parse(sessionStorage.getItem("chatData")) || {};
             if (chatData[chatId]) {
                 chatData[chatId].messages = chatData[chatId].messages.filter(message => message.randomId !== randomId);

@@ -1,16 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import useAuth from "../../hook/useAuth";
 import useConversationProperties from "../../hook/useConversationProperties";
 import Header from "../../component/Conversation/Header";
-import {Avatar, Box, Stack, Typography} from "@mui/material";
+import {Avatar, Box, CircularProgress, Stack, Typography} from "@mui/material";
 import Body from "../../component/Conversation/Body";
 import Footer from "../../component/Conversation/Footer";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import ScrollBar from "../../component/ScrollBar";
 import useMessage from "../../hook/useMessage";
-import SockJS from "sockjs-client";
-import {Stomp} from "@stomp/stompjs";
 import {useTheme} from "@mui/material/styles";
+import useWebSocket from "../../hook/useWebSocket";
 
 
 const PrivateChat = ({ friendId, chatId }) => {
@@ -31,18 +29,21 @@ const PrivateChat = ({ friendId, chatId }) => {
         updateChatDataInSession,
         rawMessagesMap,
         finalMessagesMap,
-        setTypingUsers, typingUsers,
+        typingUsers, setTypingUsers,
         toggleNewMessage, setToggleNewMessage
     } = useMessage();
     const [messageList, setMessageList] = useState([]);
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     const theme = useTheme();
     const accountId = parseInt(localStorage.getItem("accountId"));
     const [isScrollAtBottom, setIsScrollAtBottom] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const { subscribe, unsubscribe } = useWebSocket();
+
 
 
     useEffect(() => {
         const sessionMessages = getMessagesFromSession(chatId);
+        sessionMessages.sort((a, b) => new Date(a.sentTime).getTime() - new Date(b.sentTime).getTime());
         if (sessionMessages.length === 0) {
             fetchMessages(1);
         } else {
@@ -70,7 +71,6 @@ const PrivateChat = ({ friendId, chatId }) => {
                 console.error("Error fetching friend info:", error);
             }
         };
-
         getFriendInfo();
         const intervalId = setInterval(getFriendInfo, 300000);
         return () => clearInterval(intervalId);
@@ -111,26 +111,30 @@ const PrivateChat = ({ friendId, chatId }) => {
         }
     }, [messageList, typingUsers, isScrollAtBottom]);
 
-    const handleScrollUp = () => {
-        if (!scrollRef.current || !hasMore || isFetching.current) return;
-
-        const scrollElement = scrollRef.current;
-        if (scrollElement.scrollTop === 0) {
-            fetchMessages(page);
-        }
-    };
-
     const handleNewMessageClick = () => {
         scrollToBottom();
         isAutoScrolling.current = true;
         setToggleNewMessage(() => null);
     };
 
+    const handleScrollUp = () => {
+        if (!scrollRef.current || !hasMore || isFetching.current) return;
+        const scrollElement = scrollRef.current;
+        const previousScrollHeight = scrollElement.scrollHeight;
+        if (scrollElement.scrollTop === 0) {
+            fetchMessages(page).then(() => {
+                const newScrollHeight = scrollElement.scrollHeight;
+                scrollElement.scrollTop = newScrollHeight - previousScrollHeight;
+            });
+        }
+    };
 
     const fetchMessages = useCallback(async (page) => {
         if (isFetching.current || !hasMore) return;
-
         isFetching.current = true;
+        setIsLoading(true);
+        const scrollElement = scrollRef.current;
+        const previousScrollHeight = scrollElement ? scrollElement.scrollHeight : 0;
         try {
             const response = await authFetch(`/api/chat/${chatId}/messages?page=${page}`);
             if (!response.ok) {
@@ -139,11 +143,15 @@ const PrivateChat = ({ friendId, chatId }) => {
                 setHasMore(false);
                 return;
             }
-
             const data = await response.json();
             if (data.length > 0) {
                 setMessageList((prev) => [...data, ...prev]);
-                updateChatDataInSession(chatId, [...data, ...messageList]);
+                const sessionMessages = getMessagesFromSession(chatId) || [];
+                updateChatDataInSession(chatId, [...data, ...sessionMessages]);
+                if (scrollElement) {
+                    const newScrollHeight = scrollElement.scrollHeight;
+                    scrollElement.scrollTop = newScrollHeight - previousScrollHeight;
+                }
                 setPage(page + 1);
             } else {
                 setHasMore(false);
@@ -152,8 +160,10 @@ const PrivateChat = ({ friendId, chatId }) => {
             console.error("Error fetching messages:", error);
         } finally {
             isFetching.current = false;
+            setIsLoading(false);
         }
-    }, [authFetch, chatId, hasMore, messageList, page]);
+    }, [authFetch, chatId, hasMore]);
+
 
 
     useEffect(() => {
@@ -186,37 +196,6 @@ const PrivateChat = ({ friendId, chatId }) => {
     }, [finalMessagesMap, rawMessagesMap, chatId]);
 
 
-    useEffect(() => {
-        const socket = new SockJS(`${API_BASE_URL}/ws`);
-        const stompClient = Stomp.over(socket);
-        stompClient.connect({}, () => {
-            stompClient.subscribe(`/client/chat/${chatId}/typing`, (message) => {
-                const { senderId, senderAvatar, typing } = JSON.parse(message.body);
-                if (senderId !== localStorage.getItem("accountId")) {
-                    if (typing) {
-                        setTypingUsers((prev) => ({
-                            ...prev,
-                            [senderId]: { senderAvatar, typing },
-                        }));
-                    } else {
-                        setTypingUsers((prev) => {
-                            const updated = { ...prev };
-                            delete updated[senderId];
-                            return updated;
-                        });
-                    }
-                }
-            });
-        }, (error) => {
-            console.error("STOMP connection error:", error);
-        });
-        return () => {
-            stompClient.disconnect();
-        };
-    }, [chatId, setTypingUsers, API_BASE_URL]);
-
-
-
     return (
         <Stack height="100%" maxHeight="100vh" width="auto">
             <Header
@@ -232,11 +211,20 @@ const PrivateChat = ({ friendId, chatId }) => {
                 width="100%"
                 sx={{ flexGrow: 1, height: "100%", overflowY: "auto" }}
             >
-                <Body messages={messageList} />
+                {isLoading && (
+                    <Stack
+                        alignItems="center"
+                        justifyContent="center"
+                        sx={{ py: 2 }}
+                    >
+                        <CircularProgress size={24} />
+                    </Stack>
+                )}
+                <Body chatId={chatId} messages={messageList} />
                 <div ref={messagesEndRef} />
             </Box>
 
-            {toggleNewMessage !== null && toggleNewMessage.senderId !== accountId && !isScrollAtBottom && (
+            {toggleNewMessage !== null && toggleNewMessage.senderId !== accountId && !toggleNewMessage.viewerIds.includes(accountId) && !isScrollAtBottom && (
                 <Box
                     sx={{
                         position: "absolute",

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import useSidebar from "../../hook/useSideBar";
 import { alpha, useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -19,8 +19,6 @@ import {
 import Search from "../../component/SearchBar";
 import { Menu as MenuIcon } from '@mui/icons-material';
 import PrivateChat from "../Chat/PrivateChat";
-import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
 import useMessage from "../../hook/useMessage";
 
 const StyledBadge = (props) => {
@@ -57,7 +55,8 @@ const Chats = () => {
     const [page, setPage] = useState(null);
     const isFetching = useRef(false);
     const [chatId, setChatId] = useState(0);
-    const { oldMessagesMap, setOldMessagesMap, addNewMessage, getMessagesFromSession, updateChatDataInSession } = useMessage();
+    const { oldMessagesMap, setOldMessagesMap,
+            getMessagesFromSession, updateChatDataInSession, finalMessagesMap } = useMessage();
 
     class ChatElement {
         constructor(chatId = 0, friendId = 0, friendUsername = "", friendAvatar = "", friendIsOnline = false, friendLastOnlineTime = new Date(),
@@ -172,48 +171,62 @@ const Chats = () => {
     }, [chatList, fetchMessages, oldMessagesMap]);
 
 
+    // useEffect(() => {
+    //     chatList.forEach((chat) => {
+    //         const chatId = chat.chatId;
+    //         subscribe(`/client/chat/${chatId}`, (message) => {
+    //             const data = JSON.parse(message.body);
+    //             // addNewMessage(chatId, data);
+    //             setChatList((prevChatList) => {
+    //                 const updatedChatList = prevChatList.map((chat) => {
+    //                     if (chat.chatId === chatId) {
+    //                         return {
+    //                             ...chat,
+    //                             lastMessage: data.content,
+    //                             lastMessageSenderId: data.senderId,
+    //                             lastMessageSentTime: new Date(data.sentTime),
+    //                             lastMessageHasSeen: false,
+    //                         };
+    //                     }
+    //                     return chat;
+    //                 });
+    //                 return updatedChatList.sort(
+    //                     (a, b) =>
+    //                         new Date(b.lastMessageSentTime).getTime() -
+    //                         new Date(a.lastMessageSentTime).getTime()
+    //                 );
+    //             });
+    //         });
+    //     });
+    //     return () => {
+    //         chatList.forEach((chat) => {
+    //             unsubscribe(`/client/chat/${chat.chatId}`);
+    //         });
+    //     };
+    // }, [chatList, subscribe, unsubscribe, addNewMessage, setChatList]);
+
     useEffect(() => {
-        const subscriptions = new Map();
-        const socket = new SockJS(`${API_BASE_URL}/ws`);
-        const stompClient = Stomp.over(socket);
-        const connectAndSubscribe = () => {
-            stompClient.connect({}, () => {
-                chatList.forEach((chat) => {
-                    const chatId = chat.chatId;
-                    if (!subscriptions.has(chatId)) {
-                        const subscription = stompClient.subscribe(`/client/chat/${chatId}`, (message) => {
-                            const data = JSON.parse(message.body);
-                            addNewMessage(chatId, data);
-                            setChatList((prevChatList) => {
-                                const updatedChatList = prevChatList.map((chat) => {
-                                    if (chat.chatId === chatId) {
-                                        return {
-                                            ...chat,
-                                            lastMessage: data.content,
-                                            lastMessageSenderId: data.senderId,
-                                            lastMessageSentTime: new Date(data.sentTime),
-                                            lastMessageHasSeen: false,
-                                        };
-                                    }
-                                    return chat;
-                                });
-                                return updatedChatList.sort((a, b) => new Date(b.lastMessageSentTime).getTime() - new Date(a.lastMessageSentTime).getTime());
-                            });
-                        });
-                        subscriptions.set(chatId, subscription);
-                    }
-                });
+        setChatList((prevChatList) => {
+            const updatedChatList = prevChatList.map((chat) => {
+                const newMessages = finalMessagesMap.get(chat.chatId) || [];
+                if (newMessages.length > 0) {
+                    const lastMessage = newMessages[newMessages.length - 1];
+                    return {
+                        ...chat,
+                        lastMessage: lastMessage.content,
+                        lastMessageSenderId: lastMessage.senderId,
+                        lastMessageSenderName: lastMessage.senderId === parseInt(localStorage.getItem('accountId')) ? "You: " : lastMessage.senderUsername + ": ",
+                        lastMessageSentTime: new Date(lastMessage.sentTime),
+                        lastMessageHasSeen: lastMessage.hasSeen,
+                    };
+                }
+                return chat;
             });
-        };
-        connectAndSubscribe();
-        return () => {
-            subscriptions.forEach((subscription) => subscription.unsubscribe());
-            subscriptions.clear();
-            stompClient.disconnect(() => {
-                console.log("WebSocket disconnected");
-            });
-        };
-    }, [API_BASE_URL, chatList]);
+            return updatedChatList.sort(
+                (a, b) => new Date(b.lastMessageSentTime).getTime() - new Date(a.lastMessageSentTime).getTime()
+            );
+        });
+    }, [finalMessagesMap]);
 
 
     const handleSearchResultClick = async (accountId) => {

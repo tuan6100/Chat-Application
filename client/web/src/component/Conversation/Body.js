@@ -1,5 +1,4 @@
 import {Avatar, Box, Stack, Tooltip, Typography} from "@mui/material";
-import {Reply, MoreVert} from "@mui/icons-material";
 import TextMessage from "../Message/TextMessage";
 import ImageMessage from "../Message/ImageMessage";
 import VideoMessage from "../Message/VideoMessage";
@@ -8,15 +7,16 @@ import FileMessage from "../Message/FileMessage";
 import LinkMessage from "../Message/LinkMessage";
 import useMessage from "../../hook/useMessage";
 import TypingIndicator from "../Message/TypingIndicator";
-import {useCallback, useEffect, useRef} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import useWebSocket from "../../hook/useWebSocket";
 
-const Body = ({ chatId, messages }) => {
+const Body = ({ chatId, messages, fetchMessages, page, hasMore }) => {
 
     const {typingUsers} = useMessage();
     const observerRef = useRef(null);
     const seenMessages = useRef(new Set());
     const {publish} = useWebSocket();
+    const [highlightMessageId, setHighlightMessageId] = useState(-1);
 
 
     const markAsSeen = useCallback((message) => {
@@ -78,10 +78,21 @@ const Body = ({ chatId, messages }) => {
 
     const scrollToMessage = (messageId) => {
         const targetElement = document.querySelector(`[data-message-id="${messageId}"]`);
-        if (targetElement) {
-            targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (!targetElement) {
+            if (!hasMore) {
+                return;
+            }
+            fetchMessages(page);
         }
+        setHighlightMessageId(messageId);
+        targetElement.scrollIntoView({behavior: "smooth", block: "center"});
+        targetElement.classList.add("highlight");
+        setTimeout(() => {
+            setHighlightMessageId(-1);
+            targetElement.classList.remove("highlight");
+        }, 600);
     };
+
 
 
     return (
@@ -108,28 +119,10 @@ const Body = ({ chatId, messages }) => {
                         <Box
                             key={`${message.messageId}-${index}`}
                             data-message-id={message.messageId}
-                            sx={{ position: "relative" }}
+                            sx={{position: "relative"}}
+
                         >
-                            {message.replyToMessageId && message.replyToMessageContent && (
-                                <Box
-                                    onClick={() => scrollToMessage(message.replyToMessageId)}
-                                    sx={{
-                                        position: "absolute",
-                                        width: 'fit-content',
-                                        backgroundColor: "rgba(240, 240, 240, 0.9)",
-                                        border: "1px solid #ccc",
-                                        borderRadius: "15px",
-                                        padding: "8px",
-                                        cursor: "pointer",
-                                        zIndex: 1,
-                                    }}
-                                >
-                                    <Typography variant="body2" color="text.secondary">
-                                        {message.replyToMessageContent}
-                                    </Typography>
-                                </Box>
-                            )}
-                            <MessageComponent message={message} />
+                            <MessageComponent message={message} scrollToMessage={scrollToMessage} highlightMessageId={highlightMessageId} />
                         </Box>
                     );
                 })}

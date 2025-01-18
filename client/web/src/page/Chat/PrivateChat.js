@@ -220,7 +220,7 @@ const PrivateChat = ({ friendId, chatId }) => {
                         <CircularProgress size={24} />
                     </Stack>
                 )}
-                <Body chatId={chatId} messages={messageList} />
+                <Body chatId={chatId} messages={messageList} fetchMessages={fetchMessages} page={page} hasMore={hasMore}/>
                 <div ref={messagesEndRef} />
             </Box>
 

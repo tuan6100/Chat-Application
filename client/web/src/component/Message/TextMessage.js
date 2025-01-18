@@ -1,17 +1,17 @@
 import { useState } from "react";
-import {Avatar, Box, IconButton, Stack, Tooltip, Typography} from "@mui/material";
+import {Avatar, Box, Stack, Typography} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import IconList from "./IconList";
 
-const TextMessage = ({ message }) => {
+const TextMessage = ({ message, scrollToMessage, highlightMessageId }) => {
 
     const theme = useTheme();
     const isMine = (message.senderId.toString() === localStorage.getItem('accountId'));
     const [showDetails, setShowDetails] = useState(false);
     const isMobile = useMediaQuery('(max-width:600px)');
     const hasSeen = (message.viewerAvatars === undefined) || (message.viewerAvatars.length === 0);
-
+    const isHighlighted = message.messageId === highlightMessageId;
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -46,16 +46,40 @@ const TextMessage = ({ message }) => {
                 {isMine && <IconList message={message} />}
 
                 <Stack direction='column' alignItems={!isMine ? 'flex-start' : 'flex-end'}>
+
                     {showDetails && (
                         <Typography variant='caption' color={theme.palette.text.secondary} sx={{ mb: 0.5 }}>
                             {formatDate(message.sentTime)}
                         </Typography>
                     )}
 
+                    {message.replyToMessageId && message.replyToMessageContent && (
+                        <Box
+                            onClick={() => scrollToMessage(message.replyToMessageId)}
+                            sx={{
+                                position: "relative",
+                                width: 'fit-content',
+                                backgroundColor: "rgba(240, 240, 240, 0.9)",
+                                border: "1px solid #ccc",
+                                borderRadius: "15px",
+                                padding: "8px",
+                                cursor: "pointer",
+                                zIndex: 1,
+                            }}
+                        >
+                            <Typography variant="body2" color="text.secondary">
+                                {message.replyToMessageContent}
+                            </Typography>
+                        </Box>
+                    )}
                     <Box p={1} sx={{
                         backgroundColor: !isMine ? '#424242' : theme.palette.primary.main,
                         borderRadius: "15px",
                         width: 'fit-content',
+                        marginTop: '-7px',
+                        zIndex: 2,
+                        transform: isHighlighted ? 'scale(1.2)' : 'none',
+                        transition: 'transform 0.5s ease-in-out',
                     }}>
                         <Typography
                             variant='body2'

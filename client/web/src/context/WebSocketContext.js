@@ -14,9 +14,11 @@ export const WebSocketProvider = ({ children }) => {
     const {isAuthenticated} = useAuth();
     const [isWebSocketActive, setIsWebSocketActive] = useState(true);
 
+
     useEffect(() => {
         setIsWebSocketActive(isAuthenticated);
     }, [isAuthenticated]);
+
 
     useEffect(() => {
         const connectWebSocket = () => {
@@ -146,7 +148,7 @@ export const WebSocketProvider = ({ children }) => {
                 unsubscribe(`/client/chat/${chatId}`);
             });
         };
-    }, [stompClient.current, chatIdList, isWebSocketActive]);
+    }, [stompClient.current, isWebSocketActive, chatIdList]);
 
 
     useEffect(() => {
@@ -216,6 +218,7 @@ export const WebSocketProvider = ({ children }) => {
                         }
                         return updatedFinal;
                     });
+                    console.log("Marked as seen for message: ", data);
                 });
             });
         }

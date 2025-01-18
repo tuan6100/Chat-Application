@@ -3,7 +3,7 @@ import {
     IconButton,
     InputBase,
     Stack,
-    Paper, Tooltip, InputAdornment,
+    Paper, Tooltip, InputAdornment, Typography, Box,
 } from "@mui/material";
 import {
     AttachFile,
@@ -12,62 +12,28 @@ import {
 import {
     Image,
     Sticker,
-    SmileyBlank
+    SmileyBlank,
+    XCircle
 } from "phosphor-react";
 import {useTheme} from "@mui/material/styles";
 import SendButton from "../SendButton";
-import SockJS from "sockjs-client";
-import {Client} from "@stomp/stompjs";
 import useMessage from "../../hook/useMessage";
+import useWebSocket from "../../hook/useWebSocket";
 
 const Footer = ({chatId}) => {
 
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     const [message, setMessage] = useState("");
     const [recording, setRecording] = useState(false);
     const fileInputRef = useRef(null);
     const audioRecorderRef = useRef(null);
     const theme = useTheme();
-    const [stompClient, setStompClient] = useState(null);
     const [mediaBlob, setMediaBlob] = useState(null);
-    const { setRawMessagesMap } = useMessage();
+    const { setRawMessagesMap, replyMessage, setReplyMessage } = useMessage();
+    const { publish } = useWebSocket();
+    const {  } = useMessage();
     const [isTyping, setIsTyping] = useState(false);
     let typingTimeout = useRef(null);
 
-
-
-    useEffect(() => {
-        const socket = new SockJS(`${API_BASE_URL}/ws`);
-        const stomp = new Client({
-            webSocketFactory: () => socket,
-            debug: (str) => console.log(str),
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
-        });
-        stomp.activate();
-        setStompClient(stomp);
-        return () => {
-            if (stompClient) {
-                stompClient.deactivate();
-            }
-        };
-    }, [chatId]);
-
-
-    const publishRawMessage = (message) => {
-        stompClient.publish({
-            destination: `/client/chat/${chatId}`,
-            body: JSON.stringify(message),
-        });
-    };
-
-    const sendMessageToServer = (request) => {
-        stompClient.publish({
-            destination: `/chat/${chatId}/message/send`,
-            body: JSON.stringify(request),
-        });
-    };
 
     const generateRandomId = () => {
         return crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
@@ -77,14 +43,13 @@ const Footer = ({chatId}) => {
         if (message.trim() !== "") {
             if (isTyping) {
                 setIsTyping(false);
-                stompClient.publish({
-                    destination: `/client/chat/${chatId}/typing`,
-                    body: JSON.stringify({
-                        senderId: localStorage.getItem("accountId"),
-                        typing: false,
-                    }),
-                });
                 clearTimeout(typingTimeout.current);
+                const body = JSON.stringify({
+                    senderId: localStorage.getItem("accountId"),
+                    typing: false,
+                    chatId: chatId,
+                });
+                publish(`/client/chat/${chatId}/typing`, body);
             }
             const messageBody = {
                 randomId: `${new Date().getTime()}-${localStorage.getItem("accountId")}-${chatId}-${generateRandomId()}`,
@@ -92,6 +57,8 @@ const Footer = ({chatId}) => {
                 content: message,
                 sentTime: new Date().getTime(),
                 type: "TEXT",
+                replyToMessageId: Object.keys(replyMessage).length === 0 ? null : replyMessage.messageId,
+                replyToMessageContent: Object.keys(replyMessage).length === 0 ? null : replyMessage.content,
                 status: "sending",
             };
             setRawMessagesMap((prev) => {
@@ -102,9 +69,12 @@ const Footer = ({chatId}) => {
                 updatedRawMap.get(chatId).push(messageBody);
                 return updatedRawMap;
             });
-            publishRawMessage(messageBody);
-            sendMessageToServer(messageBody);
+            setTimeout(() => {
+                publish(`/client/chat/${chatId}`, JSON.stringify(messageBody));
+                publish(`/chat/${chatId}/message/send`, JSON.stringify(messageBody));
+            }, 500);
             setMessage("");
+            setReplyMessage(null, null);
         }
     };
 
@@ -112,26 +82,31 @@ const Footer = ({chatId}) => {
     const handleTyping = () => {
         if (!isTyping) {
             setIsTyping(true);
-            stompClient.publish({
-                destination: `/client/chat/${chatId}/typing`,
-                body: JSON.stringify({
+            console.log("Start typing...");
+            publish(
+                `/client/chat/${chatId}/typing`,
+                JSON.stringify({
                     senderId: localStorage.getItem("accountId"),
                     senderAvatar: localStorage.getItem("avatar"),
                     typing: true,
-                }),
-            });
+                    chatId: chatId,
+                })
+            );
         }
         clearTimeout(typingTimeout.current);
         typingTimeout.current = setTimeout(() => {
             setIsTyping(false);
-            stompClient.publish({
-                destination: `/client/chat/${chatId}/typing`,
-                body: JSON.stringify({
+            console.log("Stop typing...");
+            publish(
+                `/client/chat/${chatId}/typing`,
+                JSON.stringify({
                     senderId: localStorage.getItem("accountId"),
+                    senderAvatar: localStorage.getItem("avatar"),
                     typing: false,
-                }),
-            });
-        }, 2000);
+                    chatId: chatId,
+                })
+            );
+        }, 1000);
     };
 
 
@@ -146,6 +121,10 @@ const Footer = ({chatId}) => {
         }
     };
 
+
+    const handleImageUpload = async (e) => {
+
+    }
 
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
@@ -191,90 +170,142 @@ const Footer = ({chatId}) => {
 
 
     return (
-        <Paper
-            component="form"
+        <Stack
+            spacing={1}
             sx={{
-                display: "flex",
-                alignItems: "center",
-                p: 1,
+                width: '100%',
+                position: 'relative',
                 backgroundColor: "transparent",
                 borderTop: "1px solid #E0E0E0",
                 boxShadow: "0px -1px 5px rgba(0, 0, 0, 0.1)",
-                width: '100%',
             }}
         >
-            <Stack direction="row" spacing={1} alignItems="center">
-                <Tooltip title="File">
-                    <IconButton color="primary" onClick={handleFileSelect}>
-                        <AttachFile size={24} />
-                    </IconButton>
-                </Tooltip>
-
-                <Tooltip title="Image">
-                    <IconButton color="primary" onClick={handleFileSelect}>
-                        <Image  />
-                    </IconButton>
-                </Tooltip>
-
-                <Tooltip title={recording ? "Stop Recording" : "Voice Record"}>
-                    <IconButton onClick={handleVoiceRecord}>
-                        <SettingsVoice sx={{
-                            color: recording ? theme.palette.error.main : theme.palette.primary.main
-                        }} />
-                    </IconButton>
-                </Tooltip>
-
-                <Tooltip title="Sticker">
-                    <IconButton color="primary" >
-                        <Sticker size={24} />
-                    </IconButton>
-                </Tooltip>
-
-            </Stack>
-
-            <InputBase
+            <Paper
+                elevation={1}
                 sx={{
-                    ml: 2,
-                    flex: 1,
-                    borderRadius: 4,
-                    pl: 2,
-                    pr: 0,
+                    p: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    backgroundColor: "#fff",
                     border: "1px solid #E0E0E0",
-                    transition: "all 0.3s",
-                    '&:hover': {
-                        borderColor: theme.palette.primary.main,
-                    },
-                    '&:focus-within': {
-                        borderColor: theme.palette.primary.main,
-                        boxShadow: `0px 0px 5px ${theme.palette.primary.light}`,
-                    }
+                    borderRadius: 1,
+                    width: '100%',
                 }}
-                placeholder="Message..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                multiline
-                endAdornment={
-                    <InputAdornment position="end">
-                        <Tooltip title="Emoji">
-                            <IconButton color="primary">
-                                <SmileyBlank size={28} />
+            >
+                {replyMessage && Object.keys(replyMessage).length > 0 && (
+                    <Box
+                        sx={{
+                            mb: 1,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            borderRadius: 1,
+                            backgroundColor: "#f9f9f9",
+                            p: 1,
+                            border: "1px solid #E0E0E0",
+                            width: '97.5%',
+                        }}
+                    >
+                        <Stack spacing={0.5}>
+                            <Typography fontWeight="bold" color="primary">
+                                Replying to {replyMessage.senderId.toString() === localStorage.getItem('accountId') ? 'yourself' : replyMessage.senderUsername}
+                            </Typography>
+                            <Typography color="text.secondary">
+                                {replyMessage.content}
+                            </Typography>
+                        </Stack>
+                        <IconButton color="primary" onClick={() => setReplyMessage({})}>
+                            <XCircle />
+                        </IconButton>
+                    </Box>
+                )}
+
+                <Box
+                    component="form"
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        width: '100%',
+                    }}
+                >
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <Tooltip title="File">
+                            <IconButton color="primary" onClick={handleFileSelect}>
+                                <AttachFile size={24} />
                             </IconButton>
                         </Tooltip>
-                    </InputAdornment>
-                }
-            />
 
-            <SendButton handleSendMessage={handleSendMessage}/>
+                        <Tooltip title="Image">
+                            <IconButton color="primary" onClick={handleFileSelect}>
+                                <Image />
+                            </IconButton>
+                        </Tooltip>
 
-            <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                onChange={handleFileUpload}
-            />
-        </Paper>
+                        <Tooltip title={recording ? "Stop Recording" : "Voice Record"}>
+                            <IconButton onClick={handleVoiceRecord}>
+                                <SettingsVoice
+                                    sx={{
+                                        color: recording
+                                            ? theme.palette.error.main
+                                            : theme.palette.primary.main,
+                                    }}
+                                />
+                            </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title="Sticker">
+                            <IconButton color="primary">
+                                <Sticker size={24} />
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
+
+                    <InputBase
+                        sx={{
+                            ml: 2,
+                            flex: 1,
+                            borderRadius: 4,
+                            pl: 2,
+                            pr: 0,
+                            border: "1px solid #E0E0E0",
+                            transition: "all 0.3s",
+                            '&:hover': {
+                                borderColor: theme.palette.primary.main,
+                            },
+                            '&:focus-within': {
+                                borderColor: theme.palette.primary.main,
+                                boxShadow: `0px 0px 5px ${theme.palette.primary.light}`,
+                            },
+                        }}
+                        placeholder="Message..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        multiline
+                        endAdornment={
+                            <InputAdornment position="end">
+                                <Tooltip title="Emoji">
+                                    <IconButton color="primary">
+                                        <SmileyBlank size={28} />
+                                    </IconButton>
+                                </Tooltip>
+                            </InputAdornment>
+                        }
+                    />
+
+                    <SendButton handleSendMessage={handleSendMessage} />
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: "none" }}
+                        onChange={handleFileUpload}
+                    />
+                </Box>
+            </Paper>
+        </Stack>
     );
-};
+}
 
 export default Footer;

@@ -13,11 +13,13 @@ export const MessageProvider = ({ children }) => {
     const pendingTimeouts = useRef(new Map());
     const [typingUsers, setTypingUsers] = useState({});
     const [toggleNewMessage, setToggleNewMessage] = useState(null);
+    const [replyMessage, setReplyMessage] = useState({});
+
     const { authFetch } = useAuth();
 
 
     const addNewMessage = useCallback((chatId, newMessage) => {
-        console.log("New message:", JSON.stringify(newMessage));
+        console.log("New message:", newMessage);
         setNewMessagesMap((prev) => {
             const updatedMap = new Map(prev);
             if (!updatedMap.has(chatId)) {
@@ -239,6 +241,7 @@ export const MessageProvider = ({ children }) => {
             addNewMessage,
             typingUsers, setTypingUsers,
             toggleNewMessage, setToggleNewMessage,
+            replyMessage, setReplyMessage,
             getMessagesFromSession,
             updateChatDataInSession,
             unreadNotification,

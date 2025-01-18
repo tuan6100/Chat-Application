@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Avatar, Box, Stack, Typography } from "@mui/material";
+import {Avatar, Box, IconButton, Stack, Tooltip, Typography} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import IconList from "./IconList";
 
+const TextMessage = ({ message }) => {
 
-const TextMessage = ({ messageKey, message }) => {
     const theme = useTheme();
     const isMine = (message.senderId.toString() === localStorage.getItem('accountId'));
     const [showDetails, setShowDetails] = useState(false);
@@ -30,10 +31,21 @@ const TextMessage = ({ messageKey, message }) => {
     }
 
     return (
-        <Stack direction='row' justifyContent={!isMine ? 'start' : 'end'} sx={{ width: '100%' }} key={messageKey}>
-            <Stack direction='row' spacing={1} alignItems="flex-end">
+        <Stack direction='row' justifyContent={!isMine ? 'start' : 'end'} sx={{ width: '100%' }}>
+            <Stack direction='row'
+                   spacing={1}
+                   alignItems="flex-end"
+                   justifyContent="flex-end"
+                   sx={{
+                       "&:hover .message-actions": { opacity: 1 },
+                   }}
+            >
+
                 {!isMine && <Avatar sx={{ width: 30, height: 30 }} src={message.senderAvatar} />}
-                <Stack>
+
+                {isMine && <IconList message={message} />}
+
+                <Stack direction='column' alignItems={!isMine ? 'flex-start' : 'flex-end'}>
                     {showDetails && (
                         <Typography variant='caption' color={theme.palette.text.secondary} sx={{ mb: 0.5 }}>
                             {formatDate(message.sentTime)}
@@ -42,7 +54,7 @@ const TextMessage = ({ messageKey, message }) => {
 
                     <Box p={1} sx={{
                         backgroundColor: !isMine ? '#424242' : theme.palette.primary.main,
-                        borderRadius: 1.5,
+                        borderRadius: "15px",
                         width: 'fit-content',
                     }}>
                         <Typography
@@ -53,6 +65,7 @@ const TextMessage = ({ messageKey, message }) => {
                                 whiteSpace: 'pre-wrap',
                                 wordBreak: 'break-all',
                                 maxWidth: '50vw',
+                                left: showDetails ? 0 : 'auto',
                             }}
                             onClick={() => setShowDetails(!showDetails)}
                         >
@@ -61,18 +74,35 @@ const TextMessage = ({ messageKey, message }) => {
                     </Box>
 
                     {showDetails && !hasSeen &&  (
-                        <Stack direction='row' spacing={1} sx={{ mt: 0.5 }}>
+                        <Stack
+                            direction='row'
+                            spacing={1}
+                            sx={{
+                                mt: 0.5,
+                                animation: 'toggle-in 0.5s ease-in-out'
+                            }}
+                        >
                             {message.viewerAvatars.map((avatar, index) => (
                                 <Avatar key={index} sx={{ width: 20, height: 20 }} src={avatar} />
                             ))}
                         </Stack>
                     )}
                     {showDetails && hasSeen && isMine && (
-                        <Typography variant='caption' color={theme.palette.text.secondary} sx={{ mt: 0.5 }}>
+                        <Typography
+                            variant='caption'
+                            color={theme.palette.text.secondary}
+                            sx={{
+                                mt: 0.5,
+                                animation: 'toggle-in 0.5s ease-in-out'
+                            }}
+                        >
                             {message.status || 'sent'}
                         </Typography>
                     )}
                 </Stack>
+
+                {!isMine && <IconList message={message} />}
+
             </Stack>
         </Stack>
     );

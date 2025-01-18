@@ -1,4 +1,5 @@
-import {Avatar, Box, Stack} from "@mui/material";
+import {Avatar, Box, Stack, Tooltip, Typography} from "@mui/material";
+import {Reply, MoreVert} from "@mui/icons-material";
 import TextMessage from "../Message/TextMessage";
 import ImageMessage from "../Message/ImageMessage";
 import VideoMessage from "../Message/VideoMessage";
@@ -8,8 +9,6 @@ import LinkMessage from "../Message/LinkMessage";
 import useMessage from "../../hook/useMessage";
 import TypingIndicator from "../Message/TypingIndicator";
 import {useCallback, useEffect, useRef} from "react";
-import SockJS from "sockjs-client";
-import {Stomp} from "@stomp/stompjs";
 import useWebSocket from "../../hook/useWebSocket";
 
 const Body = ({ chatId, messages }) => {
@@ -77,6 +76,12 @@ const Body = ({ chatId, messages }) => {
     }, [chatId, messages]);
 
 
+    const scrollToMessage = (messageId) => {
+        const targetElement = document.querySelector(`[data-message-id="${messageId}"]`);
+        if (targetElement) {
+            targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    };
 
 
     return (
@@ -103,42 +108,32 @@ const Body = ({ chatId, messages }) => {
                         <Box
                             key={`${message.messageId}-${index}`}
                             data-message-id={message.messageId}
+                            sx={{ position: "relative" }}
                         >
+                            {message.replyToMessageId && message.replyToMessageContent && (
+                                <Box
+                                    onClick={() => scrollToMessage(message.replyToMessageId)}
+                                    sx={{
+                                        position: "absolute",
+                                        width: 'fit-content',
+                                        backgroundColor: "rgba(240, 240, 240, 0.9)",
+                                        border: "1px solid #ccc",
+                                        borderRadius: "15px",
+                                        padding: "8px",
+                                        cursor: "pointer",
+                                        zIndex: 1,
+                                    }}
+                                >
+                                    <Typography variant="body2" color="text.secondary">
+                                        {message.replyToMessageContent}
+                                    </Typography>
+                                </Box>
+                            )}
                             <MessageComponent message={message} />
                         </Box>
                     );
                 })}
-                {/*{messages.length > 0 && (*/}
-                {/*    <Stack*/}
-                {/*        direction="row"*/}
-                {/*        spacing={3}*/}
-                {/*        sx={{*/}
-                {/*            mt: 2,*/}
-                {/*            alignItems: "center",*/}
-                {/*            justifyContent: "flex-end",*/}
-                {/*            position: "relative",*/}
-                {/*        }}*/}
-                {/*    >*/}
-                {/*        {messages[messages.length - 1].viewerAvatars?.map((avatar, index) => (*/}
-                {/*            <Avatar*/}
-                {/*                key={index}*/}
-                {/*                src={avatar}*/}
-                {/*                alt={`Viewer ${index + 1}`}*/}
-                {/*                sx={{*/}
-                {/*                    width: 20,*/}
-                {/*                    height: 20,*/}
-                {/*                    border: "2px solid dark",*/}
-                {/*                    zIndex: messages[messages.length - 1].viewerAvatars.length - index,*/}
-                {/*                    animation: `fall-animation 0.8s ease-in-out`,*/}
-                {/*                    animationDelay: `${index * 0.2}s`,*/}
-                {/*                    position: "absolute",*/}
-                {/*                    top: 0,*/}
-                {/*                    opacity: 1,*/}
-                {/*                }}*/}
-                {/*            />*/}
-                {/*        ))}*/}
-                {/*    </Stack>*/}
-                {/*)}*/}
+
                 {Object.entries(typingUsers[chatId] || {}).map(([senderId, { senderAvatar, typing }]) =>
                         typing && (
                             <Stack key={senderId} direction="row" spacing={1} alignItems="flex-end">

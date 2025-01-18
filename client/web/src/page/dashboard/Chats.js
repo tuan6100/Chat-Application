@@ -112,7 +112,7 @@ const Chats = () => {
                         friend.lastOnlineTime || new Date(),
                         chat.lastestMessage.content,
                         chat.lastestMessage.senderId,
-                        (chat.lastestMessage.senderId === parseInt(localStorage.getItem('accountId'))) ? "You: " : chat.lastestMessage.senderUsername + ": ",
+                        (chat.lastestMessage.senderId === parseInt(localStorage.getItem('accountId'))) ? "You: " : "",
                         chat.lastestMessage.sentTime,
                         chat.lastestMessage.hasSeen
                     );
@@ -171,40 +171,6 @@ const Chats = () => {
     }, [chatList, fetchMessages, oldMessagesMap]);
 
 
-    // useEffect(() => {
-    //     chatList.forEach((chat) => {
-    //         const chatId = chat.chatId;
-    //         subscribe(`/client/chat/${chatId}`, (message) => {
-    //             const data = JSON.parse(message.body);
-    //             // addNewMessage(chatId, data);
-    //             setChatList((prevChatList) => {
-    //                 const updatedChatList = prevChatList.map((chat) => {
-    //                     if (chat.chatId === chatId) {
-    //                         return {
-    //                             ...chat,
-    //                             lastMessage: data.content,
-    //                             lastMessageSenderId: data.senderId,
-    //                             lastMessageSentTime: new Date(data.sentTime),
-    //                             lastMessageHasSeen: false,
-    //                         };
-    //                     }
-    //                     return chat;
-    //                 });
-    //                 return updatedChatList.sort(
-    //                     (a, b) =>
-    //                         new Date(b.lastMessageSentTime).getTime() -
-    //                         new Date(a.lastMessageSentTime).getTime()
-    //                 );
-    //             });
-    //         });
-    //     });
-    //     return () => {
-    //         chatList.forEach((chat) => {
-    //             unsubscribe(`/client/chat/${chat.chatId}`);
-    //         });
-    //     };
-    // }, [chatList, subscribe, unsubscribe, addNewMessage, setChatList]);
-
     useEffect(() => {
         setChatList((prevChatList) => {
             const updatedChatList = prevChatList.map((chat) => {
@@ -215,9 +181,9 @@ const Chats = () => {
                         ...chat,
                         lastMessage: lastMessage.content,
                         lastMessageSenderId: lastMessage.senderId,
-                        lastMessageSenderName: lastMessage.senderId === parseInt(localStorage.getItem('accountId')) ? "You: " : lastMessage.senderUsername + ": ",
+                        lastMessageSenderName: lastMessage.senderId === parseInt(localStorage.getItem('accountId')) ? "You: " :  "",
                         lastMessageSentTime: new Date(lastMessage.sentTime),
-                        lastMessageHasSeen: lastMessage.hasSeen,
+                        lastMessageHasSeen: lastMessage.viewerIds.includes(parseInt(localStorage.getItem('accountId'))) || lastMessage.senderId === parseInt(localStorage.getItem('accountId')),
                     };
                 }
                 return chat;
@@ -363,7 +329,7 @@ const Chats = () => {
                                                     </Stack>
                                                 }
                                                 secondary={
-                                                    <Typography noWrap sx={{ maxWidth: '80%', color: item.lastMessageHasSeen ? 'white' : 'gray' }}>
+                                                    <Typography variant="subtitle2" color={item.lastMessageHasSeen ? '#808080' : '#ffffff'} noWrap sx={{ maxWidth: '80%' }}>
                                                         {item.lastMessageSenderName + item.lastMessage || "No recent messages"}
                                                     </Typography>
                                                 }

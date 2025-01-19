@@ -9,15 +9,10 @@ export const WebSocketProvider = ({ children }) => {
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     const stompClient = useRef(null);
     const subscriptions = useRef(new Map());
-    const { addNewMessage, finalMessagesMap, setFinalMessagesMap, setTypingUsers } = useMessage();
-    const chatIdList = JSON.parse(localStorage.getItem("chatIdList")) || [];
+    const { addNewMessage, finalMessagesMap, setFinalMessagesMap, setTypingUsers, updateChatDataInSession } = useMessage();
+    const chatList = JSON.parse(localStorage.getItem('chatList')) || [];
+    const chatIdList = chatList.map(chat => chat.chatId);
     const {isAuthenticated} = useAuth();
-    const [isWebSocketActive, setIsWebSocketActive] = useState(true);
-
-
-    useEffect(() => {
-        setIsWebSocketActive(isAuthenticated);
-    }, [isAuthenticated]);
 
 
     useEffect(() => {
@@ -41,7 +36,7 @@ export const WebSocketProvider = ({ children }) => {
             });
             stompClient.current.activate();
         };
-        if (isWebSocketActive) {
+        if (isAuthenticated) {
             if (!stompClient.current || !stompClient.current.connected) {
                 connectWebSocket();
             }
@@ -57,7 +52,7 @@ export const WebSocketProvider = ({ children }) => {
                 stompClient.current.deactivate(() => console.log("WebSocket disconnected on cleanup"));
             }
         };
-    }, [isWebSocketActive, API_BASE_URL]);
+    }, [isAuthenticated, API_BASE_URL]);
 
 
     const subscribe = (destination, callback) => {
@@ -100,7 +95,7 @@ export const WebSocketProvider = ({ children }) => {
 
 
     useEffect(() => {
-        if (!isWebSocketActive) {
+        if (!isAuthenticated) {
             return;
         }
         const interval = setInterval(() => {
@@ -127,14 +122,14 @@ export const WebSocketProvider = ({ children }) => {
                     });
                 }
             }
-        }, 10000);
+        }, 60000);
         return () => clearInterval(interval);
     }, []);
 
 
     useEffect(() => {
         if (!chatIdList) return;
-        if (stompClient.current && stompClient.current.connected && isWebSocketActive) {
+        if (stompClient.current && stompClient.current.connected && isAuthenticated) {
             chatIdList.forEach((chatId) => {
                 chatId = parseInt(chatId);
                 subscribe(`/client/chat/${chatId}`, (message) => {
@@ -148,12 +143,12 @@ export const WebSocketProvider = ({ children }) => {
                 unsubscribe(`/client/chat/${chatId}`);
             });
         };
-    }, [stompClient.current, isWebSocketActive, chatIdList]);
+    }, [stompClient.current, isAuthenticated, chatIdList]);
 
 
     useEffect(() => {
         if (!chatIdList) return;
-        if (stompClient.current && stompClient.current.connected && isWebSocketActive) {
+        if (stompClient.current && stompClient.current.connected && isAuthenticated) {
             chatIdList.forEach((chatId) => {
                 subscribe(`/client/chat/${chatId}/typing`, (message) => {
                     if (JSON.parse(message.body) === "pong") {
@@ -191,17 +186,14 @@ export const WebSocketProvider = ({ children }) => {
                 unsubscribe(`/client/chat/${chatId}/typing`);
             });
         };
-    }, [chatIdList, subscribe]);
+    }, [chatIdList, subscribe, isAuthenticated]);
 
 
     useEffect(() => {
-        if (stompClient.current && stompClient.current.connected && isWebSocketActive) {
+        if (stompClient.current && stompClient.current.connected && isAuthenticated) {
             chatIdList.forEach((chatId) => {
                 subscribe(`/client/chat/${chatId}/message/mark-seen`, (message) => {
                     const data = JSON.parse(message.body);
-                    if (data === "pong") {
-                        return;
-                    }
                     setFinalMessagesMap((prev) => {
                         const updatedFinal = new Map(prev);
                         if (updatedFinal.has(chatId)) {
@@ -222,17 +214,59 @@ export const WebSocketProvider = ({ children }) => {
                 });
             });
         }
-
         return () => {
             chatIdList.forEach((chatId) => {
                 unsubscribe(`/client/chat/${chatId}/message/mark-seen`);
             });
         };
-    }, [chatIdList, subscribe]);
+    }, [chatIdList, subscribe, isAuthenticated]);
+
+
+    useEffect(() => {
+        if (stompClient.current && stompClient.current.connected && isAuthenticated) {
+            chatIdList.forEach((chatId) => {
+                subscribe(`/client/chat/${chatId}/message/update`, (message) => {
+                    const data = JSON.parse(message.body);
+                    setFinalMessagesMap((prev) => {
+                        const updatedFinal = new Map(prev);
+                        if (updatedFinal.has(chatId)) {
+                            const messages = [...updatedFinal.get(chatId)];
+                            const messageIndex = messages.findIndex(msg => msg.messageId === data.messageId);
+                            if (messageIndex !== -1) {
+                                console.log("Message found, updating...");
+                                messages[messageIndex] = { ...messages[messageIndex], ...data };
+                            } else {
+                                console.log("Message not found, adding...");
+                                messages.push(data);
+                            }
+                            updatedFinal.set(chatId, messages);
+                        } else {
+                            updatedFinal.set(chatId, [data]);
+                        }
+                        return updatedFinal;
+                    });
+                    console.log("Message edited: ", data);
+                });
+            });
+
+        }
+        return () => {
+            chatIdList.forEach((chatId) => {
+                unsubscribe(`/client/chat/${chatId}/message/update`);
+            });
+        };
+    }, [chatIdList, subscribe, isAuthenticated]);
+
+
+    useEffect(() => {
+        chatIdList.forEach((chatId) => {
+            updateChatDataInSession(chatId, finalMessagesMap.get(chatId) || []);
+        })
+    }, [chatIdList, finalMessagesMap]);
 
 
     return (
-        <WebSocketContext.Provider value={{ subscribe, unsubscribe, publish, isWebSocketActive, setIsWebSocketActive }}>
+        <WebSocketContext.Provider value={{ subscribe, unsubscribe, publish}}>
             {children}
         </WebSocketContext.Provider>
     );

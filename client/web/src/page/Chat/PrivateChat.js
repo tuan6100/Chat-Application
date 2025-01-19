@@ -38,15 +38,16 @@ const PrivateChat = ({ friendId, chatId }) => {
     const [isScrollAtBottom, setIsScrollAtBottom] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const { subscribe, unsubscribe } = useWebSocket();
-
+    const sessionMessages = getMessagesFromSession(chatId);
 
 
     useEffect(() => {
-        const sessionMessages = getMessagesFromSession(chatId);
-        sessionMessages.sort((a, b) => new Date(a.sentTime).getTime() - new Date(b.sentTime).getTime());
+        console.log("Session messages:", sessionMessages);
         if (sessionMessages.length === 0) {
-            fetchMessages(1);
+            const messageData = fetchMessages(0);
+            updateChatDataInSession(chatId, messageData);
         } else {
+            sessionMessages.sort((a, b) => new Date(a.sentTime).getTime() - new Date(b.sentTime).getTime());
             setMessageList(sessionMessages);
         }
     }, [chatId]);
@@ -169,25 +170,41 @@ const PrivateChat = ({ friendId, chatId }) => {
     useEffect(() => {
         const newMessages = finalMessagesMap.get(chatId) || [];
         const rawMessages = rawMessagesMap.get(chatId) || [];
-        if (newMessages.length > 0 || rawMessages.length > 0) {
+        if (rawMessages.length > 0) {
             setMessageList((prevMessages) => {
                 const updatedMessages = [...prevMessages];
-                newMessages.forEach((newMessage) => {
-                    const index = updatedMessages.findIndex(
-                        (msg) => msg.randomId === newMessage.randomId
-                    );
-                    if (index !== -1) {
-                        updatedMessages[index] = newMessage;
-                    } else {
-                        updatedMessages.push(newMessage);
-                    }
-                });
                 rawMessages.forEach((rawMessage) => {
                     const index = updatedMessages.findIndex(
                         (msg) => msg.randomId === rawMessage.randomId
                     );
                     if (index === -1) {
                         updatedMessages.push(rawMessage);
+                    }
+                });
+                return updatedMessages;
+            });
+        }
+
+        if (newMessages.length > 0) {
+            setMessageList((prevMessages) => {
+                const updatedMessages = [...prevMessages];
+                newMessages.forEach((newMessage) => {
+                    if (newMessage.randomId === null) {
+                        const index = updatedMessages.findIndex(
+                            (msg) => msg.messageId === newMessage.messageId
+                        );
+                        if (index !== -1) {
+                            updatedMessages[index] = newMessage;
+                        }
+                    } else {
+                        const oldIndex = updatedMessages.findIndex(
+                            (msg) => msg.randomId === newMessage.randomId
+                        );
+                        if (oldIndex !== -1) {
+                            updatedMessages[oldIndex] = newMessage;
+                        } else {
+                            updatedMessages.push(newMessage);
+                        }
                     }
                 });
                 return updatedMessages;

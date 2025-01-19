@@ -20,6 +20,10 @@ import SendButton from "../SendButton";
 import useMessage from "../../hook/useMessage";
 import useWebSocket from "../../hook/useWebSocket";
 
+export const generateRandomId = () => {
+    return crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
+};
+
 const Footer = ({chatId}) => {
 
     const [message, setMessage] = useState("");
@@ -28,56 +32,71 @@ const Footer = ({chatId}) => {
     const audioRecorderRef = useRef(null);
     const theme = useTheme();
     const [mediaBlob, setMediaBlob] = useState(null);
-    const { setRawMessagesMap, replyMessage, setReplyMessage } = useMessage();
+    const { setRawMessagesMap, replyMessage, setReplyMessage, editMessage, setEditMessage } = useMessage();
     const { publish } = useWebSocket();
     const {  } = useMessage();
     const [isTyping, setIsTyping] = useState(false);
     let typingTimeout = useRef(null);
 
 
-    const generateRandomId = () => {
-        return crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
-    };
-
-    const handleSendMessage = async () => {
-        if (message.trim() !== "") {
-            if (isTyping) {
-                setIsTyping(false);
-                clearTimeout(typingTimeout.current);
-                const body = JSON.stringify({
-                    senderId: localStorage.getItem("accountId"),
-                    typing: false,
-                    chatId: chatId,
-                });
-                publish(`/client/chat/${chatId}/typing`, body);
-            }
-            const messageBody = {
-                randomId: `${new Date().getTime()}-${localStorage.getItem("accountId")}-${chatId}-${generateRandomId()}`,
-                senderId: localStorage.getItem("accountId"),
-                content: message,
-                sentTime: new Date().getTime(),
-                type: "TEXT",
-                replyToMessageId: Object.keys(replyMessage).length === 0 ? null : replyMessage.messageId,
-                replyToMessageContent: Object.keys(replyMessage).length === 0 ? null : replyMessage.content,
-                status: "sending",
-            };
-            setRawMessagesMap((prev) => {
-                const updatedRawMap = new Map(prev);
-                if (!updatedRawMap.has(chatId)) {
-                    updatedRawMap.set(chatId, []);
+    const handleSendMessage = () => {
+        let messageBody = {};
+        if (editMessage === null) {
+            if (message.trim() !== "") {
+                if (isTyping) {
+                    setIsTyping(false);
+                    clearTimeout(typingTimeout.current);
+                    const body = JSON.stringify({
+                        senderId: localStorage.getItem("accountId"),
+                        typing: false,
+                        chatId: chatId,
+                    });
+                    publish(`/client/chat/${chatId}/typing`, body);
                 }
-                updatedRawMap.get(chatId).push(messageBody);
-                return updatedRawMap;
-            });
-            setTimeout(() => {
-                publish(`/client/chat/${chatId}`, JSON.stringify(messageBody));
-                publish(`/chat/${chatId}/message/send`, JSON.stringify(messageBody));
-            }, 500);
-            setMessage("");
-            setReplyMessage(null, null);
+                messageBody = {
+                    randomId: `${new Date().getTime()}-${localStorage.getItem("accountId")}-${chatId}-${generateRandomId()}`,
+                    senderId: localStorage.getItem("accountId"),
+                    content: message,
+                    sentTime: new Date().getTime(),
+                    type: "TEXT",
+                    replyToMessageId: Object.keys(replyMessage).length === 0 ? null : replyMessage.messageId,
+                    replyToMessageContent: Object.keys(replyMessage).length === 0 ? null : replyMessage.content,
+                    status: "sending",
+                };
+                setRawMessagesMap((prev) => {
+                    const updatedRawMap = new Map(prev);
+                    if (!updatedRawMap.has(chatId)) {
+                        updatedRawMap.set(chatId, []);
+                    }
+                    updatedRawMap.get(chatId).push(messageBody);
+                    return updatedRawMap;
+                });
+                setTimeout(() => {
+                    publish(`/client/chat/${chatId}`, JSON.stringify(messageBody));
+                    publish(`/chat/${chatId}/message/send`, JSON.stringify(messageBody));
+                }, 500);
+                setReplyMessage({});
+            }
+        } else {
+            setMessage(editMessage.content);
+            messageBody = {
+                messageId: editMessage.messageId,
+                accountId: null,
+                content: message,
+                reaction: null,
+            }
+            console.info("Editing message:", messageBody);
+            publish(`/chat/${chatId}/message/update`, JSON.stringify(messageBody));
+            setEditMessage(null);
         }
+        setMessage("");
     };
 
+    useEffect(() => {
+        if (editMessage !== null) {
+            setMessage(editMessage.content);
+        }
+    }, [editMessage]);
 
     const handleTyping = () => {
         if (!isTyping) {
@@ -187,8 +206,8 @@ const Footer = ({chatId}) => {
                     display: "flex",
                     flexDirection: "column",
                     gap: 1,
-                    backgroundColor: "#fff",
-                    border: "1px solid #E0E0E0",
+                    backgroundColor: "transparent",
+                    border: "1px solid #3F3C3CFF",
                     borderRadius: 1,
                     width: '100%',
                 }}
@@ -216,6 +235,37 @@ const Footer = ({chatId}) => {
                             </Typography>
                         </Stack>
                         <IconButton color="primary" onClick={() => setReplyMessage({})}>
+                            <XCircle />
+                        </IconButton>
+                    </Box>
+                )}
+
+                {editMessage !== null && (
+                    <Box
+                        sx={{
+                            mb: 1,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            borderRadius: 1,
+                            backgroundColor: "#f9f9f9",
+                            p: 1,
+                            border: "1px solid #E0E0E0",
+                            width: '97.5%',
+                        }}
+                    >
+                        <Stack spacing={0.5}>
+                            <Typography fontWeight="bold" color="primary">
+                                Editing message
+                            </Typography>
+                            <Typography color="text.secondary">
+                                {editMessage.content}
+                            </Typography>
+                        </Stack>
+                        <IconButton color="primary" onClick={() => {
+                            setEditMessage(null);
+                            setMessage("");
+                        }}>
                             <XCircle />
                         </IconButton>
                     </Box>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {Avatar, Box, IconButton, Stack, Tooltip, Typography} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import useMessagese from "../../hook/useMessage";
+import useMessage from "../../hook/useMessage";
 import IconList from "../Menu/IconList";
 import Reactions from "../Reactions";
 import {ClockClockwise} from "phosphor-react"
@@ -15,7 +15,7 @@ const TextMessage = ({ message, scrollToMessage, highlightMessageId }) => {
     const hasSeen = (message.viewerAvatars === undefined) || (message.viewerAvatars.length === 0);
     const isHighlighted = message.messageId === highlightMessageId;
     const [linkPreview, setLinkPreview] = useState(null);
-    const { setRestoreMessage } = useMessagese();
+    const { setRestoreMessage } = useMessage();
 
     if (!isMine && message.status === 'sending') {
         return null;

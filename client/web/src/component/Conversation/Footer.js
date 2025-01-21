@@ -19,6 +19,7 @@ import {useTheme} from "@mui/material/styles";
 import SendButton from "../SendButton";
 import useMessage from "../../hook/useMessage";
 import useWebSocket from "../../hook/useWebSocket";
+import useAuth from "../../hook/useAuth";
 
 export const generateRandomId = () => {
     return crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
@@ -34,7 +35,7 @@ const Footer = ({chatId}) => {
     const [mediaBlob, setMediaBlob] = useState(null);
     const { setRawMessagesMap, replyMessage, setReplyMessage, editMessage, setEditMessage } = useMessage();
     const { publish } = useWebSocket();
-    const {  } = useMessage();
+    const {authFetch} = useAuth();
     const [isTyping, setIsTyping] = useState(false);
     let typingTimeout = useRef(null);
 
@@ -72,7 +73,7 @@ const Footer = ({chatId}) => {
                     return updatedRawMap;
                 });
                 setTimeout(() => {
-                    publish(`/client/chat/${chatId}`, JSON.stringify(messageBody));
+                    publish(`/client/chat/${chatId}/message/send`, JSON.stringify(messageBody));
                     publish(`/chat/${chatId}/message/send`, JSON.stringify(messageBody));
                 }, 500);
                 setReplyMessage({});
@@ -141,40 +142,154 @@ const Footer = ({chatId}) => {
     };
 
 
-    const handleImageUpload = async (e) => {
-
-    }
-
-    const handleFileUpload = (event) => {
-        const file = event.target.files[0];
-        // if (file) {
-        //     sendMessage(file, file.type.startsWith("image") ? "img" : "file");
-        // }
-    };
-
-
     const handleFileSelect = () => {
         fileInputRef.current.click();
     };
 
+    const handleFileUpload = async (event) => {
+        const file = event.target.files[0];
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await authFetch(`/api/file/upload`, {
+            method: "POST",
+            body: formData,
+        });
+        const blobUrl = URL.createObjectURL(file);
+        let messageBody = {
+            randomId: `${new Date().getTime()}-${localStorage.getItem("accountId")}-${chatId}-${generateRandomId()}`,
+            senderId: localStorage.getItem("accountId"),
+            content: blobUrl,
+            sentTime: new Date().getTime(),
+            type: file.type.startsWith("image/") ? "IMAGE" : (file.type === "video/mp4" || file.type === "audio/m4a") ? "VIDEO" : "FILE",
+            replyToMessageId: Object.keys(replyMessage).length === 0 ? null : replyMessage.messageId,
+            replyToMessageContent: Object.keys(replyMessage).length === 0 ? null : replyMessage.content,
+            status: "sending",
+        };
+        setRawMessagesMap((prev) => {
+            const updatedRawMap = new Map(prev);
+            if (!updatedRawMap.has(chatId)) {
+                updatedRawMap.set(chatId, []);
+            }
+            updatedRawMap.get(chatId).push(messageBody);
+            return updatedRawMap;
+        });
+        const fileUrl = await response.text();
+        messageBody.content = fileUrl;
+        setTimeout(() => {
+            publish(`/client/chat/${chatId}/message/send`, JSON.stringify(messageBody));
+        }, 500);
+        setTimeout(() => {
+            publish(`/chat/${chatId}/message/send`, JSON.stringify(messageBody));
+        }, 1000);
+    };
+
+
+    const handleImageSelect = async () => {
+        try {
+            const options = {
+                suggestedName: 'Pictures',
+                types: [
+                    {
+                        description: 'Pictures',
+                        accept: {
+                            'image/*': ['.jpeg', '.png', '.gif', '.svg', '.webm'],
+                        },
+                    },
+                ],
+                multiple: true,
+            };
+            const [fileHandle] = await window.showOpenFilePicker(options);
+            if (fileHandle.kind === 'file') {
+                const file = await fileHandle.getFile();
+                const formData = new FormData();
+                formData.append("file", file);
+                const response = await authFetch(`/api/file/upload`, {
+                    method: "POST",
+                    body: formData,
+                });
+                const blobUrl = URL.createObjectURL(file);
+                let messageBody = {
+                    randomId: `${new Date().getTime()}-${localStorage.getItem("accountId")}-${chatId}-${generateRandomId()}`,
+                    senderId: localStorage.getItem("accountId"),
+                    content: blobUrl,
+                    sentTime: new Date().getTime(),
+                    type: "IMAGE",
+                    replyToMessageId: Object.keys(replyMessage).length === 0 ? null : replyMessage.messageId,
+                    replyToMessageContent: Object.keys(replyMessage).length === 0 ? null : replyMessage.content,
+                    status: "sending",
+                };
+                setRawMessagesMap((prev) => {
+                    const updatedRawMap = new Map(prev);
+                    if (!updatedRawMap.has(chatId)) {
+                        updatedRawMap.set(chatId, []);
+                    }
+                    updatedRawMap.get(chatId).push(messageBody);
+                    return updatedRawMap;
+                });
+                const fileUrl = await response.text();
+                messageBody.content = fileUrl;
+                setTimeout(() => {
+                    publish(`/client/chat/${chatId}/message/send`, JSON.stringify(messageBody));
+                    publish(`/chat/${chatId}/message/send`, JSON.stringify(messageBody));
+                }, 500);
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Error selecting file:', error);
+            }
+        }
+    };
+
+
     const handleVoiceRecord = async () => {
         if (!recording) {
             try {
+                // Bắt đầu ghi âm
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const mediaRecorder = new MediaRecorder(stream);
                 audioRecorderRef.current = mediaRecorder;
-
                 const chunks = [];
+
                 mediaRecorder.ondataavailable = (event) => {
                     chunks.push(event.data);
                 };
 
-                mediaRecorder.onstop = () => {
+                mediaRecorder.onstop = async () => {
                     const blob = new Blob(chunks, { type: "audio/webm" });
-                    setMediaBlob(blob);
-                    // sendMessage(blob, "audio");
+                    const blobUrl = URL.createObjectURL(blob);
+                    const formData = new FormData();
+                    formData.append("file", blob, `recording-${new Date().getTime()}.webm`);
+                    const response = await authFetch(`/api/file/upload`, {
+                        method: "POST",
+                        body: formData,
+                    });
+                    const fileUrl = await response.text();
+                    let messageBody = {
+                        randomId: `${new Date().getTime()}-${localStorage.getItem("accountId")}-${chatId}-${generateRandomId()}`,
+                        senderId: localStorage.getItem("accountId"),
+                        content: blobUrl,
+                        sentTime: new Date().getTime(),
+                        type: "AUDIO",
+                        replyToMessageId: Object.keys(replyMessage).length === 0 ? null : replyMessage.messageId,
+                        replyToMessageContent: Object.keys(replyMessage).length === 0 ? null : replyMessage.content,
+                        status: "sending",
+                    };
+                    setRawMessagesMap((prev) => {
+                        const updatedRawMap = new Map(prev);
+                        if (!updatedRawMap.has(chatId)) {
+                            updatedRawMap.set(chatId, []);
+                        }
+                        updatedRawMap.get(chatId).push(messageBody);
+                        return updatedRawMap;
+                    });
+                    messageBody.content = fileUrl;
+                    setTimeout(() => {
+                        publish(`/client/chat/${chatId}/message/send`, JSON.stringify(messageBody));
+                    }, 500);
+                    setTimeout(() => {
+                        publish(`/chat/${chatId}/message/send`, JSON.stringify(messageBody));
+                    }, 1000);
                 };
-
                 mediaRecorder.start();
                 setRecording(true);
             } catch (error) {
@@ -185,6 +300,7 @@ const Footer = ({chatId}) => {
             setRecording(false);
         }
     };
+
 
 
 
@@ -287,7 +403,7 @@ const Footer = ({chatId}) => {
                         </Tooltip>
 
                         <Tooltip title="Image">
-                            <IconButton color="primary" onClick={handleFileSelect}>
+                            <IconButton color="primary" onClick={handleImageSelect}>
                                 <Image />
                             </IconButton>
                         </Tooltip>

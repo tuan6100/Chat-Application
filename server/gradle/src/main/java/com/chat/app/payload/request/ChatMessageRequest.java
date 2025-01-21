@@ -11,4 +11,5 @@ public class ChatMessageRequest {
 
     private Long chatId;
     private MessageRequest messageRequest;
+    private Integer retryCount;
 }

@@ -4,6 +4,8 @@ import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.response.AccountResponse;
+import com.chat.app.payload.response.ChatResponse;
+import com.chat.app.payload.response.PrivateChatResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -32,5 +34,8 @@ public interface AccountService {
 
     Date getLastOnlineTime(Long accountId);
 
-    List<Long> getAllChatIds(Long accountId);
+    List<PrivateChatResponse> getAllPrivateChat(Long accountId);
+
+    List<ChatResponse> getAllChatsByAccountId(Long accountId);
+
 }

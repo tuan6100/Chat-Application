@@ -1,9 +1,10 @@
-import {Avatar, Box, IconButton, Stack, Tooltip, Typography, CardMedia} from "@mui/material";
+import {Avatar, Box, IconButton, Stack, Tooltip, Typography, CardMedia, Popover} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import {useState} from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import IconList from "../Menu/IconList";
 import Reactions from "../Reactions";
+import {formatDate} from "./TextMessage";
 
 const ImageMessage = ({ message, scrollToMessage, highlightMessageId }) => {
 
@@ -13,25 +14,18 @@ const ImageMessage = ({ message, scrollToMessage, highlightMessageId }) => {
     const isMobile = useMediaQuery('(max-width:600px)');
     const hasSeen = (message.viewerAvatars === undefined) || (message.viewerAvatars.length === 0);
     const isHighlighted = message.messageId === highlightMessageId;
+    const [anchorEl, setAnchorEl] = useState(null);
 
+    const handleImageClick = (event) => {
+        setAnchorEl(anchorEl ? null : event.currentTarget);
+    };
+
+    const open = Boolean(anchorEl);
+    const id = open ? 'zoomed-image-popover' : undefined;
 
     if (!isMine && message.status === 'sending') {
         return null;
     }
-
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const isToday = date.toDateString() === now.toDateString();
-        const options = { hour: 'numeric', minute: 'numeric', hour12: true };
-        if (isToday) {
-            return date.toLocaleTimeString('en-US', options);
-        } else {
-            const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
-            return `${monthDay} AT ${date.toLocaleTimeString('en-US', options)}`;
-        }
-    };
 
 
     return (
@@ -98,10 +92,36 @@ const ImageMessage = ({ message, scrollToMessage, highlightMessageId }) => {
                             sx={{
                                 width: 300,
                                 maxWidth: '100%',
-                                borderRadius: "15px"
+                                borderRadius: "15px",
+                                cursor: 'pointer'
                             }}
-                            onClick={() => setShowDetails(!showDetails)}
+                            onClick={handleImageClick}
                         />
+                        <Popover
+                            id={id}
+                            open={open}
+                            anchorEl={anchorEl}
+                            onClose={handleImageClick}
+                            anchorOrigin={{
+                                vertical: 'center',
+                                horizontal: 'center',
+                            }}
+                            transformOrigin={{
+                                vertical: 'center',
+                                horizontal: 'center',
+                            }}
+                        >
+                            <CardMedia
+                                component="img"
+                                image={message.content}
+                                alt="Zoomed Image"
+                                sx={{
+                                    width: 900,
+                                    maxWidth: '100%',
+                                    borderRadius: "15px"
+                                }}
+                            />
+                        </Popover>
                         {message.reactions && message.reactions.length > 0 && (
                             <Reactions reactions={message.reactions}/>
                         )}

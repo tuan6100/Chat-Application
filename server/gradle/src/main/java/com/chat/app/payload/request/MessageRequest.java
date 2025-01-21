@@ -14,5 +14,7 @@ public class MessageRequest {
     private String type;
     private Date sentTime;
     private String status;
+    private Long replyToMessageId;
+    private String replyToMessageContent;
 
 }

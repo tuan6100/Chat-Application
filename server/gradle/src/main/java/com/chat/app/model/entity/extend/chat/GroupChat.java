@@ -13,6 +13,7 @@ import java.lang.reflect.Array;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

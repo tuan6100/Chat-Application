@@ -14,6 +14,10 @@ export const MessageProvider = ({ children }) => {
     const [typingUsers, setTypingUsers] = useState({});
     const [toggleNewMessage, setToggleNewMessage] = useState(null);
     const [replyMessage, setReplyMessage] = useState({});
+    const [editMessage, setEditMessage] = useState(null);
+    const [reactMessage, setReactMessage] = useState(null);
+    const [deleteMessage, setDeleteMessage] = useState(null);
+    const [restoreMessage, setRestoreMessage] = useState(null);
 
     const { authFetch } = useAuth();
 
@@ -134,15 +138,16 @@ export const MessageProvider = ({ children }) => {
         const chatData = getChatDataFromSession();
         const existingMessages = chatData[chatId]?.messages || [];
         const combinedMessages = [...existingMessages, ...messages];
-        const messagesWithIds = combinedMessages.filter(msg => msg.randomId !== null || msg.messageId !== null);
+        const messagesWithIds = combinedMessages.filter(msg => msg.messageId !== null);
         const uniqueMessages = Array.from(
-            new Map(messagesWithIds.map(msg => [msg.randomId || msg.messageId, msg])).values()
+            new Map(messagesWithIds.map(msg => [msg.messageId, msg])).values()
         );
         combinedMessages.forEach(msg => {
-            if (msg.randomId === null && msg.messageId === null) {
+            if (msg.messageId === null) {
                 uniqueMessages.push(msg);
             }
         });
+        uniqueMessages.sort((a, b) => new Date(a.sentTime).getTime() - new Date(b.sentTime).getTime());
         chatData[chatId] = {
             messages: uniqueMessages,
             lastAccessed: new Date().getTime(),
@@ -155,13 +160,6 @@ export const MessageProvider = ({ children }) => {
         }
         sessionStorage.setItem("chatData", JSON.stringify(chatData));
     };
-
-    useEffect(() => {
-        const chatData = getChatDataFromSession();
-        Object.keys(chatData).forEach(chatId => {
-            chatData[chatId].messages.sort((a, b) => new Date(a.sentTime) - new Date(b.sentTime));
-        });
-    }, [finalMessagesMap, getChatDataFromSession]);
 
 
     const handleSentMessage = async (chatId, randomId, senderId) => {
@@ -229,7 +227,6 @@ export const MessageProvider = ({ children }) => {
     }
 
 
-    const [unreadNotification, setUnreadNotification] = useState(0);
 
 
     return (
@@ -242,10 +239,12 @@ export const MessageProvider = ({ children }) => {
             typingUsers, setTypingUsers,
             toggleNewMessage, setToggleNewMessage,
             replyMessage, setReplyMessage,
+            editMessage, setEditMessage,
+            reactMessage, setReactMessage,
+            deleteMessage, setDeleteMessage,
+            restoreMessage, setRestoreMessage,
             getMessagesFromSession,
             updateChatDataInSession,
-            unreadNotification,
-            setUnreadNotification
         }}>
             {children}
         </MessageContext.Provider>

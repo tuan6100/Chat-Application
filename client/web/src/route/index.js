@@ -3,9 +3,9 @@ import { Navigate, useRoutes } from 'react-router';
 import ScreenLoading from '../component/ScreenLoading';
 import MainLayout from '../layout/main';
 import ProtectedRoute from './ProtectRouter';
-import AuthContext from '../context/AuthContext';
 import DashboardLayout from "../layout/dashboard";
 import {DEFAULT_PATH} from "../config";
+import useAuth from "../hook/useAuth";
 
 
 
@@ -30,7 +30,8 @@ const Notification = Loadable(lazy(() => import('../page/dashboard/Notifications
 const PrivateChat = Loadable(lazy(() => import('../page/Chat/PrivateChat')));
 
 export default function Router() {
-  const { isAuthenticated } = useContext(AuthContext);
+
+  const { isAuthenticated } = useAuth();
 
   return useRoutes([
     {

@@ -19,7 +19,10 @@ MessageConsumerService {
 
 
     @KafkaListener(topics = "send-message", groupId = "chat-group")
-    public void consumeSendMessage(ChatMessageRequest chatMessage) throws ChatException {
+    public void consumeSendMessage(ChatMessageRequest chatMessage) {
+        if (chatMessage.getRetryCount() > 2) {
+            return;
+        }
         System.out.println("Kafka message received: " + chatMessage);
         messageProcessingService.processSendMessage(chatMessage);
     }

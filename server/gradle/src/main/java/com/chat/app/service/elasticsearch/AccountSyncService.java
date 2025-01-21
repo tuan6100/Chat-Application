@@ -2,7 +2,7 @@ package com.chat.app.service.elasticsearch;
 
 import com.chat.app.model.elasticsearch.AccountIndex;
 import com.chat.app.model.entity.Account;
-import com.chat.app.repository.elasticsearch.AccountElasticsearchRepository;
+import com.chat.app.repository.elasticsearch.AccountSearchRepository;
 import com.chat.app.repository.jpa.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -15,7 +15,7 @@ public class AccountSyncService {
     private AccountRepository accountRepository;
 
     @Autowired
-    private AccountElasticsearchRepository accountElasticsearchRepository;
+    private AccountSearchRepository accountSearchRepository;
 
 
     @Async
@@ -26,7 +26,7 @@ public class AccountSyncService {
             accountIndex.setAccountId(account.getAccountId());
             accountIndex.setUsername(account.getUsername());
             accountIndex.setAvatar(account.getAvatar());
-            accountElasticsearchRepository.save(accountIndex);
+            accountSearchRepository.save(accountIndex);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
@@ -35,7 +35,7 @@ public class AccountSyncService {
 
     @Async
     public void deleteAccountFromElasticsearch(Long accountId) {
-        accountElasticsearchRepository.deleteById(accountId);
+        accountSearchRepository.deleteById(accountId);
     }
 
 

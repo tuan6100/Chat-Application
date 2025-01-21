@@ -17,6 +17,6 @@ public interface PrivateChatRepository extends JpaRepository<PrivateChat, Long> 
     @Query("SELECT c.chatId FROM PrivateChat c " +
             "INNER JOIN c.relationship r ON c.relationship.relationshipId = r.relationshipId " +
             "WHERE r.firstAccount.accountId = ?1 OR r.secondAccount.accountId = ?1")
-    List<Long> findChatsByAccountId(Long accountId);
+    List<Long> findPrivateChatsByAccountId(Long accountId);
 
 }

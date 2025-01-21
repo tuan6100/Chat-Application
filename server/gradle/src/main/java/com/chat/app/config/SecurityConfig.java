@@ -80,6 +80,7 @@ public class SecurityConfig {
                 "Cache-Control",
                 "accept",
                 "user-agent",
+                "Access-Control-Allow-Origin",
                 "X-CSRF-Token", "X-Requested-With", "Accept", "Accept-Version", "Content-Length", "Content-MD5", "Date", "X-Api-Version"
         ));
         config.setExposedHeaders(Arrays.asList(

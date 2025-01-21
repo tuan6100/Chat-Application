@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface AccountElasticsearchRepository extends ElasticsearchRepository<AccountIndex, Long> {
+public interface AccountSearchRepository extends ElasticsearchRepository<AccountIndex, Long> {
 
 
     @Query("{\"wildcard\": {\"username\": \"*?0*\"}}")

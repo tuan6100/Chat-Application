@@ -99,7 +99,7 @@ const Chats = () => {
     useEffect(() => {
         const fetchChat = async () => {
             try {
-                const response = await authFetch(`/api/account/me/chats`);
+                const response = await authFetch(`/api/account/me/chats/private-chat`);
                 const data = await response.json();
                 const newChatList = data.map((chat) => {
                     const friend = friendList.find(friend => friend.accountId === chat.friendId);
@@ -172,6 +172,7 @@ const Chats = () => {
 
 
     useEffect(() => {
+        console.info("Final messages map has been updated ");
         setChatList((prevChatList) => {
             const updatedChatList = prevChatList.map((chat) => {
                 const newMessages = finalMessagesMap.get(chat.chatId) || [];
@@ -183,7 +184,9 @@ const Chats = () => {
                         lastMessageSenderId: lastMessage.senderId,
                         lastMessageSenderName: lastMessage.senderId === parseInt(localStorage.getItem('accountId')) ? "You: " :  "",
                         lastMessageSentTime: new Date(lastMessage.sentTime),
-                        lastMessageHasSeen: lastMessage.viewerIds.includes(parseInt(localStorage.getItem('accountId'))) || lastMessage.senderId === parseInt(localStorage.getItem('accountId')),
+                        lastMessageHasSeen: lastMessage.viewerIds.includes(parseInt(localStorage.getItem('accountId'))) ||
+                            lastMessage.senderId === parseInt(localStorage.getItem('accountId')) ||
+                            lastMessage.content.includes("This message has been deleted"),
                     };
                 }
                 return chat;
@@ -329,7 +332,7 @@ const Chats = () => {
                                                     </Stack>
                                                 }
                                                 secondary={
-                                                    <Typography variant="subtitle2" color={item.lastMessageHasSeen ? '#808080' : '#ffffff'} noWrap sx={{ maxWidth: '80%' }}>
+                                                    <Typography variant="subtitle2" color={(item.lastMessageHasSeen || item.lastMessage === 'This message has been deleted') ? '#808080' : '#ffffff'} noWrap sx={{ maxWidth: '80%' }}>
                                                         {item.lastMessageSenderName + item.lastMessage || "No recent messages"}
                                                     </Typography>
                                                 }

@@ -41,11 +41,27 @@ const PrivateChat = ({ friendId, chatId }) => {
     const sessionMessages = getMessagesFromSession(chatId);
 
 
+    // useEffect(() => {
+    //     subscribe(`/client/chat/${chatId}/message/send`, () =>{})
+    //     subscribe(`/client/chat/${chatId}/typing`, () =>{})
+    //     subscribe(`/client/chat/${chatId}/message/mark-seen`, () =>{})
+    //     subscribe(`/client/chat/${chatId}/message/delete`, () =>{})
+    //     subscribe(`/client/chat/${chatId}/message/restore`, () =>{})
+    // }, [chatId]);
+
+
     useEffect(() => {
         console.log("Session messages:", sessionMessages);
         if (sessionMessages.length === 0) {
-            const messageData = fetchMessages(0);
-            updateChatDataInSession(chatId, messageData);
+            const fetchAndSetMessages = async () => {
+                const messageData = await fetchMessages(0);
+                if (Array.isArray(messageData)) {
+                    updateChatDataInSession(chatId, messageData);
+                } else {
+                    console.error("Fetched message data is not an array:", messageData);
+                }
+            };
+            fetchAndSetMessages();
         } else {
             sessionMessages.sort((a, b) => new Date(a.sentTime).getTime() - new Date(b.sentTime).getTime());
             setMessageList(sessionMessages);
@@ -110,11 +126,11 @@ const PrivateChat = ({ friendId, chatId }) => {
         if (isScrollAtBottom) {
             scrollToBottom();
         }
-    }, [messageList, typingUsers, isScrollAtBottom]);
+    }, [messageList, typingUsers]);
 
     const handleNewMessageClick = () => {
-        scrollToBottom();
         isAutoScrolling.current = true;
+        scrollToBottom();
         setToggleNewMessage(() => null);
     };
 
@@ -144,8 +160,12 @@ const PrivateChat = ({ friendId, chatId }) => {
                 setHasMore(false);
                 return;
             }
-            const data = await response.json();
+            let data = await response.json();
             if (data.length > 0) {
+                if (data.length < 50) {
+                    const again = await authFetch(`/api/chat/${chatId}/messages?page=${page}`);
+                    data = await again.json();
+                }
                 setMessageList((prev) => [...data, ...prev]);
                 const sessionMessages = getMessagesFromSession(chatId) || [];
                 updateChatDataInSession(chatId, [...data, ...sessionMessages]);
@@ -179,17 +199,17 @@ const PrivateChat = ({ friendId, chatId }) => {
                     );
                     if (index === -1) {
                         updatedMessages.push(rawMessage);
+                        rawMessages.splice(index, 1);
                     }
                 });
                 return updatedMessages;
             });
         }
-
         if (newMessages.length > 0) {
             setMessageList((prevMessages) => {
                 const updatedMessages = [...prevMessages];
                 newMessages.forEach((newMessage) => {
-                    if (newMessage.randomId === null) {
+                    if (newMessage.randomId === null ) {
                         const index = updatedMessages.findIndex(
                             (msg) => msg.messageId === newMessage.messageId
                         );
@@ -211,6 +231,11 @@ const PrivateChat = ({ friendId, chatId }) => {
             });
         }
     }, [finalMessagesMap, rawMessagesMap, chatId]);
+
+
+    useEffect(() => {
+        console.info("Messages updated:", messageList);
+    }, [messageList]);
 
 
     return (
@@ -237,11 +262,11 @@ const PrivateChat = ({ friendId, chatId }) => {
                         <CircularProgress size={24} />
                     </Stack>
                 )}
-                <Body chatId={chatId} messages={messageList} fetchMessages={fetchMessages} page={page} hasMore={hasMore}/>
+                <Body chatId={chatId} messages={messageList} fetchMessages={fetchMessages} page={page} hasMore={hasMore} isOnline={isOnline}/>
                 <div ref={messagesEndRef} />
             </Box>
 
-            {toggleNewMessage !== null && toggleNewMessage.senderId !== accountId && !toggleNewMessage.viewerIds.includes(accountId) && !isScrollAtBottom && (
+            {toggleNewMessage !== null  && !toggleNewMessage.viewerIds.includes(accountId) && !isScrollAtBottom && toggleNewMessage.chatId === chatId && (
                 <Box
                     sx={{
                         position: "absolute",

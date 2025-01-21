@@ -3,19 +3,28 @@ package com.chat.app.service.impl;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
+import com.chat.app.model.entity.Message;
+import com.chat.app.model.entity.extend.chat.GroupChat;
+import com.chat.app.model.entity.extend.chat.PrivateChat;
 import com.chat.app.model.redis.AccountOnlineStatus;
 import com.chat.app.payload.response.AccountResponse;
+import com.chat.app.payload.response.ChatResponse;
+import com.chat.app.payload.response.PrivateChatResponse;
 import com.chat.app.repository.jpa.AccountRepository;
-import com.chat.app.repository.jpa.PrivateChatRepository;
+import com.chat.app.repository.jpa.ChatRepository;
 import com.chat.app.repository.redis.AccountOnlineStatusRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.aws.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -33,13 +42,18 @@ public class AccountServiceImpl implements AccountService {
     private S3Service s3Service;
 
     @Autowired
-    private PrivateChatRepository privateChatRepository;
+    private PrivateChatServiceImpl privateChatService;
+
+    @Autowired
+    @Lazy
+    private GroupChatServiceImpl groupChatService;
+
 
 
     @Override
     public Account createAccount(Account account) {
         accountRepository.save(account);
-        accountOnlineStatusRepository.save(new AccountOnlineStatus(account.getAccountId(), false, new Date()));
+        accountOnlineStatusRepository.save(new AccountOnlineStatus(account.getAccountId(), true, new Date()));
         return account;
     }
 
@@ -134,8 +148,47 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public List<Long> getAllChatIds(Long accountId) {
-        return privateChatRepository.findChatsByAccountId(accountId);
+    public List<PrivateChatResponse> getAllPrivateChat(Long accountId) {
+        List<Long>  privateChatIds = privateChatService.findAllPrivateChatsByAccountId(accountId);
+        List<PrivateChatResponse> responses = new ArrayList<>();
+        for (Long chatId : privateChatIds) {
+            PrivateChat privateChat = privateChatService.getChat(chatId);
+            Long friendId = (Objects.equals(privateChat.getRelationship().getFirstAccount().getAccountId(), accountId)) ?
+                    privateChat.getRelationship().getSecondAccount().getAccountId() : privateChat.getRelationship().getFirstAccount().getAccountId();
+            Message lastestMessage = privateChatService.getLastestMessage(chatId);
+            if (lastestMessage.getUnsent() != null && lastestMessage.getUnsent()) {
+                lastestMessage.setContent("This message has been deleted");
+            }
+            Boolean hasSeen = lastestMessage.getViewers().stream().anyMatch(viewer -> viewer.getAccountId().equals(accountId)) || lastestMessage.getSender().getAccountId().equals(accountId);
+            responses.add(new PrivateChatResponse(chatId, friendId,
+                    new PrivateChatResponse.LastestMessage(lastestMessage.getSender().getAccountId(), lastestMessage.getSender().getUsername(), lastestMessage.getContent(), lastestMessage.getSentTime(), hasSeen)));
+        }
+        return responses;
+    }
+
+    @Override
+    public List<ChatResponse> getAllChatsByAccountId(Long accountId) {
+        List<Long>  privateChatIds = privateChatService.findAllPrivateChatsByAccountId(accountId);
+        List<ChatResponse> privateChatResponses = new ArrayList<>();
+        privateChatIds.forEach((chatId) -> {
+            PrivateChat privateChat = privateChatService.getChat(chatId);
+            Long friendId = (Objects.equals(privateChat.getRelationship().getFirstAccount().getAccountId(), accountId)) ?
+                    privateChat.getRelationship().getSecondAccount().getAccountId() : privateChat.getRelationship().getFirstAccount().getAccountId();
+            try {
+                String chatName = getAccount(friendId).getUsername();
+                String chatAvatar = getAccount(friendId).getAvatar();
+                privateChatResponses.add(new ChatResponse(chatId, chatName, chatAvatar));
+            } catch (ChatException e) {
+                System.out.println(e.getMessage());
+            }
+        });
+        List<Long> groupChatIds = groupChatService.getGroupChatByMemberId(accountId);
+        List<ChatResponse> groupChatResponses = new ArrayList<>();
+        groupChatIds.forEach((chatId) -> {
+            GroupChat groupChat = (GroupChat) groupChatService.getChat(chatId);
+            groupChatResponses.add(new ChatResponse(chatId, groupChat.getGroupName(), groupChat.getGroupAvatar()));
+        });
+        return Stream.concat(privateChatResponses.stream(), groupChatResponses.stream()).toList();
     }
 
 

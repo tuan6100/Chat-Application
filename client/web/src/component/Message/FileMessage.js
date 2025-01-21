@@ -5,7 +5,7 @@ import {InsertDriveFile} from "@mui/icons-material";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import IconList from "../Menu/IconList";
 import Reactions from "../Reactions";
-
+import {formatDate} from "./TextMessage";
 
 const FileMessage = ({ message, scrollToMessage, highlightMessageId }) => {
 
@@ -34,22 +34,6 @@ const FileMessage = ({ message, scrollToMessage, highlightMessageId }) => {
         };
         fetchFileMetadata();
     }, [message.content]);
-
-
-
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const isToday = date.toDateString() === now.toDateString();
-        const options = {hour: 'numeric', minute: 'numeric', hour12: true};
-        if (isToday) {
-            return date.toLocaleTimeString('en-US', options);
-        } else {
-            const monthDay = date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}).toUpperCase();
-            return `${monthDay} AT ${date.toLocaleTimeString('en-US', options)}`;
-        }
-    };
 
 
     return (

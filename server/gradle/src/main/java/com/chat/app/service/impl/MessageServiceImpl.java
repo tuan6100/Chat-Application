@@ -1,22 +1,25 @@
 package com.chat.app.service.impl;
 
+import com.chat.app.enumeration.MessageType;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Message;
+import com.chat.app.model.entity.MessageReaction;
 import com.chat.app.payload.request.ChatMessageRequest;
 import com.chat.app.payload.request.MessageRequest;
 import com.chat.app.payload.request.MessageSeenRequest;
+import com.chat.app.payload.request.MessageUpdateRequest;
 import com.chat.app.payload.response.MessageResponse;
 import com.chat.app.repository.jpa.MessageRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.ChatService;
 import com.chat.app.service.MessageService;
+import com.chat.app.service.elasticsearch.MessageSearchService;
 import com.chat.app.service.redis.MessageCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +52,10 @@ public class MessageServiceImpl implements MessageService {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
+    @Autowired
+    @Lazy
+    private MessageSearchService messageSearchService;
+
 
     @Override
     public Message getMessage(Long id) throws ChatException {
@@ -57,18 +64,23 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    @Async
     public void sendMessage(Long chatId, MessageRequest messageRequest)  {
-        kafkaTemplate.send("send-message", new ChatMessageRequest(chatId, messageRequest));
+        kafkaTemplate.send("send-message", new ChatMessageRequest(chatId, messageRequest, 0));
     }
 
     @Override
     @Transactional
     public void markViewedMessage(Long chatId, MessageSeenRequest request) throws ChatException {
         Message message = getMessage(request.getMessageId());
+        if (message.getSender().getAccountId().equals(request.getViewerId())) {
+            return;
+        }
         Account viewer = accountService.getAccount(request.getViewerId());
+        if (message.getViewers().contains(viewer)) {
+            return;
+        }
         message.getViewers().add(viewer);
-        messageRepository.save(message);
+        message = messageRepository.save(message);
         MessageResponse messageResponse = MessageResponse.fromEntity(message);
         System.out.println("Marked message as seen: " + messageResponse.getContent());
         messagingTemplate.convertAndSend("/client/chat/" + chatId + "/message/mark-seen", messageResponse);
@@ -77,22 +89,75 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    @Async
-    public void editMessage(Long messageId, MessageRequest messageRequest) throws ChatException {
-        Long chatId = getMessage(messageId).getChat().getChatId();
-        kafkaTemplate.send("edit-message", new ChatMessageRequest(chatId, messageRequest));
+    @Transactional
+    public void updateMessage(Long chatId, MessageUpdateRequest request) throws ChatException {
+        System.out.println("Updating message: " + request.toString());
+        if (request.getMessageId() == null) {
+            throw new ChatException("Message id is required");
+        }
+        Message message = getMessage(request.getMessageId());
+        MessageResponse messageResponse = new MessageResponse();
+        if (request.getContent() != null) {
+            message.setContent(request.getContent());
+            messageSearchService.updateMessage(message.getMessageId(), request.getContent());
+            messageResponse = MessageResponse.fromEntity(message);
+            messageResponse.setStatus("edited");
+        }
+        if (request.getReaction() != null) {
+            System.out.println("Updating message: " + request.getMessageId() + " with reaction: " + request.getReaction());
+            Account account = accountService.getAccount(request.getAccountId());
+            if (message.getReactions().stream().anyMatch(reaction -> reaction.getAccount().getAccountId().equals(request.getAccountId()))) {
+                if (message.getReactions().stream().anyMatch(reaction -> reaction.getReaction().equals(request.getReaction()))) {
+                    message.getReactions().removeIf(reaction -> reaction.getAccount().getAccountId().equals(request.getAccountId()));
+                } else {
+                    message.getReactions().removeIf(reaction -> reaction.getAccount().getAccountId().equals(request.getAccountId()));
+                    MessageReaction newReaction = new MessageReaction(message, account, request.getReaction());
+                    message.getReactions().add(newReaction);
+                }
+            } else {
+                MessageReaction reaction = new MessageReaction(message, account, request.getReaction());
+                message.getReactions().add(reaction);
+            }
+            messageResponse = MessageResponse.fromEntity(message);
+        }
+        messageRepository.save(message);
+        messagingTemplate.convertAndSend("/client/chat/" + chatId + "/message/update", messageResponse);
+        System.out.println("Sent message: " + messageResponse.getContent());
+        List<Long> membersInChat = chatService.getAllMembersInChat(chatId);
+        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
     }
 
     @Override
-    @Async
-    public void unsendMessage(Long messageId)  {
-        kafkaTemplate.send("unsend-message", String.valueOf(messageId), null);
+    @Transactional
+    public void unsendMessage(Long chatId, Long messageId) throws ChatException {
+        Message message = getMessage(messageId);
+        message.setUnsent(true);
+        message.setDeletedTime(new Date());
+        message = messageRepository.save(message);
+        messageSearchService.deleteMessage(messageId);
+        MessageResponse messageResponse = MessageResponse.fromEntity(message);
+        messageResponse.setStatus("deleted");
+        messageResponse.setContent("");
+        messageResponse.setType("TEXT");
+        messageResponse.setReactions(null);
+        messagingTemplate.convertAndSend("/client/chat/" + chatId + "/message/delete", messageResponse);
+        System.out.println("Deleted message: " + messageResponse.getMessageId());
+        List<Long> membersInChat = chatService.getAllMembersInChat(chatId);
+        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
     }
 
     @Override
-    @Async
-    public void restoreMessage(Long messageId) {
-        kafkaTemplate.send("restore-message", String.valueOf(messageId), null);
+    @Transactional
+    public void restoreMessage(Long chatId, Long messageId) throws ChatException {
+        Message message = getMessage(messageId);
+        message.setUnsent(false);
+        message.setDeletedTime(null);
+        messageRepository.save(message);
+        messageSearchService.addNewMessage(message);
+        List<Long> membersInChat = chatService.getAllMembersInChat(chatId);
+        MessageResponse messageResponse = MessageResponse.fromEntity(message);
+        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
+        messagingTemplate.convertAndSend("/client/chat/" + chatId + "/message/restore", messageResponse);
     }
 
     @Override
@@ -106,7 +171,7 @@ public class MessageServiceImpl implements MessageService {
         Date now = new Date();
         List<Message> unsentMessages = messageRepository.findAllByUnsendTrue();
         for (Message message : unsentMessages) {
-            if (TimeUnit.MILLISECONDS.toHours(now.getTime() - message.getSentTime().getTime()) >= 1) {
+            if (TimeUnit.MILLISECONDS.toHours(now.getTime() - message.getDeletedTime().getTime()) >= 1) {
                 removeMessage(message.getMessageId());
                 System.out.println("Removed unsent message: " + message.getMessageId());
             }

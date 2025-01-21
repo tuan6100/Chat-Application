@@ -9,10 +9,7 @@ import com.chat.app.model.elasticsearch.AccountIndex;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.extend.chat.SpamChat;
 import com.chat.app.model.redis.AccountOnlineStatus;
-import com.chat.app.payload.response.AccountResponse;
-import com.chat.app.payload.response.MessageResponse;
-import com.chat.app.payload.response.NotificationResponse;
-import com.chat.app.payload.response.RelationshipResponse;
+import com.chat.app.payload.response.*;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.NotificationService;
 import com.chat.app.service.RelationshipService;
@@ -201,11 +198,17 @@ public class AccountController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/chats")
-    public ResponseEntity<List<Long>> getChatList() throws UnauthorizedException {
+    public ResponseEntity<List<ChatResponse>> getChatIdsList() throws UnauthorizedException {
         Account myAccount = getAuthenticatedAccount();
-        return ResponseEntity.ok(accountService.getAllChatIds(myAccount.getAccountId()));
+        return ResponseEntity.ok(accountService.getAllChatsByAccountId(myAccount.getAccountId()));
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/chats/private-chat")
+    public ResponseEntity<List<PrivateChatResponse>> getChatList() throws UnauthorizedException {
+        Account myAccount = getAuthenticatedAccount();
+        return ResponseEntity.ok(accountService.getAllPrivateChat(myAccount.getAccountId()));
+    }
 
     @PostMapping("/me/online")
     public ResponseEntity<?> markOnline(@RequestParam Long accountId) throws  UnauthorizedException {

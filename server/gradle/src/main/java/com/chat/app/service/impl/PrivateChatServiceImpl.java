@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class PrivateChatServiceImpl extends ChatServiceImpl implements PrivateChatService {
 
@@ -26,6 +28,10 @@ public class PrivateChatServiceImpl extends ChatServiceImpl implements PrivateCh
     private RelationshipService relationshipService;
 
 
+    @Override
+    public PrivateChat getChat(Long chatId) {
+        return privateChatRepository.findById(chatId).orElse(null);
+    }
 
     @Override
     public PrivateChat create(Theme theme, Long RelationshipId) throws ChatException {
@@ -35,6 +41,11 @@ public class PrivateChatServiceImpl extends ChatServiceImpl implements PrivateCh
         }
         PrivateChat privateChat = new PrivateChat(theme, relationship);
         return chatRepository.save(privateChat);
+    }
+
+    @Override
+    public List<Long> findAllPrivateChatsByAccountId(Long accountId) {
+        return privateChatRepository.findPrivateChatsByAccountId(accountId);
     }
 
     @Override

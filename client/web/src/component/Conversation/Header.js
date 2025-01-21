@@ -76,7 +76,7 @@ const Header = ({ name, avatar, isOnline, lastOnlineTime }) => {
               alignItems: "center",
               p: 1,
               backgroundColor: "transparent",
-              borderTop: "1px solid #E0E0E0",
+              borderTop: "1px solid #3F3C3CFF",
               boxShadow: "0px -1px 5px rgba(0, 0, 0, 0.1)",
               width: '100%',
           }}

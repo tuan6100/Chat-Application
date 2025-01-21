@@ -3,6 +3,8 @@ package com.chat.app.model.entity;
 import com.chat.app.enumeration.MessageType;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,15 +42,19 @@ public class Message {
     @Column(nullable = false, columnDefinition = "TIMESTAMP")
     private Date sentTime = new Date();
 
-    @Column(name = "unsend", columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean unsend;
+    @Column(name = "unsent", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean unsent = false;
+
+    @Column(columnDefinition = "TIMESTAMP")
+    private Date deletedTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_id")
     private Chat chat;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reply_to_id")
+    @JoinColumn(name = "reply_to_id", foreignKey = @ForeignKey(name = "fk_reply_to_message"))
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Message replyTo;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -58,6 +64,9 @@ public class Message {
             inverseJoinColumns = @JoinColumn(name = "viewer_id", referencedColumnName = "account_id")
     )
     private List<Account> viewers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "message", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MessageReaction> reactions = new ArrayList<>();
 
 
     public Message() {

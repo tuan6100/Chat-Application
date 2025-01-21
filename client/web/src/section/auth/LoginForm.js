@@ -62,7 +62,6 @@ const LoginForm = () => {
                 const refreshToken = refreshTokenHeader.split(' ')[1];
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
-                setIsAuthenticated(true);
 
                 const newResponse = await fetch(`${API_BASE_URL}/api/account/me`, {
                     headers: {
@@ -79,12 +78,11 @@ const LoginForm = () => {
                 localStorage.setItem('accountId', newData.accountId);
                 localStorage.setItem('username', newData.username);
                 localStorage.setItem('avatar', newData.avatar);
-                localStorage.setItem('email', newData.email);
                 setErrorMessage('');
-                window.location.href = '/me';
             } else {
                 setErrorMessage('Failed to retrieve tokens.');
             }
+
             const accountId = localStorage.getItem('accountId');
             const responseOnline = await fetch(`${API_BASE_URL}/api/account/me/online?accountId=${accountId}`, {
                 method: 'POST',
@@ -93,6 +91,17 @@ const LoginForm = () => {
             if (!responseOnline.ok) {
                 console.error('Failed to mark user online');
             }
+
+            const responseChats = await fetch(`${API_BASE_URL}/api/account/me/chats`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                },
+                credentials: 'include',
+            });
+            const chatData = await responseChats.json();
+            localStorage.setItem('chatList', JSON.stringify(chatData));
+            setIsAuthenticated(true);
+            window.location.href = '/me';
         } catch (error) {
             console.error('Error during login:', error);
             setErrorMessage(error.message || 'Login failed');

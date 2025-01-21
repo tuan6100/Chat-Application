@@ -11,6 +11,7 @@ import CustomDrawer from "../../component/Custom/drawer";
 import useSidebar  from "../../hook/useSideBar";
 import useSelected from "../../hook/useSelected";
 import useMessage from "../../hook/useMessage";
+import useWebSocket from "../../hook/useWebSocket";
 
 
 const SideBar = () => {
@@ -57,8 +58,11 @@ const SideBar = () => {
 
     const getPath = (index) => {
         switch (index) {
-            case 0: return '/me/chats';
-            case 1: return '/me/groups';
+            case 0:
+                // sessionStorage.removeItem("chatData");
+                return '/me/chats';
+            case 1:
+                return '/me/groups';
             case 2:
                 setChatOpen(false);
                 return '/me/calls';

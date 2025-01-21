@@ -14,7 +14,7 @@ import java.util.List;
 public abstract class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected long chatId;
+    protected Long chatId;
 
     @OneToMany(mappedBy = "chat", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     protected List<Message> messages = new ArrayList<>();

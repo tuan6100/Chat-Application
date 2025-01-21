@@ -4,15 +4,14 @@ import ImageMessage from "../Message/ImageMessage";
 import VideoMessage from "../Message/VideoMessage";
 import AudioMessage from "../Message/AudioMessage";
 import FileMessage from "../Message/FileMessage";
-import LinkMessage from "../Message/LinkMessage";
 import useMessage from "../../hook/useMessage";
 import TypingIndicator from "../Message/TypingIndicator";
 import {useCallback, useEffect, useRef, useState} from "react";
 import useWebSocket from "../../hook/useWebSocket";
 
-const Body = ({ chatId, messages, fetchMessages, page, hasMore }) => {
+const Body = ({ chatId, messages, fetchMessages, page, hasMore, isOnline }) => {
 
-    const {typingUsers} = useMessage();
+    const {typingUsers, reactMessage, setReactMessage, deleteMessage, setDeleteMessage, restoreMessage, setRestoreMessage} = useMessage();
     const observerRef = useRef(null);
     const seenMessages = useRef(new Set());
     const {publish} = useWebSocket();
@@ -34,6 +33,9 @@ const Body = ({ chatId, messages, fetchMessages, page, hasMore }) => {
 
 
     useEffect(() => {
+        if (!isOnline) {
+            return;
+        }
         const observerCallback = (entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
@@ -73,7 +75,7 @@ const Body = ({ chatId, messages, fetchMessages, page, hasMore }) => {
                 seenMessages.current.add(message.messageId);
             }
         });
-    }, [chatId, messages]);
+    }, [chatId, messages, isOnline]);
 
 
     const scrollToMessage = (messageId) => {
@@ -94,22 +96,75 @@ const Body = ({ chatId, messages, fetchMessages, page, hasMore }) => {
     };
 
 
+    useEffect(() => {
+        if (reactMessage) {
+            const message = messages.find((msg) => msg.messageId === reactMessage.messageId);
+            const existingReactionIndex = message.reactions.findIndex(
+                (reaction) => reaction.accountId === reactMessage.accountId && reaction.reaction === reactMessage.reaction
+            );
+            if (existingReactionIndex !== -1) {
+                message.reactions.splice(existingReactionIndex, 1);
+            } else {
+                const accountReactionIndex = message.reactions.findIndex(
+                    (reaction) => reaction.accountId === reactMessage.accountId
+                );
+                if (accountReactionIndex !== -1) {
+                    message.reactions[accountReactionIndex].reaction = reactMessage.reaction;
+                } else {
+                    message.reactions.push({
+                        accountId: reactMessage.accountId,
+                        reaction: reactMessage.reaction
+                    });
+                }
+            }
+            const body = JSON.stringify(reactMessage);
+            publish(`/chat/${chatId}/message/update`, body);
+            console.log(`React message ${reactMessage.messageId} with ${reactMessage.reaction}`);
+            setReactMessage(null);
+        }
+    }, [reactMessage, chatId]);
+
+
+    useEffect(() => {
+        if (deleteMessage) {
+            const body = JSON.stringify(deleteMessage);
+            publish(`/chat/${chatId}/message/delete`, body);
+            console.log(`Delete message ${deleteMessage}`);
+            setDeleteMessage(null);
+        }
+    }, [deleteMessage]);
+
+    useEffect(() => {
+        if (restoreMessage) {
+            const body = JSON.stringify(restoreMessage);
+            publish(`/chat/${chatId}/message/restore`, body);
+            console.log(`Restore message ${restoreMessage}`);
+            setRestoreMessage(null);
+        }
+    }, [restoreMessage]);
+
+
 
     return (
         <Box p={3}>
-            <Stack spacing={3}>
+            <Stack spacing={4}>
                 {messages.map((message, index) => {
                     const MessageComponent = (() => {
                         switch (message.type) {
+                            case "TEXT":
+                            case "TEXT_FORWARDED":
+                                return TextMessage;
                             case "IMAGE":
+                            case "IMAGE_FORWARDED":
                                 return ImageMessage;
                             case "VIDEO":
+                            case "VIDEO_FORWARDED":
                                 return VideoMessage;
                             case "AUDIO":
+                            case "AUDIO_FORWARDED":
                                 return AudioMessage;
-                            case "LINK":
-                                return LinkMessage;
                             case "FILE":
+                            case "FILE_FORWARDED":
                                 return FileMessage;
                             default:
                                 return TextMessage;

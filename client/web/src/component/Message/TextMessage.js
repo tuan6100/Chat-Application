@@ -7,6 +7,20 @@ import IconList from "../Menu/IconList";
 import Reactions from "../Reactions";
 import {ClockClockwise} from "phosphor-react"
 
+
+export const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const options = { hour: 'numeric', minute: 'numeric', hour12: true };
+    if (isToday) {
+        return date.toLocaleTimeString('en-US', options);
+    } else {
+        const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+        return `${monthDay} AT ${date.toLocaleTimeString('en-US', options)}`;
+    }
+};
+
 const TextMessage = ({ message, scrollToMessage, highlightMessageId }) => {
     const theme = useTheme();
     const isMine = (message.senderId.toString() === localStorage.getItem('accountId'));
@@ -20,20 +34,6 @@ const TextMessage = ({ message, scrollToMessage, highlightMessageId }) => {
     if (!isMine && message.status === 'sending') {
         return null;
     }
-
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const isToday = date.toDateString() === now.toDateString();
-        const options = { hour: 'numeric', minute: 'numeric', hour12: true };
-        if (isToday) {
-            return date.toLocaleTimeString('en-US', options);
-        } else {
-            const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
-            return `${monthDay} AT ${date.toLocaleTimeString('en-US', options)}`;
-        }
-    };
 
 
     const isLink = (text) => {

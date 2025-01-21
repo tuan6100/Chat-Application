@@ -18,7 +18,11 @@ import java.util.*;
 @Data
 @Entity
 @EntityListeners(AccountEntityListener.class)
-@Table(name="account")
+@Table( name="account",
+        indexes = {
+                @Index(name = "account_auth_index", columnList = "email, password"),
+        }
+)
 public class Account {
 
     @Id
@@ -70,8 +74,7 @@ public class Account {
 
     @ManyToMany(mappedBy = "viewers", fetch = FetchType.LAZY)
     @ToString.Exclude
-    @JsonIgnore
-    private Set<Message> messages = new HashSet<>();
+    private List<Message> viewedMessages = new ArrayList<>();
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
@@ -84,6 +87,10 @@ public class Account {
     @OneToMany(mappedBy = "receiverAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<Notification> receivedNotifications = new HashSet<>();
+
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<MessageReaction> reactions = new ArrayList<>();
 
 
     public Account() {

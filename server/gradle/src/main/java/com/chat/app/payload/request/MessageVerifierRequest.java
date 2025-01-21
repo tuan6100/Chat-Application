@@ -6,5 +6,6 @@ import lombok.Data;
 public class MessageVerifierRequest {
 
     private String randomId;
+    private Long senderId;
     private String status;
 }

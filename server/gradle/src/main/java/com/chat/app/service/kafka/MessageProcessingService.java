@@ -52,23 +52,49 @@ public class MessageProcessingService {
 
 
     @Transactional
-    public void processSendMessage(ChatMessageRequest chatMessage) throws ChatException {
-        Long chatId = chatMessage.getChatId();
-        MessageRequest messageRequest = chatMessage.getMessageRequest();
-        String randomId = messageRequest.getRandomId();
-        if (messageRepository.findByRandomId(randomId) != null) {
-            System.out.println("Delay processing message: " + messageRequest.getContent());
-            kafkaTemplate.send("send-message", chatMessage);
+    public void processSendMessage(ChatMessageRequest chatMessage) {
+        if (chatMessage.getRetryCount() > 2) {
+            System.out.println("Message processing cancelled: Retry limit exceeded for message with RandomId: "
+                    + chatMessage.getMessageRequest().getRandomId());
             return;
         }
-        Chat chat = chatService.getChat(chatId);
-        Account sender = accountService.getAccount(messageRequest.getSenderId());
-        MessageType type = MessageType.valueOf(messageRequest.getType().toUpperCase());
-        Date sentTime = chatMessage.getMessageRequest().getSentTime();
-        Message message = new Message(messageRequest.getRandomId(), sender, messageRequest.getContent(), type, sentTime, chat);
-        message = messageRepository.save(message);
-        MessageResponse messageResponse = MessageResponse.fromEntity(message);
-        messagingTemplate.convertAndSend("/client/chat/" + chatId, messageResponse);
+        try {
+            Long chatId = chatMessage.getChatId();
+            MessageRequest messageRequest = chatMessage.getMessageRequest();
+            String randomId = messageRequest.getRandomId();
+            if (messageRepository.findByRandomId(randomId) != null) {
+                System.out.println("Delay processing message: " + messageRequest.getContent());
+                if (chatMessage.getRetryCount() > 2) {
+                    System.out.println("Message processing cancelled: Retry limit exceeded for message with RandomId: "
+                            + chatMessage.getMessageRequest().getRandomId());
+                    return;
+                }
+                chatMessage.setRetryCount(chatMessage.getRetryCount() + 1);
+                kafkaTemplate.send("send-message", chatMessage);
+            }
+            Chat chat = chatService.getChat(chatId);
+            Account sender = accountService.getAccount(messageRequest.getSenderId());
+            MessageType type = MessageType.valueOf(messageRequest.getType().toUpperCase());
+            Date sentTime = chatMessage.getMessageRequest().getSentTime();
+            Message message = new Message(messageRequest.getRandomId(), sender, messageRequest.getContent(), type, sentTime, chat);
+            if (messageRequest.getReplyToMessageId() != null) {
+                Message replyToMessage = messageService.getMessage(messageRequest.getReplyToMessageId());
+                message.setReplyTo(replyToMessage);
+            }
+            message = messageRepository.save(message);
+            MessageResponse messageResponse = MessageResponse.fromEntity(message);
+            messagingTemplate.convertAndSend("/client/chat/" + chatId + "/message/send", messageResponse);
+            System.out.println("Sent message: " + messageRequest.getContent() + " to chat: " + chatId);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            if (chatMessage.getRetryCount() > 2) {
+                System.out.println("Message processing cancelled: Retry limit exceeded for message with RandomId: "
+                        + chatMessage.getMessageRequest().getRandomId());
+                return;
+            }
+            chatMessage.setRetryCount(chatMessage.getRetryCount() + 1);
+            kafkaTemplate.send("send-message", chatMessage);
+        }
     }
 
     @Transactional
@@ -90,7 +116,7 @@ public class MessageProcessingService {
     @Transactional
     public void processUnsendMessage(String messageId) throws ChatException {
         Message message = messageService.getMessage(Long.valueOf(messageId));
-        message.setUnsend(true);
+        message.setUnsent(true);
         chatService.removeMessage(Long.valueOf(messageId));
         messageRepository.save(message);
         messageCacheService.removeMessageFromCache(message.getChat().getChatId(), message.getSender().getAccountId(), Long.valueOf(messageId));
@@ -100,13 +126,13 @@ public class MessageProcessingService {
     @Transactional
     public void processRestoreMessage(String messageId) throws ChatException {
         Message message = messageService.getMessage(Long.valueOf(messageId));
-        message.setUnsend(false);
+        message.setUnsent(false);
         chatService.addMessage(message.getChat().getChatId(), message);
         messageRepository.save(message);
         Long chatId = message.getChat().getChatId();
         List<Long> membersInChat = chatService.getAllMembersInChat(chatId);
         MessageResponse messageResponse = MessageResponse.fromEntity(message);
-//        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
+        messageCacheService.cacheNewMessage(chatId, membersInChat, messageResponse);
         messagingTemplate.convertAndSend("/client/chat/" + chatId, messageResponse);
     }
 }

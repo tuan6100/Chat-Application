@@ -1,9 +1,9 @@
 import {Avatar, Button, Container, Stack, Typography} from "@mui/material";
-import useAuth from "../../../hook/useAuth";
+import useAuth from "../../hook/useAuth";
 import {useEffect, useState} from "react";
-import useConversationProperties from "../../../hook/useConversationProperties";
-import Body from "../Body";
-import Footer from "../Footer";
+import useConversationProperties from "../../hook/useConversationProperties";
+import Body from "../../component/Conversation/Body";
+import Footer from "../../component/Conversation/Footer";
 import {useNavigate} from "react-router";
 
 
@@ -41,9 +41,26 @@ const FriendRequest = (friendId) => {
         return () => clearInterval(intervalId);
     }, [authFetch, avatar, name, isOnline, lastOnlineTime, setAvatar, setName, setIsOnline, setLastOnlineTime, friendId]);
 
-    const handleInvite = async () => {
+    const handleAccept = async () => {
         try {
-            const response = await authFetch(`/api/account/me/invite?friendId=${friendId}`, {
+            const response = await authFetch(`/api/account/me/accept?friendId=${friendId}`, {
+                method: "POST",
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                setError(error.message);
+                return;
+            }
+            const data = await response.json();
+            navigate(`/me/chats?chatId=${data.chatId}`);
+        } catch (error) {
+            console.error("Error sending friend request:", error);
+        }
+    }
+
+    const handleReject = async () => {
+        try {
+            const response = await authFetch(`/api/account/me/reject?friendId=${friendId}`, {
                 method: "POST",
             });
             if (!response.ok) {

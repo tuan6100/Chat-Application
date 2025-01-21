@@ -9,6 +9,7 @@ import com.chat.app.model.entity.extend.chat.PrivateChat;
 import com.chat.app.payload.request.MessageVerifierRequest;
 import com.chat.app.payload.response.MessageResponse;
 import com.chat.app.service.*;
+import com.chat.app.service.elasticsearch.MessageSearchService;
 import com.chat.app.service.redis.MessageCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +45,9 @@ public class ChatController {
     @Autowired
     private MessageCacheService messageCacheService;
 
+    @Autowired
+    private MessageSearchService messageSearchService;
+
 
     private Long getAuthenticatedAccountId() throws UnauthorizedException {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -72,12 +76,16 @@ public class ChatController {
     public ResponseEntity<List<MessageResponse>> getMessages(@PathVariable Long chatId,
                                                              @RequestParam(defaultValue = "0") int page,
                                                              @Value("${spring.redis.cache.messages-per-chat.size}") int size) {
-        return ResponseEntity.ok(chatService.getMessages(chatId, getAuthenticatedAccountId(), page, size));
+        List<MessageResponse> responses = chatService.getMessages(chatId, getAuthenticatedAccountId(), page, size);
+        if (responses.isEmpty() && page < chatService.getMaxPage(chatId, size)) {
+            return getMessages(chatId, page, size);
+        }
+        return ResponseEntity.ok(responses);
     }
 
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/theme")
-    public ResponseEntity<Chat> changeTheme(@PathVariable Long chatId, @RequestParam String theme) throws ChatException {
+    public ResponseEntity<Chat> changeTheme(@PathVariable Long chatId, @RequestParam String theme) {
         Theme themeEnum = Theme.valueOf(theme.toUpperCase());
         Chat chat = chatService.changeTheme(chatId, themeEnum);
         return ResponseEntity.ok(chat);
@@ -86,8 +94,19 @@ public class ChatController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/message/verify")
     public ResponseEntity<?> verifyMessage(@PathVariable Long chatId, @RequestBody MessageVerifierRequest request) throws ChatException {
+        if (!request.getSenderId().equals(getAuthenticatedAccountId())) {
+            return null;
+        }
         chatService.verifyMessage(chatId, request);
         return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/messages/search")
+    public ResponseEntity<List<Long>> searchMessage(@PathVariable Long chatId,
+                                                    @RequestParam String content
+                                                    ) throws ChatException {
+        return ResponseEntity.ok(messageSearchService.searchMessage(chatId, content));
     }
 
 

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 
 @Service
 public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatService  {
@@ -153,5 +154,10 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
             throw new Exception("You do not have permission to delete this group chat");
         }
         groupChatRepository.delete(groupChat);
+    }
+
+    @Override
+    public List<Long> getGroupChatByMemberId(Long memberId) {
+        return groupChatRepository.findByMemberId(memberId);
     }
 }

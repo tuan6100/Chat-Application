@@ -64,6 +64,7 @@ public class ChatServiceImpl implements ChatService {
     private MessageCacheService messageCacheService;
 
     @Autowired
+    @Lazy
     private MessageSearchService messageSearchService;
 
     @Autowired
@@ -107,7 +108,14 @@ public class ChatServiceImpl implements ChatService {
                     Page<Message> messages = chatRepository.findLatestMessagesByChatId(chatId, pageable);
                     List<MessageResponse> messageResponses = new ArrayList<>();
                     for (Message message : messages) {
-                        messageResponses.add(MessageResponse.fromEntity(message));
+                        MessageResponse response = MessageResponse.fromEntity(message);
+                        if (message.getUnsent() != null && message.getUnsent()) {
+                            response.setStatus("deleted");
+                            response.setContent("");
+                            response.setType("TEXT");
+                            response.setReactions(null);
+                        }
+                        messageResponses.add(response);
                     }
                     Collections.reverse(messageResponses);
                     messageCacheService.setCache(chatId, accountId, messageResponses);

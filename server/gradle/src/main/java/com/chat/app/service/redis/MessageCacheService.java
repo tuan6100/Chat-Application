@@ -59,7 +59,6 @@ public class MessageCacheService {
         return messageResponses.subList(start, end);
     }
 
-
     public void setCache(Long chatId, Long accountId, List<MessageResponse> messages) {
         MessageCache cache = getCache(accountId, chatId);
         if (cache == null) {
@@ -75,9 +74,7 @@ public class MessageCacheService {
         if (cache == null) {
             cache = new MessageCache(new CompositeKey(accountId, chatId), new ArrayList<>(Collections.singletonList(response)));
         } else {
-            List<MessageResponse> messageResponses = new ArrayList<>(cache.getMessageResponses());
-            messageResponses.add(response);
-            cache.setMessageResponses(messageResponses);
+            cache.getMessageResponses().add(response);
             System.out.println("Cached message: " + response.getContent() + " into table: " + accountId + ":" + chatId);
         }
         messageCacheRepository.save(cache);
@@ -89,14 +86,31 @@ public class MessageCacheService {
         List<CompletableFuture<Void>> futures = accountIds.stream()
                 .map(accountId -> CompletableFuture.runAsync(() -> {
                     MessageCache cache = getCache(accountId, chatId);
-                    if (cache == null || cache.getMessageResponses().stream().noneMatch(msg -> msg.getMessageId().equals(response.getMessageId()))) {
+                    if (cache == null) {
                         cacheNewMessage(chatId, accountId, response);
+                    } else {
+                        List<MessageResponse> responses = cache.getMessageResponses();
+                        int index = -1;
+                        for (int i = responses.size() - 1; i >= 0; i--) {
+                            if (responses.get(i).getMessageId().equals(response.getMessageId())) {
+                                index = i;
+                                break;
+                            }
+                        }
+                        if (index >= 0) {
+                            responses.set(index, response);
+                        } else {
+                            responses.add(response);
+                        }
+                        cache.setMessageResponses(responses);
+                        messageCacheRepository.save(cache);
                     }
                 }, executor))
                 .toList();
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         executor.shutdown();
     }
+
 
     @Async
     public void removeMessageFromCache(Long chatId, Long accountId, Long messageId) {
@@ -146,6 +160,9 @@ public class MessageCacheService {
                 List<MessageResponse> responses = cache.getMessageResponses();
                 if (responses.size() > 50) {
                     responses = responses.subList(responses.size() - 50, responses.size());
+                } else if (responses.size() < 50 ) {
+                    responses.clear();
+                    cacheNextMessages(chatId, accountId, 0, 50);
                 }
                 cache.setMessageResponses(responses);
                 messageCacheRepository.save(cache);

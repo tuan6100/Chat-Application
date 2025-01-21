@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useRef } from "react";
+import React, {createContext, useState, useEffect, useRef, useCallback} from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import useMessage from "../hook/useMessage";
@@ -9,10 +9,41 @@ export const WebSocketProvider = ({ children }) => {
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     const stompClient = useRef(null);
     const subscriptions = useRef(new Map());
-    const { addNewMessage, finalMessagesMap, setFinalMessagesMap, setTypingUsers, updateChatDataInSession } = useMessage();
+    const { addNewMessage, finalMessagesMap, setFinalMessagesMap,
+        setTypingUsers, updateChatDataInSession, setToggleNewMessage }
+        = useMessage();
     const chatList = JSON.parse(localStorage.getItem('chatList')) || [];
     const chatIdList = chatList.map(chat => chat.chatId);
     const {isAuthenticated} = useAuth();
+    const [isRefreshed, setIsRefreshed] = useState(false);
+
+
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            sessionStorage.setItem('isRefreshed', 'true');
+        };
+        const checkRefresh = () => {
+            const refreshed = sessionStorage.getItem('isRefreshed') === 'true';
+            setIsRefreshed(refreshed);
+            if (refreshed) {
+                console.log('The tab was refreshed: ' + refreshed);
+                setIsRefreshed(refreshed);
+                sessionStorage.removeItem('isRefreshed');
+                chatIdList.forEach((chatId) => {
+                    publish(`/client/chat/${chatId}/message/send`, {});
+                    publish(`/chat/${chatId}/message/send`, {});
+                });
+            } else {
+                console.log('The tab was not refreshed');
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        window.addEventListener('load', checkRefresh);
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            window.removeEventListener('load', checkRefresh);
+        };
+    }, []);
 
 
     useEffect(() => {
@@ -25,7 +56,6 @@ export const WebSocketProvider = ({ children }) => {
                 heartbeatOutgoing: 10000,
                 onConnect: () => {
                     console.log("WebSocket connected");
-                    resubscribeAll();
                 },
                 onDisconnect: () => {
                     console.log("WebSocket disconnected");
@@ -55,7 +85,7 @@ export const WebSocketProvider = ({ children }) => {
     }, [isAuthenticated, API_BASE_URL]);
 
 
-    const subscribe = (destination, callback) => {
+    const subscribe = useCallback((destination, callback) => {
         if (stompClient.current && stompClient.current.connected) {
             if (!subscriptions.current.has(destination)) {
                 console.log(`Subscribing to: ${destination}`);
@@ -65,16 +95,16 @@ export const WebSocketProvider = ({ children }) => {
         } else {
             console.error(`WebSocket not connected. Cannot subscribe to: ${destination}`);
         }
-    };
+    }, []);
 
 
-    const unsubscribe = (destination) => {
+    const unsubscribe = useCallback((destination) => {
         const subscription = subscriptions.current.get(destination)?.subscription;
         if (subscription) {
             subscription.unsubscribe();
             subscriptions.current.delete(destination);
         }
-    };
+    }, []);
 
     const publish = (destination, body) => {
         if (stompClient.current && stompClient.current.connected) {
@@ -129,10 +159,10 @@ export const WebSocketProvider = ({ children }) => {
 
     useEffect(() => {
         if (!chatIdList) return;
-        if (stompClient.current && stompClient.current.connected && isAuthenticated) {
+        if (stompClient.current && stompClient.current.connected ) {
             chatIdList.forEach((chatId) => {
                 chatId = parseInt(chatId);
-                subscribe(`/client/chat/${chatId}`, (message) => {
+                subscribe(`/client/chat/${chatId}/message/send`, (message) => {
                     const data = JSON.parse(message.body);
                     addNewMessage(chatId, data);
                 });
@@ -140,15 +170,15 @@ export const WebSocketProvider = ({ children }) => {
         }
         return () => {
             chatIdList.forEach((chatId) => {
-                unsubscribe(`/client/chat/${chatId}`);
+                unsubscribe(`/client/chat/${chatId}/message/send`);
             });
         };
-    }, [stompClient.current, isAuthenticated, chatIdList]);
+    }, [chatIdList, subscribe]);
 
 
     useEffect(() => {
         if (!chatIdList) return;
-        if (stompClient.current && stompClient.current.connected && isAuthenticated) {
+        if (stompClient.current && stompClient.current.connected) {
             chatIdList.forEach((chatId) => {
                 subscribe(`/client/chat/${chatId}/typing`, (message) => {
                     if (JSON.parse(message.body) === "pong") {
@@ -162,7 +192,7 @@ export const WebSocketProvider = ({ children }) => {
                                 ...prev,
                                 [incomingChatId]: {
                                     ...prev[incomingChatId],
-                                    [senderId]: {senderAvatar, typing},
+                                    [senderId]: {senderAvatar, typing, chatId},
                                 },
                             }));
                         } else {
@@ -186,11 +216,11 @@ export const WebSocketProvider = ({ children }) => {
                 unsubscribe(`/client/chat/${chatId}/typing`);
             });
         };
-    }, [chatIdList, subscribe, isAuthenticated]);
+    }, [chatIdList, subscribe]);
 
 
     useEffect(() => {
-        if (stompClient.current && stompClient.current.connected && isAuthenticated) {
+        if (stompClient.current && stompClient.current.connected ) {
             chatIdList.forEach((chatId) => {
                 subscribe(`/client/chat/${chatId}/message/mark-seen`, (message) => {
                     const data = JSON.parse(message.body);
@@ -219,11 +249,11 @@ export const WebSocketProvider = ({ children }) => {
                 unsubscribe(`/client/chat/${chatId}/message/mark-seen`);
             });
         };
-    }, [chatIdList, subscribe, isAuthenticated]);
+    }, [chatIdList, subscribe]);
 
 
     useEffect(() => {
-        if (stompClient.current && stompClient.current.connected && isAuthenticated) {
+        if (stompClient.current && stompClient.current.connected ) {
             chatIdList.forEach((chatId) => {
                 subscribe(`/client/chat/${chatId}/message/update`, (message) => {
                     const data = JSON.parse(message.body);
@@ -248,14 +278,91 @@ export const WebSocketProvider = ({ children }) => {
                     console.log("Message edited: ", data);
                 });
             });
-
         }
         return () => {
             chatIdList.forEach((chatId) => {
                 unsubscribe(`/client/chat/${chatId}/message/update`);
             });
         };
-    }, [chatIdList, subscribe, isAuthenticated]);
+    }, [chatIdList, subscribe]);
+
+
+    useEffect(() => {
+        if (stompClient.current && stompClient.current.connected) {
+            chatIdList.forEach((chatId) => {
+                subscribe(`/client/chat/${chatId}/message/delete`, (message) => {
+                    const data = JSON.parse(message.body);
+                    setFinalMessagesMap((prev) => {
+                        const updatedFinal = new Map(prev);
+                        if (updatedFinal.has(chatId)) {
+                            const messages = [...updatedFinal.get(chatId)];
+                            const messageIndex = messages.findIndex(msg => msg.messageId === data.messageId);
+                            if (messageIndex !== -1) {
+                                console.log("Message found, deleting...");
+                                messages[messageIndex] = { ...messages[messageIndex], ...data };
+                                console.log("Message deleted: ", messages[messageIndex]);
+                                messages.forEach((msg, index) => {
+                                    if (msg.replyToMessageId === data.messageId) {
+                                        messages[index] = { ...msg, replyToMessageId: null, replyToMessageContent: null };
+                                        console.log("Updated message replying to deleted message: ", messages[index]);
+                                    }
+                                });
+                                updatedFinal.set(chatId, messages);
+                                setToggleNewMessage(null);
+                            }
+                        }
+                        return updatedFinal;
+                    });
+                });
+            });
+        }
+        return () => {
+            chatIdList.forEach((chatId) => {
+                unsubscribe(`/client/chat/${chatId}/message/delete`);
+            });
+        };
+    }, [chatIdList, subscribe]);
+
+
+    useEffect(() => {
+        if (stompClient.current && stompClient.current.connected) {
+            chatIdList.forEach((chatId) => {
+                subscribe(`/client/chat/${chatId}/message/restore`, (message) => {
+                    const data = JSON.parse(message.body);
+                    setFinalMessagesMap((prev) => {
+                        const updatedFinal = new Map(prev);
+                        if (updatedFinal.has(chatId)) {
+                            const messages = [...updatedFinal.get(chatId)];
+                            const messageIndex = messages.findIndex(msg => msg.messageId === data.messageId);
+                            if (messageIndex !== -1) {
+                                console.log("Message found, restoring...");
+                                messages[messageIndex] = { ...messages[messageIndex], ...data };
+                                console.log("Message restored: ", messages[messageIndex]);
+                                messages.forEach((msg, index) => {
+                                    if (msg.replyToMessageId === data.messageId) {
+                                        messages[index] = { ...msg, replyToMessageId: message.messageId, replyToMessageContent: message.content };
+                                        console.log("Updated message replying to deleted message: ", messages[index]);
+                                    }
+                                });
+                                updatedFinal.set(chatId, messages);
+                                setToggleNewMessage(null);
+                            } else {
+                                console.log("Message not found, cannot restore.");
+                            }
+                        } else {
+                            console.log("Chat ID not found in final messages map.");
+                        }
+                        return updatedFinal;
+                    });
+                });
+            });
+        }
+        return () => {
+            chatIdList.forEach((chatId) => {
+                unsubscribe(`/client/chat/${chatId}/message/restore`);
+            });
+        };
+    }, [chatIdList, subscribe]);
 
 
     useEffect(() => {

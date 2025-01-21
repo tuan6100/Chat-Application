@@ -12,8 +12,11 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-    @Query("SELECT m FROM Message m WHERE m.unsend = true")
+    @Query("SELECT m FROM Message m WHERE m.unsent = true")
     List<Message> findAllByUnsendTrue();
 
     Message findByRandomId(String randomId);
+
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.chat.chatId = ?1")
+    int countMessagesByChatId(long chatId);
 }

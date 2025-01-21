@@ -20,6 +20,9 @@ import SendButton from "../SendButton";
 import useMessage from "../../hook/useMessage";
 import useWebSocket from "../../hook/useWebSocket";
 import useAuth from "../../hook/useAuth";
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile } from '@ffmpeg/util'
+
 
 export const generateRandomId = () => {
     return crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
@@ -38,6 +41,7 @@ const Footer = ({chatId}) => {
     const {authFetch} = useAuth();
     const [isTyping, setIsTyping] = useState(false);
     let typingTimeout = useRef(null);
+    const ffmpeg = new FFmpeg({ log: true });
 
 
     const handleSendMessage = () => {
@@ -244,21 +248,25 @@ const Footer = ({chatId}) => {
     const handleVoiceRecord = async () => {
         if (!recording) {
             try {
-                // Bắt đầu ghi âm
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const mediaRecorder = new MediaRecorder(stream);
-                audioRecorderRef.current = mediaRecorder;
+                audioRecorderRef.current = { mediaRecorder, stream };
                 const chunks = [];
-
                 mediaRecorder.ondataavailable = (event) => {
                     chunks.push(event.data);
                 };
-
                 mediaRecorder.onstop = async () => {
                     const blob = new Blob(chunks, { type: "audio/webm" });
-                    const blobUrl = URL.createObjectURL(blob);
+                    const fileName = `recording-${new Date().getTime()}`
+                    const webmFile = new File([blob], fileName, { type: "audio/webm" });
+                    await ffmpeg.load();
+                    await ffmpeg.writeFile(`${fileName}.webm`, await fetchFile(webmFile));
+                    await ffmpeg.exec(['-i', `${fileName}.webm`, `${fileName}.mp3`]);
+                    const mp3Data = await ffmpeg.readFile(`${fileName}.mp3`);
+                    const mp3Blob = new Blob([mp3Data.buffer], { type: 'audio/mp3' });
+                    const mp3Url = URL.createObjectURL(mp3Blob);
                     const formData = new FormData();
-                    formData.append("file", blob, `recording-${new Date().getTime()}.webm`);
+                    formData.append("file", mp3Blob, `${fileName}.mp3`);
                     const response = await authFetch(`/api/file/upload`, {
                         method: "POST",
                         body: formData,
@@ -267,7 +275,7 @@ const Footer = ({chatId}) => {
                     let messageBody = {
                         randomId: `${new Date().getTime()}-${localStorage.getItem("accountId")}-${chatId}-${generateRandomId()}`,
                         senderId: localStorage.getItem("accountId"),
-                        content: blobUrl,
+                        content: mp3Url,
                         sentTime: new Date().getTime(),
                         type: "AUDIO",
                         replyToMessageId: Object.keys(replyMessage).length === 0 ? null : replyMessage.messageId,
@@ -289,6 +297,9 @@ const Footer = ({chatId}) => {
                     setTimeout(() => {
                         publish(`/chat/${chatId}/message/send`, JSON.stringify(messageBody));
                     }, 1000);
+                    if (audioRecorderRef.current?.stream) {
+                        audioRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+                    }
                 };
                 mediaRecorder.start();
                 setRecording(true);
@@ -296,12 +307,12 @@ const Footer = ({chatId}) => {
                 console.error("Error accessing microphone:", error);
             }
         } else {
-            audioRecorderRef.current.stop();
+            if (audioRecorderRef.current?.mediaRecorder) {
+                audioRecorderRef.current.mediaRecorder.stop();
+            }
             setRecording(false);
         }
     };
-
-
 
 
     return (

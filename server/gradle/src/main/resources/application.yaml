@@ -56,7 +56,7 @@ spring:
   redis:
     cache:
       messages-per-chat:
-        size: 30
+        size: 50
 
   main:
     allow-bean-definition-overriding: true
@@ -92,6 +92,10 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
 
 logging:
 #  file:

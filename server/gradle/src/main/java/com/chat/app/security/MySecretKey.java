@@ -1,6 +1,6 @@
 package com.chat.app.security;
 
-public final class MySecretKey {
+public class MySecretKey {
 
     public final static String JWT_SECRET = "";
 

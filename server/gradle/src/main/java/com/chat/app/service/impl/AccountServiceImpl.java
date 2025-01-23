@@ -1,7 +1,7 @@
 package com.chat.app.service.impl;
 
 import com.chat.app.exception.ChatException;
-import com.chat.app.model.dto.AccountDTO;
+import com.chat.app.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Message;
 import com.chat.app.model.entity.extend.chat.GroupChat;
@@ -11,7 +11,6 @@ import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.payload.response.ChatResponse;
 import com.chat.app.payload.response.PrivateChatResponse;
 import com.chat.app.repository.jpa.AccountRepository;
-import com.chat.app.repository.jpa.ChatRepository;
 import com.chat.app.repository.redis.AccountOnlineStatusRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.aws.S3Service;
@@ -155,9 +154,16 @@ public class AccountServiceImpl implements AccountService {
             PrivateChat privateChat = privateChatService.getChat(chatId);
             Long friendId = (Objects.equals(privateChat.getRelationship().getFirstAccount().getAccountId(), accountId)) ?
                     privateChat.getRelationship().getSecondAccount().getAccountId() : privateChat.getRelationship().getFirstAccount().getAccountId();
-            Message lastestMessage = privateChatService.getLastestMessage(chatId);
-            if (lastestMessage.getUnsent() != null && lastestMessage.getUnsent()) {
-                lastestMessage.setContent("This message has been deleted");
+            Message lastestMessage = (privateChatService.getLastestMessage(chatId) == null) ? null : privateChatService.getLastestMessage(chatId);
+//            if (lastestMessage == null) {
+//                continue;
+//            }
+//            if (lastestMessage.getUnsent() != null && lastestMessage.getUnsent()) {
+//                lastestMessage.setContent("This message has been deleted");
+//            }
+            if (lastestMessage == null) {
+                responses.add(new PrivateChatResponse(chatId, friendId, null));
+                return responses;
             }
             Boolean hasSeen = lastestMessage.getViewers().stream().anyMatch(viewer -> viewer.getAccountId().equals(accountId)) || lastestMessage.getSender().getAccountId().equals(accountId);
             responses.add(new PrivateChatResponse(chatId, friendId,

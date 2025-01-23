@@ -3,6 +3,7 @@ package com.chat.app.payload.response;
 
 import com.chat.app.model.entity.extend.notification.FriendNotification;
 import com.chat.app.model.entity.extend.notification.GroupNotification;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,10 +15,13 @@ import java.util.concurrent.TimeUnit;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class NotificationResponse {
 
     private Long id;
     private String type;
+    private Long senderId;
+    private Long receiverId;
     private String name;
     private String avatar;
     private String content;
@@ -26,8 +30,10 @@ public class NotificationResponse {
 
     public static NotificationResponse fromEntity(FriendNotification notification) {
         NotificationResponse response = new NotificationResponse();
-        response.setId(notification.getSenderAccount().getAccountId());
+        response.setId(notification.getNotificationId());
         response.setType("friend_request");
+        response.setSenderId(notification.getSenderAccount().getAccountId());
+        response.setReceiverId(notification.getReceiverAccount().getAccountId());
         response.setName(notification.getSenderAccount().getUsername());
         response.setAvatar(notification.getSenderAccount().getAvatar());
         response.setContent(notification.getContent());

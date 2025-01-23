@@ -1,4 +1,4 @@
-package com.chat.app.model.dto;
+package com.chat.app.dto;
 
 import com.chat.app.enumeration.GroupPermission;
 import com.chat.app.enumeration.Theme;

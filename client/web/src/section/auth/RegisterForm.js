@@ -68,7 +68,6 @@ const RegisterForm = () => {
                 const refreshToken = refreshTokenHeader.split(' ')[1];
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
-                setCloseWebSocket(false);
                 setIsAuthenticated(true);
 
                 const newResponse = await fetch(`${API_BASE_URL}/api/account/me`, {

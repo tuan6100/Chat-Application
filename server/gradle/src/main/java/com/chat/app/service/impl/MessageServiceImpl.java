@@ -3,17 +3,18 @@ package com.chat.app.service.impl;
 import com.chat.app.enumeration.MessageType;
 import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Account;
+import com.chat.app.model.entity.Chat;
 import com.chat.app.model.entity.Message;
 import com.chat.app.model.entity.MessageReaction;
-import com.chat.app.payload.request.ChatMessageRequest;
-import com.chat.app.payload.request.MessageRequest;
-import com.chat.app.payload.request.MessageSeenRequest;
-import com.chat.app.payload.request.MessageUpdateRequest;
+import com.chat.app.model.entity.extend.message.CallMessage;
+import com.chat.app.payload.request.*;
+import com.chat.app.payload.response.MessageCallResponse;
 import com.chat.app.payload.response.MessageResponse;
 import com.chat.app.repository.jpa.MessageRepository;
 import com.chat.app.service.AccountService;
 import com.chat.app.service.ChatService;
 import com.chat.app.service.MessageService;
+import com.chat.app.service.aws.S3Service;
 import com.chat.app.service.elasticsearch.MessageSearchService;
 import com.chat.app.service.redis.MessageCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,10 @@ public class MessageServiceImpl implements MessageService {
     @Lazy
     private MessageSearchService messageSearchService;
 
+    @Autowired
+    @Lazy
+    private S3Service s3Service;
+
 
     @Override
     public Message getMessage(Long id) throws ChatException {
@@ -66,6 +71,22 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public void sendMessage(Long chatId, MessageRequest messageRequest)  {
         kafkaTemplate.send("send-message", new ChatMessageRequest(chatId, messageRequest, 0));
+    }
+
+    @Override
+    public void sendMessage(Long chatId, MessageCallRequest request) throws ChatException {
+        Chat chat = chatService.getChat(chatId);
+        Account sender = accountService.getAccount(request.getSenderId());
+        MessageType type = MessageType.valueOf(request.getType().toUpperCase());
+        Date sentTime = request.getSentTime();
+        CallMessage message = new CallMessage(request.getRandomId(), sender, request.getContent(), type, sentTime, chat, request.getOffer());
+        if (request.getReplyToMessageId() != null) {
+            Message replyToMessage = getMessage(request.getReplyToMessageId());
+            message.setReplyTo(replyToMessage);
+        }
+        message = messageRepository.save(message);
+        MessageCallResponse response = MessageCallResponse.fromEntity(message);
+        messagingTemplate.convertAndSend("/client/chat/" + chatId + "/message/send", response);
     }
 
     @Override
@@ -172,6 +193,9 @@ public class MessageServiceImpl implements MessageService {
         List<Message> unsentMessages = messageRepository.findAllByUnsendTrue();
         for (Message message : unsentMessages) {
             if (TimeUnit.MILLISECONDS.toHours(now.getTime() - message.getDeletedTime().getTime()) >= 1) {
+                if (!(message.getType().equals(MessageType.TEXT) || message.getType().equals(MessageType.TEXT_FORWARDED))) {
+                    s3Service.deleteFile(message.getContent());
+                }
                 removeMessage(message.getMessageId());
                 System.out.println("Removed unsent message: " + message.getMessageId());
             }

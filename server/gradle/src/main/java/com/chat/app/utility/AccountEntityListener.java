@@ -16,6 +16,7 @@ public class AccountEntityListener {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+
     @PostPersist
     @PostUpdate
     public void handleAccountChange(Account account) {

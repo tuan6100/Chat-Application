@@ -8,13 +8,13 @@ import java.util.Date;
 @Data
 public class MessageRequest {
 
-    private String randomId;
-    private Long senderId;
-    private String content;
-    private String type;
-    private Date sentTime;
-    private String status;
-    private Long replyToMessageId;
-    private String replyToMessageContent;
+    protected String randomId;
+    protected Long senderId;
+    protected String content;
+    protected String type;
+    protected Date sentTime;
+    protected String status;
+    protected Long replyToMessageId;
+    protected String replyToMessageContent;
 
 }

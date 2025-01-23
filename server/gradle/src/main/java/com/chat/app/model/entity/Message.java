@@ -17,45 +17,46 @@ import java.util.List;
                     @Index(name = "idx_sent_time", columnList = "sent_time"),
         }
 )
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Message {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")
-    private Long messageId;
+    protected Long messageId;
 
     @Column(name = "random_id", unique = true)
-    private String randomId;
+    protected String randomId;
 
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
-    private Account sender;
+    protected Account sender;
 
     @Column(name = "content", columnDefinition = "TEXT")
     @Lob
-    private String content;
+    protected String content;
 
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private MessageType type;
+    protected MessageType type;
     
     @Column(nullable = false, columnDefinition = "TIMESTAMP")
-    private Date sentTime = new Date();
+    protected Date sentTime = new Date();
 
     @Column(name = "unsent", columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean unsent = false;
+    protected Boolean unsent = false;
 
     @Column(columnDefinition = "TIMESTAMP")
-    private Date deletedTime;
+    protected Date deletedTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_id")
-    private Chat chat;
+    protected Chat chat;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reply_to_id", foreignKey = @ForeignKey(name = "fk_reply_to_message"))
     @OnDelete(action = OnDeleteAction.SET_NULL)
-    private Message replyTo;
+    protected Message replyTo;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -63,10 +64,10 @@ public class Message {
             joinColumns = @JoinColumn(name = "message_id"),
             inverseJoinColumns = @JoinColumn(name = "viewer_id", referencedColumnName = "account_id")
     )
-    private List<Account> viewers = new ArrayList<>();
+    protected List<Account> viewers = new ArrayList<>();
 
     @OneToMany(mappedBy = "message", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MessageReaction> reactions = new ArrayList<>();
+    protected List<MessageReaction> reactions = new ArrayList<>();
 
 
     public Message() {

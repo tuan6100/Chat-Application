@@ -24,7 +24,7 @@ const CustomSearch = styled(TextField)(({ theme }) => ({
     }
 }));
 
-const SearchBar = ({placeholder = "" }) => {
+const SearchBar = ({placeholder = "", endpoint="" }) => {
     const [query, setQuery] = useState("");
     const {authFetch} = useAuth();
     const {setSearchResults, setStartedSearch} = useSearchResult();
@@ -34,8 +34,9 @@ const SearchBar = ({placeholder = "" }) => {
         if (value.length > 1) {
             setStartedSearch(true);
             try {
-                const response = await authFetch(`/api/account/search?username=${value}`);
+                const response = await authFetch(`${endpoint}${value}`);
                 const data = await response.json();
+                setSearchResults([]);
                 setSearchResults(data);
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -49,6 +50,7 @@ const SearchBar = ({placeholder = "" }) => {
     return (
         <CustomSearch
             placeholder={placeholder}
+            endpoint={endpoint}
             variant="outlined"
             value={query}
             onChange={handleSearch}

@@ -1,12 +1,12 @@
 import React, {createContext, useState, useEffect, useRef, useCallback} from "react";
-import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import useMessage from "../hook/useMessage";
 import useAuth from "../hook/useAuth";
 
 const WebSocketContext = createContext(undefined);
 export const WebSocketProvider = ({ children }) => {
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+    const WS_BASE_URL = process.env.REACT_APP_WS_BASE_URL;
     const stompClient = useRef(null);
     const subscriptions = useRef(new Map());
     const { addNewMessage, finalMessagesMap, setFinalMessagesMap,
@@ -48,7 +48,8 @@ export const WebSocketProvider = ({ children }) => {
 
     useEffect(() => {
         const connectWebSocket = () => {
-            const socket = new SockJS(`${API_BASE_URL}/ws`);
+            const socketUrl = `${WS_BASE_URL}/ws`;
+            const socket = new WebSocket(socketUrl);
             stompClient.current = new Client({
                 webSocketFactory: () => socket,
                 reconnectDelay: 1000,
@@ -82,7 +83,7 @@ export const WebSocketProvider = ({ children }) => {
                 stompClient.current.deactivate(() => console.log("WebSocket disconnected on cleanup"));
             }
         };
-    }, [isAuthenticated, API_BASE_URL]);
+    }, [isAuthenticated, WS_BASE_URL]);
 
 
     const subscribe = useCallback((destination, callback) => {

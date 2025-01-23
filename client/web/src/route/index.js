@@ -28,6 +28,7 @@ const Chats = Loadable(lazy(() => import('../page/dashboard/Chats')));
 const Groups = Loadable(lazy(() => import('../page/dashboard/Groups')));
 const Notification = Loadable(lazy(() => import('../page/dashboard/Notifications')));
 const PrivateChat = Loadable(lazy(() => import('../page/Chat/PrivateChat')));
+const Call = Loadable(lazy(() => import('../page/Chat/VideoCall')));
 
 export default function Router() {
 
@@ -58,8 +59,8 @@ export default function Router() {
         { element: <Navigate to={DEFAULT_PATH} replace />, index: true },
         { path: 'chats', element: <Chats />},
         { path: 'groups', element: <Groups />},
-        { path: 'notifications', element: <Notification /> }
-
+        { path: 'notifications', element: <Notification /> },
+        { path: 'call/:chatId', element: <Call /> },
       ],
     },
     { path: '*', element: <Navigate to='/me/chats' replace /> },

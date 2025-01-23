@@ -11,17 +11,17 @@ import {
     Divider,
     Badge,
     Paper,
-    IconButton,
-    Collapse,
+    Button,
+    Collapse, Stack, ListItemIcon,
 } from "@mui/material";
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-import GroupIcon from '@mui/icons-material/Group';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import MailIcon from '@mui/icons-material/Mail';
-import DeleteIcon from '@mui/icons-material/Delete';
-import SockJS from 'sockjs-client';
-import { Client } from '@stomp/stompjs';
+
 import useMessage from "../../hook/useMessage";
+import useWebSocket from "../../hook/useWebSocket";
+import {alpha} from "@mui/material/styles";
+import { useTheme } from '@mui/material/styles';
+import useSidebar from "../../hook/useSideBar";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 const Notifications = () => {
 
@@ -29,6 +29,12 @@ const Notifications = () => {
     const {setUnreadNotification} = useMessage()
     const [notifications, setNotifications] = useState([]);
     const userId = localStorage.getItem("userId");
+    const {subscribe, unsubscribe} = useWebSocket();
+    const [hasClicked, setHasClicked] = useState(new Map());
+    const theme = useTheme();
+    const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
+    const isMobile = useMediaQuery("(max-width: 600px)");
+
 
     useEffect(() => {
         const getNotifications = async () => {
@@ -44,28 +50,16 @@ const Notifications = () => {
         };
         getNotifications();
 
-        const socket = new SockJS(`${process.env.REACT_APP_API_BASE_URL}/ws`);
-        const stompClient = new Client({
-            webSocketFactory: () => socket,
-            reconnectDelay: 5000,
-        });
-        stompClient.onConnect = () => {
-            console.log("Connected to WebSocket");
-            stompClient.subscribe(`/client/notification/friend/${userId}`, (message) => {
-                const newNotification = JSON.parse(message.body);
+        subscribe(`/client/notification/friend/${userId}`, (notification) => {
+                const newNotification = JSON.parse(notification.body);
                 setNotifications((prev) => [newNotification, ...prev]);
                 setUnreadNotification((prev) => prev + 1);
-            });
-        };
-
-        stompClient.activate();
-
+        });
         return () => {
-            if (stompClient) {
-                stompClient.deactivate();
-            }
+            unsubscribe(`/client/notification/friend/${userId}`);
         };
-    }, [authFetch, setUnreadNotification, userId]);
+    }, [subscribe]);
+
 
     const handleMarkAsRead = async (id) => {
         const updatedNotifications = notifications.map(n =>
@@ -85,86 +79,172 @@ const Notifications = () => {
         });
     };
 
-    const renderNotificationIcon = (type) => {
-        switch (type) {
-            case 'friend_request':
-                return <PersonAddIcon sx={{ color: '#4caf50' }} />;
-            case 'message':
-                return <MailIcon sx={{ color: '#2196f3' }} />;
-            case 'group_invite':
-                return <GroupIcon sx={{ color: '#ff9800' }} />;
-            default:
-                return <NotificationsNoneIcon sx={{ color: 'gray' }} />;
-        }
-    };
+    const handleAcceptRequest = (accountId, notificationId) => {
+        authFetch(`/api/account/me/accept?friendId=${accountId}`, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: 'POST'
+        }).then((response) => {
+            if (response.ok) {
+                console.info("Friend request accepted");
+                setHasClicked(prev => new Map(prev).set(notificationId, true));
+            } else {
+                console.error("Failed to accept friend request");
+            }
+        }).catch((error) => {
+            console.error("Error accepting friend request:", error);
+        })
+    }
+
+    const handleRejectRequest = (accountId, notificationId) => {
+
+        authFetch(`/api/account/me/reject?friendId=${accountId}`, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: 'POST'
+        }).then(async (response) => {
+            if (response.ok) {
+                console.info("Friend request rejected");
+                setHasClicked(prev => new Map(prev).set(notificationId, true));
+                const responseChats = await authFetch(`/api/account/me/chats`)
+                const chatData = await responseChats.json();
+                localStorage.setItem('chatList', JSON.stringify(chatData));
+                const chatIdList = JSON.parse(localStorage.getItem("chatIdList"));
+                const updatedChatIdList = chatIdList.filter(chatId => chatId !== accountId);
+                localStorage.setItem("chatIdList", JSON.stringify(updatedChatIdList));
+            } else {
+                console.error("Failed to reject friend request");
+            }
+        }).catch((error) => {
+            console.error("Error rejecting friend request:", error);
+        })
+    }
+
 
     return (
-        <Box sx={{ width: "100%", maxWidth: 700, margin: "auto", marginTop: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: "bold", marginBottom: 3, textAlign: "center" }}>
-                Notifications
-            </Typography>
-
-            <Paper elevation={3} sx={{ borderRadius: 3 }}>
-                <List>
-                    {notifications.length > 0 ? notifications.map((notification) => (
-                        <Collapse key={notification.id} in={true} timeout="auto">
-                            <ListItem
-                                alignItems="flex-start"
-                                sx={{
-                                    paddingY: 2,
-                                    cursor: "pointer",
-                                    transition: "background 0.3s ease",
-                                    "&:hover": { backgroundColor: "#f5f5f5" },
-                                    backgroundColor: notification.viewed ? 'white' : '#e8f5e9'
-                                }}
-                                onClick={() => handleMarkAsRead(notification.id)}
-                            >
-                                <ListItemAvatar>
-                                    <Badge
-                                        color="secondary"
-                                        variant={notification.viewed ? "standard" : "dot"}
-                                        overlap="circular"
-                                    >
-                                        {renderNotificationIcon(notification.type)}
-                                    </Badge>
-                                </ListItemAvatar>
-
-                                <ListItemText
-                                    primary={
-                                        <Typography sx={{ fontWeight: "bold" }}>
-                                            {notification.name}
-                                        </Typography>
-                                    }
-                                    secondary={
-                                        <>
-                                            <Typography variant="body2">
-                                                {notification.content}
-                                            </Typography>
-                                            <Typography variant="caption" color="textSecondary">
-                                                {notification.aboutTime}
-                                            </Typography>
-                                        </>
-                                    }
-                                />
-                                <IconButton edge="end" onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveNotification(notification.id);
-                                }}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            </ListItem>
-                            <Divider />
-                        </Collapse>
-                    )) : (
+        <Box  sx={{
+            position: "absolute",
+            left: isSidebarOpen ? 100 : 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+            width: "100vw",
+            backgroundColor: theme.palette.mode === 'light' ? "#F8FAFF" : theme.palette.background.paper,
+            boxShadow: '0px 0px 2px rgba(0,0,0,0.25)',
+            transition: "left 0.5s ease-in-out, width 0.5s ease-in-out",
+            zIndex: 1
+        }}>
+            <Stack direction="column" spacing={2} alignItems="center">
+                <Typography
+                    variant="h4"
+                    sx={{
+                        fontWeight: "bold",
+                        marginBottom: 3,
+                        textAlign: "center",
+                    }}
+                >
+                    Notifications
+                </Typography>
+                <>
+                    {notifications.length === 0 ? (
                         <Box sx={{ textAlign: "center", paddingY: 5 }}>
                             <NotificationsNoneIcon sx={{ fontSize: 70, color: "gray" }} />
                             <Typography>No notifications</Typography>
                         </Box>
+                    ) : (
+                        notifications.map((notification) => (
+                            <ListItem
+                                key={notification.id}
+                                sx={{
+                                    borderRadius: 2,
+                                    mb: 1,
+                                    width: "100%",
+                                    "&:hover": {
+                                        backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                                    },
+                                }}
+                            >
+                                <ListItemAvatar>
+                                    <Avatar
+                                        src={notification.avatar}
+                                        sx={{ width: 50, height: 50 }}
+                                    />
+                                </ListItemAvatar>
+                                <Stack direction="row" alignItems="flex-start" spacing={2}>
+                                    <ListItemText
+                                        primary={
+                                            <Typography>{notification.content}</Typography>
+                                        }
+                                        secondary={
+                                            <Typography>{notification.aboutTime}</Typography>
+                                        }
+                                    />
+                                    {hasClicked.get(notification.id) ? (
+                                        <Typography>You were friends</Typography>
+                                    ) : (
+                                        <Stack
+                                            direction="column"
+                                            alignItems="space-between"
+                                            spacing={2}
+                                        >
+                                            <Button
+                                                onClick={() =>
+                                                    handleAcceptRequest(
+                                                        notification.senderId,
+                                                        notification.id
+                                                    )
+                                                }
+                                                sx={{
+                                                    backgroundColor: "transparent",
+                                                    color: "green",
+                                                    border: "1px solid green",
+                                                    borderRadius: 2,
+                                                    textTransform: "none",
+                                                    width: { xs: "40%", sm: "250px" },
+                                                    height: "50px",
+                                                    "&:hover": {
+                                                        backgroundColor: "rgba(0, 255, 0, 0.1)",
+                                                    },
+                                                }}
+                                            >
+                                                Accept
+                                            </Button>
+                                            <Button
+                                                onClick={() =>
+                                                    handleRejectRequest(
+                                                        notification.senderId,
+                                                        notification.id
+                                                    )
+                                                }
+                                                sx={{
+                                                    backgroundColor: "transparent",
+                                                    color: "red",
+                                                    border: "1px solid red",
+                                                    borderRadius: 2,
+                                                    textTransform: "none",
+                                                    width: { xs: "40%", sm: "250px" },
+                                                    height: "50px",
+                                                    "&:hover": {
+                                                        backgroundColor: "rgba(255, 0, 0, 0.1)",
+                                                    },
+                                                }}
+                                            >
+                                                Reject
+                                            </Button>
+                                        </Stack>
+                                    )}
+                                </Stack>
+                            </ListItem>
+                        ))
                     )}
-                </List>
-            </Paper>
+                </>
+            </Stack>
         </Box>
     );
+
 };
 
 export default Notifications;

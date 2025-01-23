@@ -16,6 +16,7 @@ const VideoMessage = ({ message, scrollToMessage, highlightMessageId }) => {
     const hasSeen = (message.viewerAvatars === undefined) || (message.viewerAvatars.length === 0);
     const isHighlighted = message.messageId === highlightMessageId;
 
+
     return (
         <Stack direction='row' spacing={3} justifyContent={!isMine ? 'start' : 'end'} sx={{width: '100%'}}>
             <Stack

@@ -18,6 +18,7 @@ public class AccountResponse {
     private String avatar;
     private Boolean isOnline;
     private Date lastOnlineTime;
+    private String relationshipStatus;
 
 
     public AccountResponse(Long accountId, String username, String avatar) {
@@ -39,6 +40,15 @@ public class AccountResponse {
         this.avatar = avatar;
         this.isOnline = isOnline;
         this.lastOnlineTime = lastOnlineTime;
+    }
+
+    public AccountResponse(Long accountId, String username, String avatar, Boolean isOnline, Date lastOnlineTime, String relationshipStatus) {
+        this.accountId = accountId;
+        this.username = username;
+        this.avatar = avatar;
+        this.isOnline = isOnline;
+        this.lastOnlineTime = lastOnlineTime;
+        this.relationshipStatus = relationshipStatus;
     }
 
 }

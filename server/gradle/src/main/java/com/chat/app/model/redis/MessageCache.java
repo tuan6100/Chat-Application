@@ -2,7 +2,7 @@ package com.chat.app.model.redis;
 
 
 import com.chat.app.payload.response.MessageResponse;
-import com.chat.app.utility.CompositeKey;
+import com.chat.app.dto.CompositeKey;
 import com.chat.app.utility.StringJson;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;

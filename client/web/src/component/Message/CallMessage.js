@@ -1,15 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
-import {Avatar, Box, IconButton, Stack, Typography} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import {Play, Pause} from 'phosphor-react';
+import {useTheme} from '@mui/material/styles';
+import {useState} from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import {Avatar, Box, IconButton, Stack, Typography} from '@mui/material';
+import {Call, CallEnd} from '@mui/icons-material';
 import IconList from '../Menu/IconList';
-import Reactions from '../Reactions';
 import {formatDate} from './TextMessage';
-// import { LiveAudioVisualizer } from 'react-audio-visualize';
-import AudioSpectrum from 'react-audio-spectrum';
+import Reactions from '../Reactions';
+import useWebRTC from "../../hook/UseWebRTC";
+import {useNavigate} from "react-router";
 
-const AudioMessage = ({ message, scrollToMessage, highlightMessageId }) => {
+
+const CallMessage = ({ message, scrollToMessage, highlightMessageId }) => {
 
     const theme = useTheme();
     const isMine = (message.senderId.toString() === localStorage.getItem('accountId'));
@@ -17,54 +18,54 @@ const AudioMessage = ({ message, scrollToMessage, highlightMessageId }) => {
     const isMobile = useMediaQuery('(max-width:600px)');
     const hasSeen = (message.viewerAvatars === undefined) || (message.viewerAvatars.length === 0);
     const isHighlighted = message.messageId === highlightMessageId;
-    const [audioDuration, setAudioDuration] = useState(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const audioRef = useRef(null);
-    const canvasRef = useRef(null);
-    const [currentTime, setCurrentTime] = useState(0);
-
-    // useEffect(() => {
-    //     if (audioRef.current) {
-    //         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    //         const source = audioContext.createMediaElementSource(audioRef.current);
-    //         const destination = audioContext.createMediaStreamDestination();
-    //         source.connect(destination);
-    //         const stream = destination.stream;
-    //         const recorder = new MediaRecorder(stream);
-    //         setMediaRecorder(recorder);
-    //     }
-    // }, [audioRef]);
+    const {localVideoRef, remoteVideoRef, peerConnectionRef, sendSignal, initializeMedia, setParticipants, configuration} = useWebRTC();
+    const navigate = useNavigate();
 
 
-    useEffect(() => {
-        const audio = audioRef.current;
-        const handleLoadedMetadata = () => {
-            setAudioDuration(audio.duration);
-        };
-        const handleTimeUpdate = () => {
-            setCurrentTime(audio.currentTime);
-        };
-        const handleEnded = () => {
-            setIsPlaying(false);
-        };
-        audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-        audio.addEventListener('timeupdate', handleTimeUpdate);
-        audio.addEventListener('ended', handleEnded);
-        return () => {
-            audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-            audio.removeEventListener('timeupdate', handleTimeUpdate);
-            audio.removeEventListener('ended', handleEnded);
-        };
-    }, []);
-
-    const handlePlayPause = () => {
-        const audio = audioRef.current;
-        if (isPlaying) {
-            audio.pause();
-        } else {
-            audio.play();
+    const handleJoinCall = async (chatId, offer) => {
+        const startCall = async () => {
+            try {
+                const stream = await initializeMedia();
+                if (!peerConnectionRef.current) {
+                    peerConnectionRef.current = new RTCPeerConnection(configuration);
+                    peerConnectionRef.current.ontrack = (event) => {
+                        if (remoteVideoRef.current) {
+                            remoteVideoRef.current.srcObject = event.streams[0];
+                        } else {
+                            console.error("remoteVideoRef.current is null");
+                        }
+                    };
+                    peerConnectionRef.current.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            sendSignal('candidate', event.candidate);
+                        }
+                    };
+                }
+                const desc = new RTCSessionDescription({ type: offer.type, sdp: offer.sdp });
+                await peerConnectionRef.current.setRemoteDescription(desc);
+                stream.getTracks().forEach(track => peerConnectionRef.current.addTrack(track, stream));
+                const answer = await peerConnectionRef.current.createAnswer();
+                await peerConnectionRef.current.setLocalDescription(answer);
+                sendSignal('answer', chatId, answer);
+                setParticipants(prevParticipants => [
+                    ...prevParticipants,
+                    {
+                        id: localStorage.getItem("accountId"),
+                        name: localStorage.getItem("name"),
+                        avatar: localStorage.getItem("avatar"),
+                    }
+                ]);
+                navigate(`/me/call/${chatId}`);
+                console.log("Joined call successfully.");
+            } catch (error) {
+                console.error('Error joining video call:', error);
+                if (peerConnectionRef.current) {
+                    peerConnectionRef.current.close();
+                    peerConnectionRef.current = null;
+                }
+            }
         }
-        setIsPlaying(!isPlaying);
+        startCall();
     };
 
 
@@ -126,34 +127,34 @@ const AudioMessage = ({ message, scrollToMessage, highlightMessageId }) => {
                             position: 'relative'
                         }}
                     >
-                        <Stack direction='column' spacing={2}>
-                            <audio ref={audioRef} src={message.content} crossOrigin="anonymous"/>
-                            <Box display='flex' alignItems='center' justifyContent='space-between'>
-                                <IconButton onClick={handlePlayPause}>
-                                    {isPlaying ? <Pause /> : <Play />}
-                                </IconButton>
-                                <Typography variant='caption'>
-                                    {currentTime === 0
-                                        ? `${Math.floor(audioDuration / 60) || 0}:${Math.floor(audioDuration % 60)?.toString().padStart(2, '0') || '00'}`
-                                        : `${Math.floor((audioDuration - currentTime) / 60) || 0}:${Math.floor((audioDuration - currentTime) % 60)?.toString().padStart(2, '0') || '00'}`}
-                                </Typography>
-                            </Box>
-                            {/*<AudioSpectrum*/}
-                            {/*    id="audio-canvas"*/}
-                            {/*    height={100}*/}
-                            {/*    width={200}*/}
-                            {/*    // audioId={'audio-element'}*/}
-                            {/*    capColor={'red'}*/}
-                            {/*    capHeight={2}*/}
-                            {/*    meterWidth={2}*/}
-                            {/*    meterCount={512}*/}
-                            {/*    meterColor={[*/}
-                            {/*        {stop: 0, color: '#f00'},*/}
-                            {/*        {stop: 0.5, color: '#0CD7FD'},*/}
-                            {/*        {stop: 1, color: 'red'}*/}
-                            {/*    ]}*/}
-                            {/*    gap={4}*/}
-                            {/*/>*/}
+                        <Stack direction='column'
+                               justifyContent='flex-start'
+                               spacing={2}
+                               sx={{cursor: 'pointer'}}
+                               onClick={() => window.open(message.content, '_blank')}
+                        >
+                            <Typography variant='caption' color={theme.palette.text.primary}>
+                                {message.content}
+                            </Typography>
+
+                            {message.status === 'ended'? (
+                                <>
+                                    <Typography variant='caption' color={theme.palette.text.primary}>
+                                        {message.content}
+                                    </Typography>
+                                </>
+                            ) : (
+                                <>
+                                    <Stack direction='row' justifyContent='space-between'>
+                                        <IconButton onClick={() => handleJoinCall(message.chatId, message.offer)}>
+                                            <Call sx={{color: '#20b410'}}/>
+                                        </IconButton>
+                                        <IconButton>
+                                            <CallEnd sx={{color: '#f44336'}}/>
+                                        </IconButton>
+                                    </Stack>
+                                </>
+                            )}
                         </Stack>
                         {message.reactions && message.reactions.length > 0 && (
                             <Reactions reactions={message.reactions}/>
@@ -187,4 +188,4 @@ const AudioMessage = ({ message, scrollToMessage, highlightMessageId }) => {
     );
 }
 
-export default AudioMessage;
+export default CallMessage;

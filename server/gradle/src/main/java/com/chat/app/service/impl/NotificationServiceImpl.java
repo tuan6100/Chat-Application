@@ -41,11 +41,12 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void notifyFriendRequestInvited(Long senderId, Long recipientId) throws ChatException {
         Account sender = accountService.getAccount(senderId);
-        Account recipient = accountService.getAccount(recipientId);
+        Account receiver = accountService.getAccount(recipientId);
         Notification notification = new FriendNotification(sender.getUsername() + " sent you a friend request",
-                sender, recipient, new Date());
-        notificationRepository.save(notification);
-        messagingTemplate.convertAndSend("/client/notification" + recipientId, notification.getContent());
+                sender, receiver, new Date());
+        notification = notificationRepository.save(notification);
+        NotificationResponse notificationResponse = NotificationResponse.fromEntity((FriendNotification) notification);
+        messagingTemplate.convertAndSend("/client/notification/friend" + recipientId, notificationResponse);
     }
 
     @Override

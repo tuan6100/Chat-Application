@@ -1,5 +1,6 @@
 package com.chat.app.utility;
 
+import com.chat.app.dto.CompositeKey;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentHashMap;

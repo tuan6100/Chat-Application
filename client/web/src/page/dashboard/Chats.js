@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState, useCallback} from "react";
 import useSidebar from "../../hook/useSideBar";
 import { alpha, useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -11,13 +11,13 @@ import {
     IconButton,
     List,
     ListItem,
-    ListItemAvatar,
+    ListItemAvatar, ListItemIcon,
     ListItemText,
     Stack,
     Typography
 } from "@mui/material";
 import Search from "../../component/SearchBar";
-import { Menu as MenuIcon } from '@mui/icons-material';
+import { Menu as MenuIcon, PersonAdd, Sms, ThumbUp, ThumbDown, Pending } from '@mui/icons-material';
 import PrivateChat from "../Chat/PrivateChat";
 import useMessage from "../../hook/useMessage";
 
@@ -44,7 +44,7 @@ const StyledBadge = (props) => {
 
 const Chats = () => {
 
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
     const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
     const theme = useTheme();
     const isMobile = useMediaQuery("(max-width: 600px)");
@@ -54,9 +54,33 @@ const Chats = () => {
     const [UserId, setUserId] = useState(0);
     const [page, setPage] = useState(null);
     const isFetching = useRef(false);
-    const [chatId, setChatId] = useState(0);
+    let [chatId, setChatId] = useState(0);
+    const [friendId, setFriendId] = useState(0);
     const { oldMessagesMap, setOldMessagesMap,
             getMessagesFromSession, updateChatDataInSession, finalMessagesMap } = useMessage();
+    const chatsList = JSON.parse(localStorage.getItem('chatList')) || [];
+
+
+    const fetchChatList = useCallback(async () => {
+        try {
+            const response = await authFetch(`/api/account/me/chats`);
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('chatList', JSON.stringify(data));
+                setChatList(data);
+            } else {
+                console.error("Failed to fetch chat list");
+            }
+        } catch (error) {
+            console.error("Error fetching chat list:", error);
+        }
+    }, [authFetch]);
+
+    useEffect(() => {
+        if (chatsList.length === 0) {
+            fetchChatList();
+        }
+    }, [chatsList, fetchChatList]);
 
     class ChatElement {
         constructor(chatId = 0, friendId = 0, friendUsername = "", friendAvatar = "", friendIsOnline = false, friendLastOnlineTime = new Date(),
@@ -103,6 +127,10 @@ const Chats = () => {
                 const data = await response.json();
                 const newChatList = data.map((chat) => {
                     const friend = friendList.find(friend => friend.accountId === chat.friendId);
+                    if (!friend) {
+                        console.log("Friend not found: ", chat);
+                    }
+                    const lastMessage = chat.lastestMessage || {};
                     return new ChatElement(
                         chat.chatId,
                         chat.friendId,
@@ -110,11 +138,11 @@ const Chats = () => {
                         friend?.avatar || "",
                         friend.isOnline || false,
                         friend.lastOnlineTime || new Date(),
-                        chat.lastestMessage.content,
-                        chat.lastestMessage.senderId,
-                        (chat.lastestMessage.senderId === parseInt(localStorage.getItem('accountId'))) ? "You: " : "",
-                        chat.lastestMessage.sentTime,
-                        chat.lastestMessage.hasSeen
+                        lastMessage.content || null,
+                        lastMessage.senderId || null,
+                        (lastMessage.senderId === parseInt(localStorage.getItem('accountId'))) ? "You: " : "",
+                        lastMessage.sentTime || null,
+                        lastMessage.hasSeen || null
                     );
                 });
                 setChatList(newChatList);
@@ -142,6 +170,9 @@ const Chats = () => {
                 return;
             }
             const data = await response.json();
+            if (data === null) {
+                return;
+            }
             console.info("Fetched messages for chat " + chatId + ": ", data);
             updateChatDataInSession(chatId, data);
             console.info("Cached messages for chat " + chatId + ": ", getMessagesFromSession(chatId));
@@ -198,25 +229,68 @@ const Chats = () => {
     }, [finalMessagesMap]);
 
 
-    const handleSearchResultClick = async (accountId) => {
-        try {
-            const response = await authFetch(`/api/account/me/relationship?accountId=${accountId}`);
-            if (!response.ok) {
-                console.error("Failed to fetch user data");
-                return;
-            }
-            const data = await response.json();
-            setUserId(accountId);
-            if (data.status === "NO_RELATIONSHIP" || data.status === "BLOCKED") {
-                setPage('info');
-            } else if (data.status === "WAITING FOR ACCEPTANCE" || data.status === "NEW FRIEND REQUEST") {
-                setPage('waiting');
-            }
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
-    };
+    // const handleSearchResultClick = (accountId) => {
+    // };
 
+    const handleStartChat = (accountId) => {
+        const chat = chatList.find(chat => chat.friendId === accountId);
+        if (chat) {
+            console.info("Chat already exists: ", chat);
+            setChatId(chat.chatId);
+            setFriendId(accountId);
+        }
+    }
+
+    const handleFriendRequest = (accountId) => {
+        authFetch(`/api/account/me/invite?friendId=${accountId}`, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: 'POST'
+        }).then((response) => {
+            if (response.ok) {
+                console.info("Friend request sent");
+            } else {
+                console.error("Failed to send friend request");
+            }
+        }).catch((error) => {
+            console.error("Error sending friend request:", error);
+        })
+    }
+
+    const handleAcceptRequest = (accountId) => {
+        authFetch(`/api/account/me/accept?friendId=${accountId}`, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: 'POST'
+        }).then((response) => {
+            if (response.ok) {
+                console.info("Friend request accepted");
+            } else {
+                console.error("Failed to accept friend request");
+            }
+        }).catch((error) => {
+            console.error("Error accepting friend request:", error);
+        })
+    }
+
+    const handleRejectRequest = (accountId) => {
+        authFetch(`/api/account/me/reject?friendId=${accountId}`, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: 'POST'
+        }).then((response) => {
+            if (response.ok) {
+                console.info("Friend request rejected");
+            } else {
+                console.error("Failed to reject friend request");
+            }
+        }).catch((error) => {
+            console.error("Error rejecting friend request:", error);
+        })
+    }
 
 
     return (
@@ -242,7 +316,7 @@ const Chats = () => {
                     </Stack>
 
                     <Box sx={{ width: "100%", height: 50 }}>
-                        <Search placeholder="Find your friends..." />
+                        <Search placeholder="Find your friends..." endpoint="/api/account/search?username=" />
                     </Box>
 
                     <Box sx={{ flexGrow: 1, overflowY: 'auto', mt: 2 }}>
@@ -267,7 +341,7 @@ const Chats = () => {
                                                 }
                                             }}
                                             button
-                                            onClick={() => handleSearchResultClick(result.accountId)}
+                                            // onClick={() => }
                                         >
                                             <ListItemAvatar>
                                                 <StyledBadge isOnline={result.isOnline}>
@@ -285,6 +359,35 @@ const Chats = () => {
                                                     </Typography>
                                                 </Stack>
                                             </ListItemText>
+
+                                            <ListItemIcon>
+                                                {result.relationshipStatus === "FRIEND" ? (
+                                                    <IconButton onClick={() => handleStartChat(result.accountId)} >
+                                                        <Sms />
+                                                    </IconButton>
+                                                ) : (
+                                                    result.relationshipStatus === "NO RELATIONSHIP" ? (
+                                                        <IconButton onClick={() => handleFriendRequest(result.accountId)} >
+                                                            <PersonAdd />
+                                                        </IconButton>
+                                                    ) : (
+                                                        result.relationshipStatus === "PENDING" ? (
+                                                            <IconButton >
+                                                                <Pending />
+                                                            </IconButton>
+                                                        ) : (
+                                                            <Stack direction="row" spacing={1}>
+                                                                <IconButton onClick={() => handleAcceptRequest(result.accountId)} >
+                                                                    <ThumbUp />
+                                                                </IconButton>
+                                                                <IconButton onClick={() => handleRejectRequest(result.accountId)} >
+                                                                    <ThumbDown />
+                                                                </IconButton>
+                                                            </Stack>
+                                                        )
+                                                    )
+                                                )}
+                                            </ListItemIcon>
                                         </ListItem>
 
                                     ))) : (
@@ -333,7 +436,7 @@ const Chats = () => {
                                                 }
                                                 secondary={
                                                     <Typography variant="subtitle2" color={(item.lastMessageHasSeen || item.lastMessage === 'This message has been deleted') ? '#808080' : '#ffffff'} noWrap sx={{ maxWidth: '80%' }}>
-                                                        {item.lastMessageSenderName + item.lastMessage || "No recent messages"}
+                                                        {item.lastMessageSenderName === null ? '' : item.lastMessageSenderName + item.lastMessage || "No recent messages"}
                                                     </Typography>
                                                 }
                                             />
@@ -356,7 +459,7 @@ const Chats = () => {
             }}>
                 {chatId !== 0 && (
                     <PrivateChat
-                        friendId={chatList.find(chat => chat.chatId === chatId)?.friendId || 0}
+                        friendId={chatList.find(chat => chat.chatId === chatId)?.friendId || friendId}
                         chatId={chatId}
                     />
                 )}

@@ -3,7 +3,7 @@ package com.chat.app.service.impl;
 import com.chat.app.enumeration.RelationshipStatus;
 import com.chat.app.enumeration.Theme;
 import com.chat.app.exception.ChatException;
-import com.chat.app.model.dto.FriendStatusDTO;
+import com.chat.app.dto.FriendStatusDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Relationship;
 import com.chat.app.payload.response.AccountResponse;
@@ -52,7 +52,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
-    public RelationshipResponse getRelationshipStatus(Long firstAccountId, Long secondAccountId) throws ChatException {
+    public RelationshipResponse getRelationshipStatus(Long firstAccountId, Long secondAccountId)  {
         Long relationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(firstAccountId, secondAccountId);
         Long reverseRelationshipId = relationshipRepository.findByFirstAccountAndSecondAccount(secondAccountId, firstAccountId);
         Relationship relationship = relationshipId != null ? getRelationship(relationshipId) : (reverseRelationshipId != null ? getRelationship(reverseRelationshipId) : null);

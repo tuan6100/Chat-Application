@@ -66,9 +66,17 @@ const ImageMessage = ({ message, scrollToMessage, highlightMessageId }) => {
                                 zIndex: 1,
                             }}
                         >
-                            <Typography variant="body2" color="text.secondary">
-                                {message.replyToMessageContent}
-                            </Typography>
+                            <CardMedia
+                                component="img"
+                                image={message.replyToMessageContent}
+                                alt="Image"
+                                sx={{
+                                    width: 300,
+                                    maxWidth: '100%',
+                                    borderRadius: "15px",
+                                    cursor: 'pointer'
+                                }}
+                            />
                         </Box>
                     )}
 

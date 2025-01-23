@@ -39,15 +39,7 @@ const PrivateChat = ({ friendId, chatId }) => {
     const [isLoading, setIsLoading] = useState(false);
     const { subscribe, unsubscribe } = useWebSocket();
     const sessionMessages = getMessagesFromSession(chatId);
-
-
-    // useEffect(() => {
-    //     subscribe(`/client/chat/${chatId}/message/send`, () =>{})
-    //     subscribe(`/client/chat/${chatId}/typing`, () =>{})
-    //     subscribe(`/client/chat/${chatId}/message/mark-seen`, () =>{})
-    //     subscribe(`/client/chat/${chatId}/message/delete`, () =>{})
-    //     subscribe(`/client/chat/${chatId}/message/restore`, () =>{})
-    // }, [chatId]);
+    const [jumpToMessage, setJumpToMessage] = useState(-1);
 
 
     useEffect(() => {
@@ -55,10 +47,12 @@ const PrivateChat = ({ friendId, chatId }) => {
         if (sessionMessages.length === 0) {
             const fetchAndSetMessages = async () => {
                 const messageData = await fetchMessages(0);
+                if (messageData === null || messageData === undefined) return;
                 if (Array.isArray(messageData)) {
                     updateChatDataInSession(chatId, messageData);
                 } else {
                     console.error("Fetched message data is not an array:", messageData);
+
                 }
             };
             fetchAndSetMessages();
@@ -146,7 +140,7 @@ const PrivateChat = ({ friendId, chatId }) => {
         }
     };
 
-    const fetchMessages = useCallback(async (page) => {
+    const fetchMessages = useCallback(async (p) => {
         if (isFetching.current || !hasMore) return;
         isFetching.current = true;
         setIsLoading(true);
@@ -161,11 +155,11 @@ const PrivateChat = ({ friendId, chatId }) => {
                 return;
             }
             let data = await response.json();
+            if (data === null || data === undefined) {
+                setHasMore(false);
+                return;
+            }
             if (data.length > 0) {
-                if (data.length < 50) {
-                    const again = await authFetch(`/api/chat/${chatId}/messages?page=${page}`);
-                    data = await again.json();
-                }
                 setMessageList((prev) => [...data, ...prev]);
                 const sessionMessages = getMessagesFromSession(chatId) || [];
                 updateChatDataInSession(chatId, [...data, ...sessionMessages]);
@@ -173,7 +167,7 @@ const PrivateChat = ({ friendId, chatId }) => {
                     const newScrollHeight = scrollElement.scrollHeight;
                     scrollElement.scrollTop = newScrollHeight - previousScrollHeight;
                 }
-                setPage(page + 1);
+                setPage(p + 1);
             } else {
                 setHasMore(false);
             }
@@ -241,10 +235,13 @@ const PrivateChat = ({ friendId, chatId }) => {
     return (
         <Stack height="100%" maxHeight="100vh" width="auto">
             <Header
+                chatId={chatId}
                 name={name}
                 avatar={avatar}
                 isOnline={isOnline}
                 lastOnlineTime={lastOnlineTime}
+                jumpToMessage={jumpToMessage}
+                setJumpToMessage={setJumpToMessage} // Corrected prop name
             />
 
             <Box
@@ -262,7 +259,14 @@ const PrivateChat = ({ friendId, chatId }) => {
                         <CircularProgress size={24} />
                     </Stack>
                 )}
-                <Body chatId={chatId} messages={messageList} fetchMessages={fetchMessages} page={page} hasMore={hasMore} isOnline={isOnline}/>
+                <Body chatId={chatId}
+                      messages={messageList}
+                      fetchMessages={fetchMessages}
+                      page={page} hasMore={hasMore}
+                      isOnline={isOnline}
+                      jumpToMessage={jumpToMessage}
+                />
+
                 <div ref={messagesEndRef} />
             </Box>
 

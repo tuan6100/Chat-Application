@@ -4,18 +4,21 @@ import ImageMessage from "../Message/ImageMessage";
 import VideoMessage from "../Message/VideoMessage";
 import AudioMessage from "../Message/AudioMessage";
 import FileMessage from "../Message/FileMessage";
+import CallMessage from "../Message/CallMessage";
 import useMessage from "../../hook/useMessage";
 import TypingIndicator from "../Message/TypingIndicator";
 import {useCallback, useEffect, useRef, useState} from "react";
 import useWebSocket from "../../hook/useWebSocket";
+import useSearchResult from "../../hook/useSearchResult";
 
-const Body = ({ chatId, messages, fetchMessages, page, hasMore, isOnline }) => {
+const Body = ({ chatId, messages, fetchMessages, page, hasMore, isOnline, jumpToMessage }) => {
 
     const {typingUsers, reactMessage, setReactMessage, deleteMessage, setDeleteMessage, restoreMessage, setRestoreMessage} = useMessage();
     const observerRef = useRef(null);
     const seenMessages = useRef(new Set());
     const {publish} = useWebSocket();
     const [highlightMessageId, setHighlightMessageId] = useState(-1);
+    const { searchResults } = useSearchResult();
 
 
     const markAsSeen = useCallback((message) => {
@@ -78,22 +81,30 @@ const Body = ({ chatId, messages, fetchMessages, page, hasMore, isOnline }) => {
     }, [chatId, messages, isOnline]);
 
 
-    const scrollToMessage = (messageId) => {
-        const targetElement = document.querySelector(`[data-message-id="${messageId}"]`);
-        if (!targetElement) {
-            if (!hasMore) {
-                return;
-            }
-            fetchMessages(page);
+    const scrollToMessage = async (messageId) => {
+        let targetElement = document.querySelector(`[data-message-id="${messageId}"]`);
+        while (!targetElement && hasMore) {
+            await fetchMessages(page);
+            targetElement = document.querySelector(`[data-message-id="${messageId}"]`);
         }
-        setHighlightMessageId(messageId);
-        targetElement.scrollIntoView({behavior: "smooth", block: "center"});
-        targetElement.classList.add("highlight");
-        setTimeout(() => {
-            setHighlightMessageId(-1);
-            targetElement.classList.remove("highlight");
-        }, 600);
+        if (targetElement) {
+            setHighlightMessageId(messageId);
+            targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+            targetElement.classList.add("highlight");
+            setTimeout(() => {
+                setHighlightMessageId(-1);
+                targetElement.classList.remove("highlight");
+            }, 600);
+        } else {
+            console.error(`Message with ID ${messageId} not found.`);
+        }
     };
+
+    useEffect(() => {
+        if (jumpToMessage !== -1) {
+            scrollToMessage(jumpToMessage);
+        }
+    }, [jumpToMessage]);
 
 
     useEffect(() => {
@@ -166,6 +177,9 @@ const Body = ({ chatId, messages, fetchMessages, page, hasMore, isOnline }) => {
                             case "FILE":
                             case "FILE_FORWARDED":
                                 return FileMessage;
+                            case "CALL":
+                            case "VIDEO_CALL":
+                                return CallMessage;
                             default:
                                 return TextMessage;
                         }

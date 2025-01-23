@@ -74,9 +74,43 @@ const FileMessage = ({ message, scrollToMessage, highlightMessageId }) => {
                                 zIndex: 1,
                             }}
                         >
-                            <Typography variant="body2" color="text.secondary">
-                                {message.replyToMessageContent}
-                            </Typography>
+                            <Box
+                                p={1}
+                                sx={{
+                                    backgroundColor: '#424242',
+                                    borderRadius: '15px',
+                                    width: '200px',
+                                    marginTop: '-7px',
+                                    zIndex: 2,
+                                    transform: isHighlighted ? 'scale(1.2)' : 'none',
+                                    transition: 'transform 0.5s ease-in-out',
+                                    position: 'relative'
+                                }}
+                            >
+                                <Stack direction='row'
+                                       justifyContent='flex-start'
+                                       spacing={2}
+                                       sx={{cursor: 'pointer'}}
+                                >
+                                    <InsertDriveFile />
+                                    <Stack
+                                        direction='column'
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
+                                        sx={{ cursor: 'pointer' }}
+                                    >
+                                        <Typography variant='caption' color={theme.palette.text.primary}>
+                                            {fileMetadata.filename}
+                                        </Typography>
+                                        <Typography variant='caption' color={theme.palette.text.secondary}>
+                                            {fileMetadata.size && `${(fileMetadata.size / 1024).toFixed(2)} KB`}
+                                        </Typography>
+                                    </Stack>
+                                </Stack>
+                                {message.reactions && message.reactions.length > 0 && (
+                                    <Reactions reactions={message.reactions}/>
+                                )}
+                            </Box>
                         </Box>
                     )}
 

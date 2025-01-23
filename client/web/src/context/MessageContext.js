@@ -226,7 +226,7 @@ export const MessageProvider = ({ children }) => {
         }
     }
 
-
+    const [unreadNotification, setUnreadNotification] = useState(0);
 
 
     return (
@@ -243,6 +243,7 @@ export const MessageProvider = ({ children }) => {
             reactMessage, setReactMessage,
             deleteMessage, setDeleteMessage,
             restoreMessage, setRestoreMessage,
+            unreadNotification, setUnreadNotification,
             getMessagesFromSession,
             updateChatDataInSession,
         }}>

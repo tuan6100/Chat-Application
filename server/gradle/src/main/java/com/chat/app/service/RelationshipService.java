@@ -1,7 +1,7 @@
 package com.chat.app.service;
 
 import com.chat.app.exception.ChatException;
-import com.chat.app.model.dto.FriendStatusDTO;
+import com.chat.app.dto.FriendStatusDTO;
 import com.chat.app.model.entity.Relationship;
 import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.payload.response.RelationshipResponse;
@@ -16,7 +16,9 @@ import java.util.List;
 
      Long getRelationshipId(Long firstAccountId, Long secondAccountId);
 
-     RelationshipResponse getRelationshipStatus(Long firstAccountId, Long secondAccountId) throws ChatException ;
+
+
+     RelationshipResponse getRelationshipStatus(Long firstAccountId, Long secondAccountId) ;
 
      void inviteFriend(Long userId, Long friendId) throws ChatException;
 

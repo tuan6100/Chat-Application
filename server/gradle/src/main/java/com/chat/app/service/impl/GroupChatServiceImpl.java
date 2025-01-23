@@ -2,7 +2,7 @@ package com.chat.app.service.impl;
 
 import com.chat.app.enumeration.GroupPermission;
 import com.chat.app.exception.ChatException;
-import com.chat.app.model.dto.GroupChatDTO;
+import com.chat.app.dto.GroupChatDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Chat;
 import com.chat.app.model.entity.extend.chat.GroupChat;

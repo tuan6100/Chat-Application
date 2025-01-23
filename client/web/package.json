@@ -23,6 +23,7 @@
     "email-validator": "^2.0.4",
     "emoji-picker-react": "^4.12.0",
     "framer-motion": "^11.13.1",
+    "http-proxy-middleware": "^3.0.3",
     "link-preview-js": "^3.0.13",
     "phosphor-react": "^1.4.1",
     "prop-types": "^15.8.1",

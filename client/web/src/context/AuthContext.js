@@ -2,7 +2,6 @@ import React, { createContext, useState } from "react";
 import {useNavigate} from "react-router";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import useWebSocket from "../hook/useWebSocket";
 
 const AuthContext = createContext(undefined);
 

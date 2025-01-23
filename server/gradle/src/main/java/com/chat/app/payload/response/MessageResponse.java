@@ -17,21 +17,21 @@ import java.util.List;
 @AllArgsConstructor
 public class MessageResponse {
 
-    private Long messageId;
-    private String randomId;
-    private Long senderId;
-    private String senderUsername;
-    private String senderAvatar;
-    private String content;
-    private String type;
-    private String sentTime;
-    private Long replyToMessageId;
-    private String replyToMessageContent;
-    private List<Long> viewerIds;
-    private List<String> viewerUsernames;
-    private List<String> viewerAvatars;
-    private List<MessageReactionResponse> reactions;
-    private String status;
+    protected Long messageId;
+    protected String randomId;
+    protected Long senderId;
+    protected String senderUsername;
+    protected String senderAvatar;
+    protected String content;
+    protected String type;
+    protected String sentTime;
+    protected Long replyToMessageId;
+    protected String replyToMessageContent;
+    protected List<Long> viewerIds;
+    protected List<String> viewerUsernames;
+    protected List<String> viewerAvatars;
+    protected List<MessageReactionResponse> reactions;
+    protected String status;
 
 
     public static MessageResponse fromEntity(Message message) {

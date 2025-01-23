@@ -8,7 +8,7 @@ import com.chat.app.repository.jpa.ChatRepository;
 import com.chat.app.repository.jpa.PrivateChatRepository;
 import com.chat.app.repository.redis.MessageCacheRepository;
 import com.chat.app.utility.CacheSyncManager;
-import com.chat.app.utility.CompositeKey;
+import com.chat.app.dto.CompositeKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

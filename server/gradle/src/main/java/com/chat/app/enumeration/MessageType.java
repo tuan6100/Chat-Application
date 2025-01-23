@@ -11,4 +11,5 @@ public enum MessageType {
     AUDIO_FORWARDED,
     FILE,
     FILE_FORWARDED,
+    VIDEO_CALL,
 }

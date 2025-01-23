@@ -293,10 +293,8 @@ const Footer = ({chatId}) => {
                     messageBody.content = fileUrl;
                     setTimeout(() => {
                         publish(`/client/chat/${chatId}/message/send`, JSON.stringify(messageBody));
-                    }, 500);
-                    setTimeout(() => {
                         publish(`/chat/${chatId}/message/send`, JSON.stringify(messageBody));
-                    }, 1000);
+                    }, 500);
                     if (audioRecorderRef.current?.stream) {
                         audioRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
                     }

@@ -1,6 +1,7 @@
 package com.chat.app.controller;
 
 import com.chat.app.exception.ChatException;
+import com.chat.app.payload.request.MessageCallRequest;
 import com.chat.app.payload.request.MessageRequest;
 import com.chat.app.payload.request.MessageSeenRequest;
 import com.chat.app.payload.request.MessageUpdateRequest;
@@ -33,6 +34,14 @@ public class MessageController {
         messageService.sendMessage(chatId, request);
     }
 
+    @MessageMapping("/{chatId}/message/call")
+    public void sendMessage(@DestinationVariable Long chatId, @Payload MessageCallRequest request) throws ChatException {
+        if (request == null || request.equals(new MessageCallRequest())) {
+            return;
+        }
+        messageService.sendMessage(chatId, request);
+    }
+
     @MessageMapping("/{chatId}/message/mark-seen")
     public void markViewedMessage(@DestinationVariable Long chatId, @Payload MessageSeenRequest request) throws ChatException {
         if (request.getMessageId() == null) {
@@ -58,6 +67,7 @@ public class MessageController {
     public void restoreMessage(@DestinationVariable Long chatId, @Payload Long messageId) throws ChatException {
         messageService.restoreMessage(chatId, messageId);
     }
+
 
     @MessageMapping("/ping")
     public void ping(@Payload String ping) {

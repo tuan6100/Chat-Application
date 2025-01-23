@@ -20,7 +20,7 @@ import com.chat.app.service.MessageService;
 import com.chat.app.service.elasticsearch.MessageSearchService;
 import com.chat.app.service.redis.MessageCacheService;
 import com.chat.app.utility.CacheSyncManager;
-import com.chat.app.utility.CompositeKey;
+import com.chat.app.dto.CompositeKey;
 import jakarta.persistence.OptimisticLockException;
 import org.hibernate.StaleObjectStateException;
 import org.springframework.beans.factory.annotation.Autowired;

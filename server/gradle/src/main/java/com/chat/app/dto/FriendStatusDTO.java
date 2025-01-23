@@ -1,4 +1,4 @@
-package com.chat.app.model.dto;
+package com.chat.app.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

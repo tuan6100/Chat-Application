@@ -3,8 +3,8 @@ package com.chat.app.controller;
 
 import com.chat.app.exception.ChatException;
 import com.chat.app.exception.UnauthorizedException;
-import com.chat.app.model.dto.AccountDTO;
-import com.chat.app.model.dto.FriendStatusDTO;
+import com.chat.app.dto.AccountDTO;
+import com.chat.app.dto.FriendStatusDTO;
 import com.chat.app.model.elasticsearch.AccountIndex;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.extend.chat.SpamChat;
@@ -84,6 +84,7 @@ public class AccountController {
         results.forEach(result -> responses.add(new AccountResponse(result.getAccountId(), result.getUsername(), result.getAvatar())));
         responses.forEach(account -> account.setIsOnline(accountService.isUserOnline(account.getAccountId())));
         responses.forEach(account -> account.setLastOnlineTime(accountService.getLastOnlineTime(account.getAccountId())));
+        responses.forEach(account -> account.setRelationshipStatus(relationshipService.getRelationshipStatus(getAuthenticatedAccount().getAccountId(), account.getAccountId()).getStatus()));
         return ResponseEntity.ok(responses);
     }
 
@@ -117,6 +118,7 @@ public class AccountController {
         List<AccountResponse> friends = relationshipService.getFriendsList(myAccount.getAccountId());
         friends.forEach(friend -> friend.setIsOnline(accountService.isUserOnline(friend.getAccountId())));
         friends.forEach(friend -> friend.setLastOnlineTime(accountService.getLastOnlineTime(friend.getAccountId())));
+//        friends.forEach(friend -> friend.setRelationshipStatus(relationshipService.getRelationshipStatus(myAccount.getAccountId(), friend.getAccountId()).getStatus()));
         return ResponseEntity.ok(friends);
     }
 
@@ -151,7 +153,6 @@ public class AccountController {
         Account myAccount = getAuthenticatedAccount();
         Account friend = accountService.getAccount(friendId);
         relationshipService.acceptFriend(myAccount.getAccountId(), friendId);
-        notificationService.notifyFriendRequestAccepted(myAccount.getAccountId(), friendId);
         return ResponseEntity.ok(relationshipService.getRelationshipStatus(myAccount.getAccountId(), friendId));
     }
 
@@ -161,7 +162,7 @@ public class AccountController {
         Account myAccount = getAuthenticatedAccount();
         Account friend = accountService.getAccount(friendId);
         relationshipService.rejectFriend(myAccount.getAccountId(), friendId);
-        notificationService.notifyFriendRequestRejected(friendId, myAccount.getAccountId());
+//        notificationService.notifyFriendRequestRejected(friendId, myAccount.getAccountId());
         return ResponseEntity.ok("Reject a friend request from " + friend.getUsername());
     }
 

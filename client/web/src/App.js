@@ -13,6 +13,7 @@ import {SelectedProvider} from "./context/SelectedContext";
 import {ConversationPropertiesProvider} from "./context/ConversationPropertiesContext";
 import {MessageProvider} from "./context/MessageContext";
 import {WebSocketProvider} from "./context/WebSocketContext";
+import {WebRTCProvider} from "./context/WebRTCContext";
 
 
 function App() {
@@ -28,8 +29,10 @@ function App() {
                                     <ConversationPropertiesProvider>
                                         <MessageProvider>
                                             <WebSocketProvider>
-                                                <Router />
-                                                <ToastContainer />
+                                                <WebRTCProvider>
+                                                    <Router />
+                                                    <ToastContainer />
+                                                </WebRTCProvider>
                                             </WebSocketProvider>
                                         </MessageProvider>
                                     </ConversationPropertiesProvider>

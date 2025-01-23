@@ -1,7 +1,7 @@
 package com.chat.app.service;
 
 import com.chat.app.exception.ChatException;
-import com.chat.app.model.dto.AccountDTO;
+import com.chat.app.dto.AccountDTO;
 import com.chat.app.model.entity.Account;
 import com.chat.app.payload.response.AccountResponse;
 import com.chat.app.payload.response.ChatResponse;

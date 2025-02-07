@@ -1,27 +1,14 @@
 import React, {useEffect, useRef, useState} from "react";
-import {
-    IconButton,
-    InputBase,
-    Stack,
-    Paper, Tooltip, InputAdornment, Typography, Box,
-} from "@mui/material";
-import {
-    AttachFile,
-    SettingsVoice
-} from "@mui/icons-material";
-import {
-    Image,
-    Sticker,
-    SmileyBlank,
-    XCircle
-} from "phosphor-react";
+import {Box, IconButton, InputAdornment, InputBase, Paper, Stack, Tooltip, Typography,} from "@mui/material";
+import {AttachFile, SettingsVoice} from "@mui/icons-material";
+import {Image, SmileyBlank, Sticker, XCircle} from "phosphor-react";
 import {useTheme} from "@mui/material/styles";
 import SendButton from "../SendButton";
 import useMessage from "../../hook/useMessage";
 import useWebSocket from "../../hook/useWebSocket";
 import useAuth from "../../hook/useAuth";
-import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile } from '@ffmpeg/util'
+import {FFmpeg} from '@ffmpeg/ffmpeg'
+import {fetchFile} from '@ffmpeg/util'
 
 
 export const generateRandomId = () => {
@@ -60,7 +47,7 @@ const Footer = ({chatId}) => {
                 }
                 messageBody = {
                     randomId: `${new Date().getTime()}-${localStorage.getItem("accountId")}-${chatId}-${generateRandomId()}`,
-                    senderId: localStorage.getItem("accountId"),
+                    accountId: localStorage.getItem("accountId"),
                     content: message,
                     sentTime: new Date().getTime(),
                     type: "TEXT",
@@ -91,7 +78,7 @@ const Footer = ({chatId}) => {
                 reaction: null,
             }
             console.info("Editing message:", messageBody);
-            publish(`/chat/${chatId}/message/update`, JSON.stringify(messageBody));
+            publish(`/server/chat/${chatId}/message/update`, JSON.stringify(messageBody));
             setEditMessage(null);
         }
         setMessage("");
@@ -177,8 +164,7 @@ const Footer = ({chatId}) => {
             updatedRawMap.get(chatId).push(messageBody);
             return updatedRawMap;
         });
-        const fileUrl = await response.text();
-        messageBody.content = fileUrl;
+        messageBody.content = await response.text();
         setTimeout(() => {
             publish(`/client/chat/${chatId}/message/send`, JSON.stringify(messageBody));
         }, 500);
@@ -230,8 +216,7 @@ const Footer = ({chatId}) => {
                     updatedRawMap.get(chatId).push(messageBody);
                     return updatedRawMap;
                 });
-                const fileUrl = await response.text();
-                messageBody.content = fileUrl;
+                messageBody.content = await response.text();
                 setTimeout(() => {
                     publish(`/client/chat/${chatId}/message/send`, JSON.stringify(messageBody));
                     publish(`/chat/${chatId}/message/send`, JSON.stringify(messageBody));

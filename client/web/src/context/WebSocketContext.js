@@ -52,7 +52,7 @@ export const WebSocketProvider = ({ children }) => {
             const socket = new WebSocket(socketUrl);
             stompClient.current = new Client({
                 webSocketFactory: () => socket,
-                reconnectDelay: 1000,
+                // reconnectDelay: 1000,
                 heartbeatIncoming: 10000,
                 heartbeatOutgoing: 10000,
                 onConnect: () => {
@@ -124,40 +124,6 @@ export const WebSocketProvider = ({ children }) => {
         });
     };
 
-
-    useEffect(() => {
-        if (!isAuthenticated) {
-            return;
-        }
-        const interval = setInterval(() => {
-            if (!stompClient.current || !stompClient.current.connected) {
-                console.warn("WebSocket is not connected. Reconnecting...");
-                try {
-                    stompClient.current.activate();
-                    console.log("Reconnecting WebSocket...");
-                } catch (error) {
-                    console.error("Error while reconnecting WebSocket:", error);
-                }
-            } else {
-                try {
-                    publish(`/chat/ping`, "Ping");
-                    console.log("Ping");
-                    subscribe(`/client/pong`, (message) => {
-                        console.log(JSON.stringify(message));
-                    });
-                } catch (error) {
-                    console.error("Failed to send ping. Reconnecting...");
-                    stompClient.current.deactivate(() => {
-                        console.log("WebSocket deactivated");
-                        stompClient.current.activate();
-                    });
-                }
-            }
-        }, 60000);
-        return () => clearInterval(interval);
-    }, []);
-
-
     useEffect(() => {
         if (!chatIdList) return;
         if (stompClient.current && stompClient.current.connected ) {
@@ -217,7 +183,7 @@ export const WebSocketProvider = ({ children }) => {
                 unsubscribe(`/client/chat/${chatId}/typing`);
             });
         };
-    }, [chatIdList, subscribe]);
+    }, [chatIdList]);
 
 
     useEffect(() => {
@@ -250,7 +216,7 @@ export const WebSocketProvider = ({ children }) => {
                 unsubscribe(`/client/chat/${chatId}/message/mark-seen`);
             });
         };
-    }, [chatIdList, subscribe]);
+    }, [chatIdList]);
 
 
     useEffect(() => {
@@ -285,7 +251,7 @@ export const WebSocketProvider = ({ children }) => {
                 unsubscribe(`/client/chat/${chatId}/message/update`);
             });
         };
-    }, [chatIdList, subscribe]);
+    }, [chatIdList]);
 
 
     useEffect(() => {

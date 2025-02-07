@@ -74,7 +74,7 @@ const Body = ({ chatId, messages, fetchMessages, page, hasMore, isOnline, jumpTo
                     messageId: message.messageId,
                     viewerId: localStorage.getItem("accountId"),
                 });
-                publish(`/chat/${chatId}/message/mark-seen`, body);
+                publish(`/server/chat/${chatId}/message/mark-seen`, body);
                 seenMessages.current.add(message.messageId);
             }
         });
@@ -129,7 +129,7 @@ const Body = ({ chatId, messages, fetchMessages, page, hasMore, isOnline, jumpTo
                 }
             }
             const body = JSON.stringify(reactMessage);
-            publish(`/chat/${chatId}/message/update`, body);
+            publish(`/serverserver/chat/${chatId}/message/update`, body);
             console.log(`React message ${reactMessage.messageId} with ${reactMessage.reaction}`);
             setReactMessage(null);
         }
@@ -139,7 +139,7 @@ const Body = ({ chatId, messages, fetchMessages, page, hasMore, isOnline, jumpTo
     useEffect(() => {
         if (deleteMessage) {
             const body = JSON.stringify(deleteMessage);
-            publish(`/chat/${chatId}/message/delete`, body);
+            publish(`/server/chat/${chatId}/message/delete`, body);
             console.log(`Delete message ${deleteMessage}`);
             setDeleteMessage(null);
         }
@@ -148,7 +148,7 @@ const Body = ({ chatId, messages, fetchMessages, page, hasMore, isOnline, jumpTo
     useEffect(() => {
         if (restoreMessage) {
             const body = JSON.stringify(restoreMessage);
-            publish(`/chat/${chatId}/message/restore`, body);
+            publish(`/server/chat/${chatId}/message/restore`, body);
             console.log(`Restore message ${restoreMessage}`);
             setRestoreMessage(null);
         }

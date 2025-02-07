@@ -101,9 +101,10 @@ const IconList = ({ message }) => {
 
 
     const handleCopyMessage = () => {
-        navigator.clipboard.writeText(message.content);
-        setOpenSnackbar(true);
-        handleMenuClose();
+        navigator.clipboard.writeText(message.content).then(() => {
+            setOpenSnackbar(true);
+            handleMenuClose();
+        });
     }
 
     const handleSnackbarClose = (event, reason) => {
@@ -120,7 +121,7 @@ const IconList = ({ message }) => {
             if (!response.ok) {
                 throw new Error("Failed to download file");
             }
-            const contentDisposition = response.headers.get("Content-Disposition");
+            response.headers.get("Content-Disposition");
             let filename = message.content.split('/').pop();
             filename = filename.includes('_')
                 ? filename.split('_').pop()
@@ -136,8 +137,9 @@ const IconList = ({ message }) => {
             document.body.removeChild(a);
         } catch (error) {
             console.error("Error downloading the file:", error);
+        } finally {
+            handleMenuClose();
         }
-        handleMenuClose();
     };
 
 

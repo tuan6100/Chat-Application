@@ -1,0 +1,117 @@
+server:
+  port: 8000
+  address: localhost
+
+
+spring:
+  application:
+    name: real-time-chat-app
+
+  datasource:
+#    url: jdbc:postgresql://localhost:5432/chatstorage
+#    username: postgres
+#    password:
+#    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://160.191.50.248:5432/chatstorage
+    username: postgres
+    password: 20226100
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: false
+      maximum-pool-size: 100
+      maxLifetime: 60000
+
+  jpa:
+    database: postgresql
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          time_zone: UTC+7
+        enable_lazy_load_no_trans: true
+
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+
+    redis:
+      host: 160.191.50.248
+      port: 6400
+      username: default
+      password: 20226100
+
+  elasticsearch:
+    uris: http://160.191.50.248:9200
+#    uris: http://localhost:9200
+#    username: elastic
+#    password: 20226100
+    socket-timeout: 30s
+
+  cache:
+    type: caffeine
+    caffeine:
+        spec: maximumSize=10000,expireAfterWrite=1h,expireAfterAccess=30m
+    distributed:
+      message-per-chat: 100
+    in-memory:
+      message-per-chat: 1000
+
+  main:
+    allow-bean-definition-overriding: true
+
+  devtools:
+    restart:
+      exclude: logs/**
+
+  cloud:
+    aws:
+      bucket-name: chatstoragebucket
+
+  task:
+    execution:
+        pool:
+            core-size: 10
+            max-size: 20
+            queue-capacity: 100
+
+  threads:
+    virtual:
+      enabled: true
+
+  kafka:
+    bootstrap-servers: 160.191.50.248:9092
+    consumer:
+      group-id: chat-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
+
+
+logging:
+#  file:
+#    name: server/app/src/main/resources/logs/application.log
+  level:
+    org:
+      springframework:
+        security: DEBUG
+        data:
+          elasticsearch:
+            core: DEBUG
+            client:
+              WIRE: trace
+
+

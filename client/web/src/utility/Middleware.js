@@ -1,11 +1,13 @@
-const { createProxyMiddleware } = require('http-proxy-middleware');
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
-module.exports = function(app) {
+const host = '192.168.6.101:8000';
+
+export default function(app) {
     app.use(
         '/api',
         createProxyMiddleware({
-            target: ['http://192.168.6.101:8000', 'ws://192.168.6.101:8000'],
+            target: [ `http://${host}`, `ws://${host}` ],
             changeOrigin: true,
         })
     );
-};
+}

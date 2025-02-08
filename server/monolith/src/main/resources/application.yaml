@@ -8,18 +8,20 @@ spring:
     name: real-time-chat-app
 
   datasource:
-#    url: jdbc:postgresql://localhost:5432/chatstorage
+#    url: jdbc:postgresql://160.191.50.248:5432/chatstorage
 #    username: postgres
 #    password:
 #    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/chatstorage
+    url: jdbc:postgresql://160.191.50.248:5432/chatstorage
     username: postgres
     password: 20226100
     driver-class-name: org.postgresql.Driver
     hikari:
       auto-commit: false
       maximum-pool-size: 100
-      maxLifetime: 60000
+      idle-timeout: 60000
+      connection-timeout: 60000
+      max-lifetime: 60000
 
   jpa:
     database: postgresql
@@ -40,14 +42,14 @@ spring:
         enabled: true
 
     redis:
-      host: localhost
+      host: 160.191.50.248
       port: 6400
       username: default
       password: 20226100
 
   elasticsearch:
-    uris: http://localhost:9200
-#    uris: http://localhost:9200
+    uris: http://160.191.50.248:9200
+#    uris: http://160.191.50.248:9200
 #    username: elastic
 #    password: 20226100
     socket-timeout: 30s
@@ -84,7 +86,7 @@ spring:
       enabled: true
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: 160.191.50.248:9092
     consumer:
       group-id: chat-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -113,5 +115,6 @@ logging:
             core: DEBUG
             client:
               WIRE: trace
+
 
 

@@ -27,13 +27,13 @@ public class KafkaConfig {
 
 
     @Bean
-    public KafkaTemplate<String, ChatMessage> kafkaTemplate(
+    public KafkaTemplate<String, ChatMessage> chatMessageKafkaTemplate (
             ProducerFactory<String, ChatMessage> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 
     @Bean
-    public ProducerFactory<String, ChatMessage> producerFactory() {
+    public ProducerFactory<String, ChatMessage> chatMessageProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);

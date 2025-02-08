@@ -20,6 +20,7 @@ import com.chat.app.service.interfaces.chat.ChatService;
 import com.chat.app.service.interfaces.chat.GroupChatService;
 import com.chat.app.service.interfaces.user.relationship.RelationshipService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,9 @@ public class GroupChatServiceImpl extends ChatServiceImpl implements GroupChatSe
     private AccountSearchService accountSearchService;
 
     @Autowired
+    @Qualifier("chatServiceImpl")
     private ChatService chatService;
+
 
     @Override
     public GroupChat getGroupChat(long chatId) throws ChatException {

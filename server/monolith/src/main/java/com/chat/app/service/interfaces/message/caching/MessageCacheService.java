@@ -10,7 +10,7 @@ import java.util.List;
 @Service
 public interface MessageCacheService {
 
-    void setCache(Long chatId, List<MessageResponse> messages);
+    void setCache(Long chatId, List<MessageResponse> messages, int page);
 
     List<MessageResponse> getMessagesFromCache(Long chatId, int page, int size);
 

@@ -21,6 +21,7 @@ import com.chat.app.service.interfaces.system.aws.S3Service;
 import com.chat.app.service.interfaces.user.information.AccountSearchService;
 import com.chat.app.service.interfaces.chat.ChatService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -54,13 +55,15 @@ public class MessageServiceImpl implements MessageSearchService, MessageProcessi
     private MessageConsumerService messageConsumerService;
 
     @Autowired
+    @Lazy
+    @Qualifier("chatServiceImpl")
     private ChatService chatService;
 
     @Autowired
     private AccountSearchService  accountSearchService;
 
     @Autowired
-    private KafkaTemplate<String, ChatMessage> kafkaTemplate;
+    private KafkaTemplate<String, ChatMessage> chatMessageKafkaTemplate;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;

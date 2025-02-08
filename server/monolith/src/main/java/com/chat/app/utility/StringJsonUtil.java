@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
-public class StringJson<T> {
+public class StringJsonUtil<T> {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Class<T> type;
 
 
-    public StringJson(Class<T> type) {
+    public StringJsonUtil(Class<T> type) {
         this.type = type;
     }
 

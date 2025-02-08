@@ -2,15 +2,13 @@ package com.chat.app.model.redis;
 
 
 import com.chat.app.payload.response.MessageResponse;
-import com.chat.app.dto.CompositeKey;
-import com.chat.app.utility.StringJson;
+import com.chat.app.utility.StringJsonUtil;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import lombok.Data;
 import org.springframework.data.redis.core.RedisHash;
 
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -32,13 +30,13 @@ public class MessageCache {
 
 
     public List<MessageResponse> getMessageResponses() {
-        StringJson<MessageResponse> stringJson = new StringJson<>(MessageResponse.class);
-        return stringJson.fromJson(this.messageResponses);
+        StringJsonUtil<MessageResponse> stringJsonUtil = new StringJsonUtil<>(MessageResponse.class);
+        return stringJsonUtil.fromJson(this.messageResponses);
     }
 
     public void setMessageResponses(List<MessageResponse> messageResponses) {
-        StringJson<MessageResponse> stringJson = new StringJson<>(MessageResponse.class);
-        this.messageResponses = stringJson.toJson(messageResponses);
+        StringJsonUtil<MessageResponse> stringJsonUtil = new StringJsonUtil<>(MessageResponse.class);
+        this.messageResponses = stringJsonUtil.toJson(messageResponses);
     }
 
 

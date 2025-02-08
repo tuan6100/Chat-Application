@@ -17,6 +17,7 @@ import com.chat.app.service.interfaces.message.kafka.MessageProducerService;
 import com.chat.app.service.implementations.message.MessageRedisCacheServiceImpl;
 import com.chat.app.service.interfaces.user.information.AccountSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -32,6 +33,7 @@ public class ChatController {
 
 
     @Autowired
+    @Qualifier("chatServiceImpl")
     private ChatService chatService;
 
     @Autowired
@@ -81,8 +83,8 @@ public class ChatController {
                                                              @RequestParam(defaultValue = "0") int page,
                                                              @RequestParam int size) {
         List<MessageResponse> responses = chatService.getMessagesByPage(chatId, page, size);
-        if (responses.isEmpty() && page < chatService.getMaxPageOfMessages(chatId, size)) {
-            return getMessages(chatId, page, size);
+        if (page >= chatService.getMaxPageOfMessages(chatId, size) ) {
+            return null;
         }
         return ResponseEntity.ok(responses);
     }

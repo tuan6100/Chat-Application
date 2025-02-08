@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 
 @Configuration
-@EnableCaching
+@EnableCaching(proxyTargetClass = true)
 public class LocalCacheConfig {
 
     @Value("${spring.cache.in-memory.message-per-chat}")
@@ -27,7 +27,6 @@ public class LocalCacheConfig {
                 .initialCapacity(50)
                 .maximumSize(messagePerChat)
                 .expireAfterWrite(1, TimeUnit.HOURS)
-                .refreshAfterWrite(30, TimeUnit.MINUTES)
                 .recordStats()
                 .build();
     }

@@ -6,11 +6,7 @@ import com.chat.app.model.redis.MessageCache;
 import com.chat.app.payload.response.MessageResponse;
 import com.chat.app.repository.jpa.ChatRepository;
 import com.chat.app.repository.redis.MessageCacheRepository;
-import com.chat.app.service.interfaces.message.caching.MessageCacheService;
-import com.chat.app.service.interfaces.message.caching.MessageLocalCacheService;
 import com.chat.app.service.interfaces.message.caching.MessageRedisCacheService;
-import com.chat.app.utility.CacheSyncManager;
-import com.github.benmanes.caffeine.cache.Cache;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,15 +30,14 @@ public class MessageRedisCacheServiceImpl implements MessageRedisCacheService {
     @Autowired
     private MessageCacheRepository messageCacheRepository;
 
-    @Autowired
-    private MessageLocalCacheService messageLocalCacheService;
-
     @Value("${spring.cache.distributed.message-per-chat}")
     private int messagePerChat;
 
+    public static final List<Integer> cachedPages = List.of(0, 1);
+
 
     @Override
-    public void setCache(Long chatId, List<MessageResponse> messages) {
+    public void setCache(Long chatId, List<MessageResponse> messages, int page) {
         MessageCache cache = getCache(chatId);
         if (cache == null) {
             cache = new MessageCache(chatId, messages);
@@ -60,6 +55,9 @@ public class MessageRedisCacheServiceImpl implements MessageRedisCacheService {
     @Override
     public List<MessageResponse> getMessagesFromCache(Long chatId, int page, int size) {
         List<MessageResponse> messageResponses = getCache(chatId).getMessageResponses();
+        if (messageResponses == null || !cachedPages.contains(page)) {
+            return List.of();
+        }
         return new PageImpl<>(messageResponses, PageRequest.of(page, size), messageResponses.size()).getContent();
     }
 
@@ -102,13 +100,19 @@ public class MessageRedisCacheServiceImpl implements MessageRedisCacheService {
     public void cacheMessagesByPage(Long chatId, int page) {
         Pageable pageable = PageRequest.of(page, messagePerChat);
         Page<Message> messages = chatRepository.findMostRecentMessagesByChatId(chatId, pageable);
-        setCache(chatId, messages.stream().parallel().map(MessageResponse::fromEntity).toList().reversed());
+        setCache(chatId, messages.stream().parallel().map(MessageResponse::fromEntity).toList().reversed(), page);
     }
 
     @PostConstruct
     public void cacheMostRecentMessagesForAllChats() {
         List<Long> chatIds = chatRepository.findAllChatIds();
-        chatIds.stream().parallel().forEach(chatId -> cacheMessagesByPage(chatId, 0));
+        chatIds.stream().parallel().forEach(chatId -> {
+            if (getCache(chatId) == null || getCache(chatId).getMessageResponses().isEmpty()) {
+                cacheMessagesByPage(chatId, 0);
+            } else {
+                System.out.println("Cache for chat " + chatId + " already exists");
+            }
+        });
     }
 
     @Override

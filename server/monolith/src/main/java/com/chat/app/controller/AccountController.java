@@ -17,6 +17,8 @@ import com.chat.app.service.interfaces.user.information.AccountSearchService;
 import com.chat.app.service.interfaces.user.information.AccountService;
 import com.chat.app.service.interfaces.user.relationship.RelationshipService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -49,6 +51,8 @@ public class AccountController {
     private FriendRequestNotificationService friendRequestNotificationService;
 
     @Autowired
+    @Qualifier("chatServiceImpl")
+    @Lazy
     private ChatService chatService;
 
     @Autowired

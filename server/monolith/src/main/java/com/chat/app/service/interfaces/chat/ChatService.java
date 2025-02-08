@@ -5,11 +5,13 @@ import com.chat.app.exception.ChatException;
 import com.chat.app.model.entity.Chat;
 import com.chat.app.payload.response.ChatResponse;
 import com.chat.app.payload.response.MessageResponse;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Primary
 public interface ChatService {
 
      Chat getChat(Long chatId);

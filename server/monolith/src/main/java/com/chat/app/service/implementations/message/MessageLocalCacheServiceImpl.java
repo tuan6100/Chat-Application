@@ -3,6 +3,7 @@ package com.chat.app.service.implementations.message;
 import com.chat.app.payload.response.MessageResponse;
 import com.chat.app.service.interfaces.message.caching.MessageLocalCacheService;
 import com.github.benmanes.caffeine.cache.Cache;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
@@ -18,17 +19,20 @@ public class MessageLocalCacheServiceImpl implements MessageLocalCacheService {
     @Autowired
     private Cache<Long, List<MessageResponse>> localCache;
 
+    public static List<Integer> cachedPages = List.of();
+
 
     @Override
     @Async
-    public void setCache(Long chatId, List<MessageResponse> messages) {
+    public void setCache(Long chatId, List<MessageResponse> messages, int page) {
         localCache.put(chatId, messages);
+        cachedPages.add(page);
     }
 
     @Override
     public List<MessageResponse> getMessagesFromCache(Long chatId, int page, int size) {
         List<MessageResponse> cachedMessages = localCache.getIfPresent(chatId);
-        if (cachedMessages == null) {
+        if (cachedMessages == null || !cachedPages.contains(page)) {
             return List.of();
         }
         return new PageImpl<>(cachedMessages, PageRequest.of(page, size), cachedMessages.size()).getContent();
@@ -53,7 +57,7 @@ public class MessageLocalCacheServiceImpl implements MessageLocalCacheService {
                     int index = existingMessages.indexOf(message);
                     existingMessages.set(index, response);
                 });
-        setCache(chatId, existingMessages);
+        localCache.put(chatId, existingMessages);
     }
 
     @Override
@@ -92,5 +96,6 @@ public class MessageLocalCacheServiceImpl implements MessageLocalCacheService {
     @Override
     public void clearCache(Long chatId) {
         localCache.invalidate(chatId);
+        cachedPages.clear();
     }
 }

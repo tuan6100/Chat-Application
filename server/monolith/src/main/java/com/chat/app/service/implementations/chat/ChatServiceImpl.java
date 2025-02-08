@@ -2,13 +2,8 @@ package com.chat.app.service.implementations.chat;
 
 import com.chat.app.enumeration.Theme;
 import com.chat.app.exception.ChatException;
-import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Chat;
 import com.chat.app.model.entity.Message;
-import com.chat.app.model.entity.Relationship;
-import com.chat.app.model.entity.extend.chat.CloudStorage;
-import com.chat.app.model.entity.extend.chat.GroupChat;
-import com.chat.app.model.entity.extend.chat.PrivateChat;
 import com.chat.app.payload.response.ChatResponse;
 import com.chat.app.payload.response.MessageResponse;
 import com.chat.app.repository.jpa.*;
@@ -16,11 +11,10 @@ import com.chat.app.service.interfaces.chat.ChatService;
 import com.chat.app.service.interfaces.chat.GroupChatService;
 import com.chat.app.service.interfaces.chat.PrivateChatService;
 import com.chat.app.service.interfaces.message.MessageSearchService;
-import com.chat.app.service.implementations.message.MessageRedisCacheServiceImpl;
 import com.chat.app.service.interfaces.message.caching.MessageLocalCacheService;
 import com.chat.app.service.interfaces.message.caching.MessageRedisCacheService;
-import com.github.benmanes.caffeine.cache.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,6 +43,7 @@ public class ChatServiceImpl implements ChatService {
     private SpamChatRepository spamChatRepository;
 
     @Autowired
+    @Lazy
     private MessageSearchService messageSearchService;
 
     @Autowired
@@ -56,9 +51,13 @@ public class ChatServiceImpl implements ChatService {
 
     @Autowired
     private MessageLocalCacheService messageLocalCacheService;
+
     @Autowired
+    @Lazy
     private PrivateChatService privateChatService;
+
     @Autowired
+    @Lazy
     private GroupChatService groupChatService;
 
 
@@ -86,13 +85,15 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public List<MessageResponse> getMessagesByPage(Long chatId, int page, int size) {
-        List<MessageResponse> cachedMessages = messageLocalCacheService.getMessagesFromCache(chatId, page, size);
-        if (cachedMessages != null) {
-            return cachedMessages;
+        List<MessageResponse> localCache = messageLocalCacheService.getMessagesFromCache(chatId, page, size);
+        if (localCache  != null && !localCache .isEmpty()) {
+            System.out.println("Local Cache hit");
+            return localCache;
         }
         List<MessageResponse> redisCache = messageRedisCacheService.getMessagesFromCache(chatId, page, size);
         if (redisCache != null && !redisCache.isEmpty()) {
-            messageLocalCacheService.setCache(chatId, redisCache);
+            messageLocalCacheService.setCache(chatId, redisCache, page);
+            System.out.println("Redis Cache hit");
             return redisCache;
         }
         Pageable pageable = PageRequest.of(page, size);
@@ -104,8 +105,6 @@ public class ChatServiceImpl implements ChatService {
         messageLocalCacheService.putMessagesToTheTop(chatId, messageResponses);
         return messageResponses;
     }
-
-
 
     @Override
     public MessageResponse getLastestMessage(Long chatId) {

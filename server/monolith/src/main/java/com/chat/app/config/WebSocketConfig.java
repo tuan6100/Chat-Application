@@ -1,6 +1,6 @@
 package com.chat.app.config;
 
-import com.chat.app.utility.SocketHandler;
+import com.chat.app.utility.SocketHandlerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -38,6 +38,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new SocketHandler(), "/ws").setAllowedOrigins("ws://192.168.6.101:8000/ws", "ws://localhost:8000/ws");
+        registry.addHandler(new SocketHandlerUtil(), "/ws").setAllowedOrigins("ws://192.168.6.101:8000/ws", "ws://localhost:8000/ws");
     }
 }

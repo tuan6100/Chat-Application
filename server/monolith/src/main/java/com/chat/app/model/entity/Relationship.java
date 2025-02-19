@@ -6,17 +6,21 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Date;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table( name = "relationship",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"first_account_id", "second_account_id"})},
-        indexes = {@Index(name = "idx_first_second_account", columnList = "first_account_id, second_account_id", unique = true)}
+        indexes = {@Index(name = "idx_first_second_account", columnList = "first_account_id, second_account_id", unique = true),
+                @Index(name = "idx_relationship_status", columnList = "status")
+        }
 )
 public class Relationship {
 

@@ -2,7 +2,8 @@ package com.chat.app.model.entity;
 
 import com.chat.app.enumeration.MessageType;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -10,7 +11,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table( name = "message",
         indexes = { @Index(name = "idx_chat_id", columnList = "chat_id"),

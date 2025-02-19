@@ -17,8 +17,6 @@ public class MessageController {
     @Autowired
     private MessageProducerService messageProducerService;
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
 
 
     @MessageMapping("/chat/{chatId}/message/send")

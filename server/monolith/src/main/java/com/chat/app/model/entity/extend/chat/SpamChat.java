@@ -4,11 +4,11 @@ import com.chat.app.enumeration.Theme;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Chat;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import lombok.EqualsAndHashCode;
 
-@EqualsAndHashCode(callSuper = true)
-@Data
+
+@Getter
 @Entity
 @Table(name = "spam_chat")
 public class SpamChat extends Chat {

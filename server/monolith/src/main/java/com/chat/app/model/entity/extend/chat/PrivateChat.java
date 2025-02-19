@@ -6,8 +6,7 @@ import com.chat.app.model.entity.Relationship;
 import jakarta.persistence.*;
 import lombok.*;
 
-@EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
 @Entity
 @Table(name = "private_chat")
 public class PrivateChat extends Chat {

@@ -95,14 +95,15 @@ public class AccountController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<AccountResponse>> searchAccounts(@RequestParam String username) {
+    public ResponseEntity<List<AccountResponse>> searchAccounts(@RequestParam String username) throws UnauthorizedException {
+        Account me = getAuthenticatedAccount();
         List<AccountIndex> results = accountSearchService.searchAccountByUsername(username);
         List<AccountResponse> responses = results.stream().parallel()
                 .map(result -> new AccountResponse(result.getAccountId(), result.getUsername(), result.getAvatar()))
                 .peek(account -> account.setIsOnline(accountService.isUserOnline(account.getAccountId())))
                 .peek(account -> account.setLastOnlineTime(accountService.getLastOnlineTime(account.getAccountId())))
-                .peek(account -> account.setRelationshipStatus(relationshipService.getRelationshipStatus(getAuthenticatedAccount().getAccountId(), account.getAccountId()).getStatus()))
-                .collect(Collectors.toList());
+                .peek(account -> account.setRelationshipStatus(relationshipService.getRelationshipStatus(me.getAccountId(), account.getAccountId()).getStatus()))
+                .toList();
         return ResponseEntity.ok(responses);
     }
 

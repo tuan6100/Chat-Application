@@ -2,10 +2,10 @@ package com.chat.app.model.entity;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @Entity
 @NoArgsConstructor
 @Table(name = "message_reaction")

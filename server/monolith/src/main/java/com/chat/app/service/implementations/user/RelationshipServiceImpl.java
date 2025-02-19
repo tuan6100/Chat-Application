@@ -38,6 +38,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Lazy
     @Autowired
     private SpamChatService spamChatService;
+
     @Autowired
     private AccountSearchService accountSearchService;
 

@@ -1,11 +1,11 @@
 package com.chat.app.model.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 
 import java.time.Instant;
 
-@Data
+@Getter
 @Entity
 @Table(name = "refresh_token")
 public class RefreshToken {

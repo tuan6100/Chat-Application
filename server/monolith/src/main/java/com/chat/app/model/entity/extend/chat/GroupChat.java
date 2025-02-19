@@ -6,17 +6,15 @@ import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Chat;
 import com.chat.app.model.entity.extend.notification.GroupNotification;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.lang.reflect.Array;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
-@EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "group_chat")
 public class GroupChat extends Chat {

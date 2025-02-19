@@ -6,13 +6,15 @@ import com.chat.app.model.entity.extend.notification.FriendNotification;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 
 import java.util.*;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table( name="account",
         indexes = {
@@ -51,22 +53,20 @@ public class Account {
     private UserStatus status;
 
     @OneToMany(mappedBy = "firstAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private Set<Relationship> firstRelationships = new HashSet<>();
+    private List<Relationship> firstRelationships = new ArrayList<>();
 
     @OneToMany(mappedBy = "secondAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private Set<Relationship> secondRelationships = new HashSet<>();
+    private List<Relationship> secondRelationships = new ArrayList<>();
 
     @ManyToMany(mappedBy = "admins", fetch = FetchType.LAZY, targetEntity = GroupChat.class)
     @ToString.Exclude
     @JsonIgnore
-    private Set<GroupChat> adminOfGroup = new HashSet<>();
+    private List<GroupChat> adminOfGroup = new ArrayList<>();
 
     @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY, targetEntity = GroupChat.class)
     @ToString.Exclude
     @JsonIgnore
-    private Set<GroupChat> memberOfGroup = new HashSet<>();
+    private List<GroupChat> memberOfGroup = new ArrayList<>();
 
     @ManyToMany(mappedBy = "viewers", fetch = FetchType.LAZY)
     @ToString.Exclude
@@ -78,11 +78,11 @@ public class Account {
 
     @OneToMany(mappedBy = "senderAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private Set<FriendNotification> sentNotifications = new HashSet<>();
+    private List<FriendNotification> sentNotifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "receiverAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private Set<Notification> receivedNotifications = new HashSet<>();
+    private List<Notification> receivedNotifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore

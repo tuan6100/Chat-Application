@@ -1,4 +1,4 @@
-package com.chat.app.service;
+package com.chat.app.service.chat;
 
 import com.chat.app.model.entity.Message;
 import com.chat.app.payload.response.MessageResponse;
@@ -47,11 +47,11 @@ public class ChatServiceTest {
     @InjectMocks
     private ChatServiceImpl chatServiceImpl;
 
+
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
     }
-
 
     @Test
     public void testGetMessagesByPage_CacheHit() {

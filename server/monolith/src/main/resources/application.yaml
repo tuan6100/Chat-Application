@@ -1,6 +1,8 @@
 server:
   port: 8000
   address: localhost
+  tomcat:
+    accept-count: 10000
 
 
 spring:
@@ -35,6 +37,7 @@ spring:
         jdbc:
           time_zone: UTC+7
         enable_lazy_load_no_trans: true
+    open-in-view: false
 
   data:
     elasticsearch:
@@ -48,8 +51,8 @@ spring:
       password: 20226100
 
   elasticsearch:
+#    uris: http://localhost:9200
     uris: http://160.191.50.248:9200
-#    uris: http://160.191.50.248:9200
 #    username: elastic
 #    password: 20226100
     socket-timeout: 30s
@@ -115,6 +118,25 @@ logging:
             core: DEBUG
             client:
               WIRE: trace
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      access: read_only
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    elasticsearch:
+      enabled: true
 
 
 

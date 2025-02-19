@@ -15,6 +15,7 @@ import com.chat.app.repository.redis.AccountOnlineStatusRepository;
 import com.chat.app.service.interfaces.system.aws.S3Service;
 import com.chat.app.service.interfaces.user.information.AccountSearchService;
 import com.chat.app.service.interfaces.user.information.AccountService;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -145,4 +146,5 @@ public class AccountServiceImpl implements AccountService, AccountSearchService 
         AccountOnlineStatus accountStatus = accountOnlineStatusRepository.findByAccountId(accountId.toString());
         return (accountStatus != null) ? accountStatus.getLastOnlineTime() : null;
     }
+
 }

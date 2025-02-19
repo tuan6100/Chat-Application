@@ -5,13 +5,12 @@ import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Notification;
 import com.chat.app.model.entity.extend.chat.GroupChat;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 
-@EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
 @Entity
 @Table(name = "group_notification")
 public class GroupNotification extends Notification {

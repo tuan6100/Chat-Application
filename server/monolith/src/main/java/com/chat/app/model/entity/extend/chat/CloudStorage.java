@@ -4,14 +4,15 @@ import com.chat.app.enumeration.Theme;
 import com.chat.app.model.entity.Account;
 import com.chat.app.model.entity.Chat;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.format.annotation.NumberFormat;
 
-@EqualsAndHashCode(callSuper = true)
-@Data
+
+@Getter
+@Setter
 @Entity
-@Table(name = "personal_message_archive")
+@Table(name = "cloud_storage")
 public class CloudStorage extends Chat {
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

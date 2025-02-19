@@ -40,6 +40,8 @@ dependencies {
     implementation("org.springframework.data:spring-data-elasticsearch:5.4.1")
     implementation("org.springframework.boot:spring-boot-starter-cache:3.4.2")
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.0")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus:1.14.3")
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     compileOnly("org.projectlombok:lombok")
@@ -50,6 +52,7 @@ dependencies {
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("com.h2database:h2:2.3.232")
 
 }
 

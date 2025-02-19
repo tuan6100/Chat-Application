@@ -6,13 +6,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 
-@EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
 @Entity
 @Table(name = "friend_notification")
 public class FriendNotification extends Notification {

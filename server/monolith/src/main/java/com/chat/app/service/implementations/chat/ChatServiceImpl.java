@@ -13,6 +13,7 @@ import com.chat.app.service.interfaces.chat.PrivateChatService;
 import com.chat.app.service.interfaces.message.MessageSearchService;
 import com.chat.app.service.interfaces.message.caching.MessageLocalCacheService;
 import com.chat.app.service.interfaces.message.caching.MessageRedisCacheService;
+import com.chat.app.utility.LockManagerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,6 +62,9 @@ public class ChatServiceImpl implements ChatService {
     @Lazy
     private GroupChatService groupChatService;
 
+    @Autowired
+    private LockManagerUtil lockManagerUtil;
+
 
     @Override
     public Chat getChat(Long chatId) {
@@ -86,7 +91,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public List<MessageResponse> getMessagesByPage(Long chatId, int page, int size) {
         List<MessageResponse> localCache = messageLocalCacheService.getMessagesFromCache(chatId, page, size);
-        if (localCache  != null && !localCache .isEmpty()) {
+        if (localCache != null && !localCache.isEmpty()) {
             System.out.println("Local Cache hit");
             return localCache;
         }
@@ -96,14 +101,32 @@ public class ChatServiceImpl implements ChatService {
             System.out.println("Redis Cache hit");
             return redisCache;
         }
-        Pageable pageable = PageRequest.of(page, size);
-        List<Message> messages = chatRepository.findMostRecentMessagesByChatId(chatId, pageable).getContent();
-        List<MessageResponse> messageResponses = messages.stream().parallel()
-                .map(MessageResponse::fromEntity)
-                .collect(Collectors.toList());
-        Collections.reverse(messageResponses);
-        messageLocalCacheService.putMessagesToTheTop(chatId, messageResponses);
-        return messageResponses;
+        ReentrantLock lock = lockManagerUtil.getLock(chatId);
+        lock.lock();
+        try {
+            localCache = messageLocalCacheService.getMessagesFromCache(chatId, page, size);
+            if (localCache != null && !localCache.isEmpty()) {
+                System.out.println("Local Cache hit (after locking)");
+                return localCache;
+            }
+            redisCache = messageRedisCacheService.getMessagesFromCache(chatId, page, size);
+            if (redisCache != null && !redisCache.isEmpty()) {
+                messageLocalCacheService.setCache(chatId, redisCache, page);
+                System.out.println("Redis Cache hit (after locking)");
+                return redisCache;
+            }
+            Pageable pageable = PageRequest.of(page, size);
+            List<Message> messages = chatRepository.findMostRecentMessagesByChatId(chatId, pageable).getContent();
+            List<MessageResponse> messageResponses = messages.stream().parallel()
+                    .map(MessageResponse::fromEntity)
+                    .collect(Collectors.toList());
+            Collections.reverse(messageResponses);
+            messageLocalCacheService.putMessagesToTheTop(chatId, messageResponses);
+            messageRedisCacheService.setCache(chatId, messageResponses, page);
+            return messageResponses;
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override

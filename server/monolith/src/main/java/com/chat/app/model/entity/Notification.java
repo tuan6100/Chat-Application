@@ -1,11 +1,14 @@
 package com.chat.app.model.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Date;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Notification {
 

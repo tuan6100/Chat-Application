@@ -7,14 +7,15 @@ import com.chat.app.model.entity.Message;
 import com.chat.app.dto.Offer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import lombok.Data;
+import jakarta.persistence.Table;
+import lombok.Getter;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 
-@Data
+@Getter
 @Entity
-@EqualsAndHashCode(callSuper = true)
+@Table(name = "call_message")
 public class CallMessage extends Message {
 
     @Column(name = "sdp", columnDefinition = "TEXT")

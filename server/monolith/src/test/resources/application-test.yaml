@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://160.191.50.248:5432/chatstorage
+    username: postgres
+    password: 20226100
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
